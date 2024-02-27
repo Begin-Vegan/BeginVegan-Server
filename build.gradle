@@ -8,6 +8,11 @@ group = 'com'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
+// plain.jar - false
+jar {
+	enabled = false
+}
+
 repositories {
 	mavenCentral()
 }
