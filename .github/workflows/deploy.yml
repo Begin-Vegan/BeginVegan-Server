@@ -36,11 +36,11 @@ jobs:
         run: |
           mkdir ./src/main/resources/database
           touch ./src/main/resources/database/application-database.yml
-          echo "${{ secrets.DATABASE_YML }}" | base64 --decode > /src/main/resources/database/application-database.yml
+          echo "${{ secrets.DATABASE_YML }}" | base64 --decode > src/main/resources/database/application-database.yml
           
           mkdir ./src/main/resources/oauth2
           touch ./src/main/resources/oauth2/application-oauth2.yml
-          echo "${{ secrets.OAUTH2_YML }}" | base64 --decode > /src/main/resources/oauth2/application-oauth2.yml
+          echo "${{ secrets.OAUTH2_YML }}" | base64 --decode > src/main/resources/oauth2/application-oauth2.yml
 
       # 추가
       - name: Make Gradle Wrapper script executable
