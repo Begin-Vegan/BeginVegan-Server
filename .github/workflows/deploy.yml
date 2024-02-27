@@ -3,14 +3,13 @@ name: Deploy to Amazon EC2
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [ "feature/1-infra-setting" ]
 
 env:
   AWS_REGION: ap-northeast-2
   S3_BUCKET_NAME: begin-vegan-github-actions-s3-bucket
   CODE_DEPLOY_APPLICATION_NAME: begin-vegan-codedeploy-application
   CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: begin-vegan-codedeploy-deployment-group
-#  ENCRYPTOR_KEY: ${{ secrets.ENCRYPTOR_KEY }}
 
 permissions:
   contents: read
