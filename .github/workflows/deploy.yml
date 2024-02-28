@@ -3,7 +3,7 @@ name: Deploy to Amazon EC2
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "feature/1-infra-setting" ]
+    branches: [ "main", "develop" ]
 
 env:
   AWS_REGION: ap-northeast-2
