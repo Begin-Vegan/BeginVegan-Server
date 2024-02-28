@@ -12,7 +12,7 @@ public class PingController {
 
     @GetMapping("/ping")
     public String pingTest() {
-        log.info("pint test : pong");
+        log.info("==== pong ====");
         return "pong";
     }
 }
