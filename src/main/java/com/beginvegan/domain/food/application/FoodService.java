@@ -81,7 +81,6 @@ public class FoodService {
                 .id(food.getId())
                 .name(food.getName())
                 .veganType(food.getVeganType())
-                .source(food.getSource())
                 .ingredients(ingredientDtos)
                 .blocks(blockDtos)
                 .build();
@@ -113,7 +112,6 @@ public class FoodService {
                     .id(foods.get(num).getId())
                     .name(foods.get(num).getName())
                     .veganType(foods.get(num).getVeganType())
-                    .description(foods.get(num).getDescription())
                     .build();
             foodList.add(foodListRes);
         }

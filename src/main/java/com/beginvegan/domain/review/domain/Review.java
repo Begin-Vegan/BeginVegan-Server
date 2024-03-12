@@ -27,16 +27,28 @@ public class Review extends BaseEntity {
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
+    private String thumbnail;
+
+    private Double rate;
+
+    private Boolean verified = false;
+
+    private Boolean visible = true;
+
     @Builder
-    public Review(Long id, String content, LocalDate date, Restaurant restaurant, User user) {
+    public Review(Long id, String content, LocalDate date, Restaurant restaurant, User user, String thumbnail, Double rate, Boolean verified, Boolean visible) {
         this.id = id;
         this.content = content;
         this.date = date;
         this.restaurant = restaurant;
         this.user = user;
+        this.thumbnail = thumbnail;
+        this.rate = rate;
+        this.verified = verified;
+        this.visible = visible;
     }
-
 }

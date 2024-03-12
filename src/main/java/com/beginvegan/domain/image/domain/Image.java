@@ -1,6 +1,7 @@
-package com.beginvegan.domain.restaurant.domain;
+package com.beginvegan.domain.image.domain;
 
 import com.beginvegan.domain.common.BaseEntity;
+import com.beginvegan.domain.review.domain.Review;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,22 +11,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
-public class Menu extends BaseEntity {
+public class Image extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id")
-    private Restaurant restaurant;
+    @JoinColumn(name = "review_id")
+    private Review review;
+
+    private String imageUrl;
 
     @Builder
-    public Menu(Long id, String name,  Restaurant restaurant) {
+    public Image(Long id, Review review, String imageUrl) {
         this.id = id;
-        this.name = name;
-        this.restaurant = restaurant;
+        this.review = review;
+        this.imageUrl = imageUrl;
     }
-
 }

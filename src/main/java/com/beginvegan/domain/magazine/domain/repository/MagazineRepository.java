@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface MagazineRepository extends JpaRepository<Magazine, Long> {
 
-    List<Magazine> findAllByMagazineType(MagazineType magazineType);
+//    List<Magazine> findAllByMagazineType(MagazineType magazineType);
 
     @EntityGraph(attributePaths = {"magazineBlocks"})
     Optional<Magazine> findMagazineById(Long magazineId);

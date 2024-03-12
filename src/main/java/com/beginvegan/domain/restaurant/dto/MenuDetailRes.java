@@ -26,9 +26,9 @@ public class MenuDetailRes {
         return MenuDetailRes.builder()
                 .id(menu.getId())
                 .name(menu.getName())
-                .price(menu.getPrice())
-                .description(menu.getDescription())
-                .imageUrl(menu.getImageUrl())
+//                .price(menu.getPrice())
+//                .description(menu.getDescription())
+//                .imageUrl(menu.getImageUrl())
                 .build();
     }
 

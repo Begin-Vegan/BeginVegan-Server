@@ -1,7 +1,7 @@
-package com.beginvegan.domain.bookmark.domain;
+package com.beginvegan.domain.report.domain;
 
 import com.beginvegan.domain.common.BaseEntity;
-import com.beginvegan.domain.restaurant.domain.Restaurant;
+import com.beginvegan.domain.review.domain.Review;
 import com.beginvegan.domain.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -12,22 +12,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
-public class Bookmark extends BaseEntity {
+public class Report extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "review_id")
+    private Review review;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // 매거진, 레시피, 레스토랑 id
-    private Long contentId;
-
     @Builder
-    public Bookmark(Long id, User user, Long contentId) {
+    public Report(Long id, Review review, User user) {
         this.id = id;
+        this.review = review;
         this.user = user;
-        this.contentId = contentId;
     }
 }

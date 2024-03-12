@@ -97,13 +97,13 @@ public class RestaurantService {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(InvalidRestaurantException::new);
 
-        if (bookmarkRepository.existsBookmarkByUserAndRestaurant(user, restaurant)) {
-            throw new ExistsBookmarkException();
-        }
+//        if (bookmarkRepository.existsBookmarkByUserAndRestaurant(user, restaurant)) {
+//            throw new ExistsBookmarkException();
+//        }
 
         Bookmark bookmark = Bookmark.builder()
                 .user(user)
-                .restaurant(restaurant)
+//                .restaurant(restaurant)
                 .build();
 
         bookmarkRepository.save(bookmark);
@@ -123,19 +123,19 @@ public class RestaurantService {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(InvalidRestaurantException::new);
 
-        if (!bookmarkRepository.existsBookmarkByUserAndRestaurant(user, restaurant)) {
-            throw new NotExistsBookmarkException();
-        }
+//        if (!bookmarkRepository.existsBookmarkByUserAndRestaurant(user, restaurant)) {
+//            throw new NotExistsBookmarkException();
+//        }
 
-        Bookmark bookmark = bookmarkRepository.findBookmarkByUserAndRestaurant(user, restaurant);
-        bookmarkRepository.delete(bookmark);
+//        Bookmark bookmark = bookmarkRepository.findBookmarkByUserAndRestaurant(user, restaurant);
+//        bookmarkRepository.delete(bookmark);
 
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information(Message.builder().message("스크랩 해제되었습니다.").build())
-                .build();
+//        ApiResponse apiResponse = ApiResponse.builder()
+//                .check(true)
+//                .information(Message.builder().message("스크랩 해제되었습니다.").build())
+//                .build();
 
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok("엔티티 변경으로 인한 다시 구현");
     }
 
     public ResponseEntity<?> findAroundRestaurant(LocationReq locationReq) {
@@ -169,18 +169,17 @@ public class RestaurantService {
                     List<MenuDto> menuDtos = nearRestaurant.getMenus().stream()
                             .map(menu -> MenuDto.builder()
                                     .id(menu.getId())
-                                    .imageUrl(menu.getImageUrl())
+//                                    .imageUrl(menu.getImageUrl())
                                     .build())
                             .collect(Collectors.toList());
 
                     AroundRestaurantListRes aroundRestaurantListRes = AroundRestaurantListRes.builder()
                             .id(nearRestaurant.getId())
                             .name(nearRestaurant.getName())
-                            .businessHours(nearRestaurant.getBusinessHours())
                             .address(nearRestaurant.getAddress())
                             .latitude(nearRestaurant.getLatitude())
                             .longitude(nearRestaurant.getLongitude())
-                            .imageUrl(nearRestaurant.getImageUrl())
+//                            .imageUrl(nearRestaurant.getImageUrl())
                             .menus(menuDtos)
                             .build();
 

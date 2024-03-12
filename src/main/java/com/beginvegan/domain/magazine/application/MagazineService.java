@@ -35,7 +35,6 @@ public class MagazineService {
                     .id(magazine.getId())
                     .title(magazine.getTitle())
                     .editor(magazine.getEditor())
-                    .magazineType(magazine.getMagazineType())
                     .build();
             magazineList.add(magazineListRes);
         }
@@ -65,8 +64,6 @@ public class MagazineService {
                 .id(magazine.getId())
                 .title(magazine.getTitle())
                 .editor(magazine.getEditor())
-                .source(magazine.getSource())
-                .magazineType(magazine.getMagazineType())
                 .magazineContents(blockDtos) // magazineBlocks
                 .build();
 
