@@ -40,14 +40,12 @@ public class RestaurantDetailRes {
         return RestaurantDetailRes.builder()
                 .id(restaurant.getId())
                 .name(restaurant.getName())
-                .businessHours(restaurant.getBusinessHours())
                 .contactNumber(restaurant.getContactNumber())
                 .address(restaurant.getAddress())
                 .latitude(restaurant.getLatitude())
                 .longitude(restaurant.getLongitude())
                 .kakaoMapUrl(restaurant.getKakaoMapUrl())
-                .imageUrl(restaurant.getImageUrl())
-                .imageSource(restaurant.getImageSource())
+                .imageUrl(restaurant.getThumbnail())
                 .restaurantType(restaurant.getRestaurantType())
                 .build();
     }

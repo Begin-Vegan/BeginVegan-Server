@@ -26,14 +26,16 @@ public class User extends BaseEntity {
 
     private String name;
 
+    private String imageUrl;
+
+    private String nickname;
+
     @Email
     private String email;
 
-    private String imageUrl;
-
-    private Boolean emailVerified = false;
-
     private String password;
+
+    private Boolean emailVerified = false; // emailVerified / marketingConsent는 불필요시 삭제
 
     private Boolean marketingConsent;
 
@@ -48,19 +50,29 @@ public class User extends BaseEntity {
 
     private String providerId;
 
+    private Integer point;
+
+    private Boolean alarmSetting;
+
+    private String userCode;
+
     @Builder
-    public User(Long id, String name, String email, String imageUrl, Boolean emailVerified, String password, Boolean marketingConsent, VeganType veganType, Provider provider, Role role, String providerId) {
+    public User(Long id, String name, String imageUrl, String nickname, String email, String password, Boolean emailVerified, Boolean marketingConsent, VeganType veganType, Provider provider, Role role, String providerId, Integer point, Boolean alarmSetting, String userCode) {
         this.id = id;
         this.name = name;
-        this.email = email;
         this.imageUrl = imageUrl;
-        this.emailVerified = emailVerified;
+        this.nickname = nickname;
+        this.email = email;
         this.password = password;
+        this.emailVerified = emailVerified;
         this.marketingConsent = marketingConsent;
         this.veganType = veganType;
         this.provider = provider;
         this.role = role;
         this.providerId = providerId;
+        this.point = point;
+        this.alarmSetting = alarmSetting;
+        this.userCode = userCode;
     }
 
     public void updateName(String name){

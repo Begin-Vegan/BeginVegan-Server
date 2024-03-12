@@ -10,11 +10,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 
-    @EntityGraph(attributePaths = {"restaurant"})
-    Page<Bookmark> findBookmarksByUser(User user, Pageable pageable);
+//    @EntityGraph(attributePaths = {"restaurant"})
+//    Page<Bookmark> findBookmarksByUser(User user, Pageable pageable);
 
-    Bookmark findBookmarkByUserAndRestaurant(User user, Restaurant restaurant);
+//    Bookmark findBookmarkByUserAndRestaurant(User user, Restaurant restaurant);
 
-    boolean existsBookmarkByUserAndRestaurant(User user, Restaurant restaurant);
+//    boolean existsBookmarkByUserAndRestaurant(User user, Restaurant restaurant);
 
 }
