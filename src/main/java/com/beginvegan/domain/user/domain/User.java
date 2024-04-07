@@ -24,8 +24,6 @@ public class User extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-
     private String imageUrl;
 
     private String nickname;
@@ -34,10 +32,6 @@ public class User extends BaseEntity {
     private String email;
 
     private String password;
-
-    private Boolean emailVerified = false; // emailVerified / marketingConsent는 불필요시 삭제
-
-    private Boolean marketingConsent;
 
     @Enumerated(EnumType.STRING)
     private VeganType veganType;
@@ -52,20 +46,17 @@ public class User extends BaseEntity {
 
     private Integer point;
 
-    private Boolean alarmSetting;
+    private Boolean alarmSetting = true;
 
     private String userCode;
 
     @Builder
-    public User(Long id, String name, String imageUrl, String nickname, String email, String password, Boolean emailVerified, Boolean marketingConsent, VeganType veganType, Provider provider, Role role, String providerId, Integer point, Boolean alarmSetting, String userCode) {
+    public User(Long id, String imageUrl, String nickname, String email, String password, VeganType veganType, Provider provider, Role role, String providerId, Integer point, Boolean alarmSetting, String userCode) {
         this.id = id;
-        this.name = name;
         this.imageUrl = imageUrl;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
-        this.emailVerified = emailVerified;
-        this.marketingConsent = marketingConsent;
         this.veganType = veganType;
         this.provider = provider;
         this.role = role;
@@ -75,8 +66,12 @@ public class User extends BaseEntity {
         this.userCode = userCode;
     }
 
-    public void updateName(String name){
-        this.name = name;
+    public void updateNickname(String nickname){
+        this.nickname = nickname;
+    }
+
+    public void updateUserCode(String userCode){
+        this.userCode = userCode;
     }
 
     public void updateImageUrl(String imageUrl){
@@ -87,8 +82,8 @@ public class User extends BaseEntity {
         this.veganType = veganType;
     }
 
-    public void updateMarketingConsent(Boolean marketingConsent) {
-        this.marketingConsent = marketingConsent;
+    public void updateAlarmSetting(Boolean alarmSetting) {
+       this.alarmSetting = alarmSetting;
     }
 
 }

@@ -2,7 +2,7 @@ package com.beginvegan.domain.user.application;
 
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
-import com.beginvegan.domain.user.dto.UpdateMarketingConsentReq;
+import com.beginvegan.domain.user.dto.UpdateAlarmSettingReq;
 import com.beginvegan.domain.user.dto.UpdateNicknameReq;
 import com.beginvegan.domain.user.dto.UpdateVeganTypeReq;
 import com.beginvegan.domain.user.dto.UserDetailRes;
@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
@@ -31,7 +33,7 @@ public class UserService {
 
         UserDetailRes userDetailRes = UserDetailRes.builder()
                 .id(user.getId())
-                .name(user.getName())
+                .nickname(user.getNickname())
                 .email(user.getEmail())
                 .provider(user.getProvider())
                 .role(user.getRole())
@@ -56,11 +58,11 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateMarketingConsent(UserPrincipal userPrincipal, UpdateMarketingConsentReq marketingConsentReq) {
+    public ResponseEntity<?> updateAlarmSetting(UserPrincipal userPrincipal, UpdateAlarmSettingReq alarmSettingReq) {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
-        user.updateMarketingConsent(marketingConsentReq.getMarketingConsent());
+        user.updateAlarmSetting(alarmSettingReq.getAlarmSetting());
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -75,7 +77,8 @@ public class UserService {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
-        user.updateName(updateNicknameReq.getNickname());
+        user.updateUserCode(generateUserCode(updateNicknameReq.getNickname()));
+        user.updateNickname(updateNicknameReq.getNickname());
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -83,6 +86,13 @@ public class UserService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    private String generateUserCode(String nickname) {
+        Optional<User> latestUserOptional = userRepository.findTopByNicknameOrderByUserCodeDesc(nickname);
+        int count = latestUserOptional.map(user -> Integer.parseInt(user.getUserCode())).orElse(0);
+
+        return String.format("%04d", count + 1);
     }
 
 }

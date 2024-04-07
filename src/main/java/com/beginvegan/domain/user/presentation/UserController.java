@@ -1,9 +1,8 @@
 package com.beginvegan.domain.user.presentation;
 
 import com.beginvegan.domain.auth.dto.AuthRes;
-import com.beginvegan.domain.auth.dto.RefreshTokenReq;
 import com.beginvegan.domain.user.application.UserService;
-import com.beginvegan.domain.user.dto.UpdateMarketingConsentReq;
+import com.beginvegan.domain.user.dto.UpdateAlarmSettingReq;
 import com.beginvegan.domain.user.dto.UpdateNicknameReq;
 import com.beginvegan.domain.user.dto.UpdateVeganTypeReq;
 import com.beginvegan.global.config.security.token.CurrentUser;
@@ -17,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,11 +47,11 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "유저 정보 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
     @PatchMapping
-    public ResponseEntity<?> updateMarketingConsent(
+    public ResponseEntity<?> updateAlarmSetting(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "UpdateMarketionConsentReq Schema를 확인해주세요.", required = true) @RequestBody UpdateMarketingConsentReq updateMarketingConsentReq
+            @Parameter(description = "UpdateAlarmSettingReq Schema를 확인해주세요.", required = true) @RequestBody UpdateAlarmSettingReq updateAlarmSettingReq
     ) {
-        return userService.updateMarketingConsent(userPrincipal, updateMarketingConsentReq);
+        return userService.updateAlarmSetting(userPrincipal, updateAlarmSettingReq);
     }
 
     @Operation(summary = "유저 비건 타입 변경", description = "유저의 비건 타입을 변경합니다.")
@@ -75,7 +75,7 @@ public class UserController {
     @PostMapping("/nickname")
     public ResponseEntity<?> updateNickname(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "UpdateVeganTypeReq Schema를 확인해주세요", required = true) @RequestBody UpdateNicknameReq updateNicknameReq
+            @Parameter(description = "UpdateNicknameReq Schema를 확인해주세요", required = true) @Valid @RequestBody UpdateNicknameReq updateNicknameReq
     ) {
         return userService.updateNickname(userPrincipal, updateNicknameReq);
     }

@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.beginvegan.domain.auth.dto.*;
 import com.beginvegan.domain.auth.exception.AlreadyExistEmailException;
 import com.beginvegan.domain.auth.exception.InvalidTokenException;
+import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.Provider;
 import com.beginvegan.domain.user.domain.Role;
 import com.beginvegan.domain.user.domain.User;
@@ -13,7 +14,9 @@ import com.beginvegan.global.DefaultAssert;
 
 import com.beginvegan.domain.auth.domain.Token;
 import com.beginvegan.global.config.security.token.UserPrincipal;
+import com.beginvegan.global.error.DefaultException;
 import com.beginvegan.global.payload.ApiResponse;
+import com.beginvegan.global.payload.ErrorCode;
 import com.beginvegan.global.payload.Message;
 import com.beginvegan.domain.auth.domain.repository.TokenRepository;
 
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @RequiredArgsConstructor
@@ -37,6 +41,7 @@ public class AuthService {
     private final CustomTokenProviderService customTokenProviderService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final S3Uploader s3Uploader;
 
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
@@ -93,17 +98,21 @@ public class AuthService {
     }
 
     @Transactional
-    public ResponseEntity<?> signUp(SignUpReq signUpReq) {
+    public ResponseEntity<?> signUp(SignUpReq signUpReq, Boolean isDefaultImage, MultipartFile file) {
         if(userRepository.existsByEmail(signUpReq.getEmail()))
             throw new AlreadyExistEmailException();
 
         User newUser = User.builder()
                 .providerId(signUpReq.getProviderId())
                 .provider(Provider.kakao)
-                .name(signUpReq.getNickname())
+                .nickname(signUpReq.getNickname())
                 .email(signUpReq.getEmail())
-                .imageUrl(signUpReq.getProfileImgUrl())
+                .imageUrl(registerImage(isDefaultImage, file))
                 .password(passwordEncoder.encode(signUpReq.getProviderId()))
+                .userCode(generateUserCode(signUpReq.getNickname()))
+                .veganType(signUpReq.getVeganType())
+                .alarmSetting(true)
+                .point(0)
                 .role(Role.USER)
                 .build();
 
@@ -136,6 +145,24 @@ public class AuthService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    private String registerImage(Boolean isDefaultImage, MultipartFile file) {
+        if (file.isEmpty() && isDefaultImage) {
+            return "/profile.png";
+        } else if (!file.isEmpty() && !isDefaultImage) {
+             return s3Uploader.uploadImage(file);
+        } else {
+            throw new DefaultException(ErrorCode.INVALID_PARAMETER, "잘못된 요청입니다.");
+        }
+    }
+
+    // UserCode 생성
+    private String generateUserCode(String nickname) {
+        Optional<User> recentUser = userRepository.findTopByNicknameOrderByUserCodeDesc(nickname);
+        int count = recentUser.map(user -> Integer.parseInt(user.getUserCode())).orElse(0);
+
+        return String.format("%04d", count + 1);
     }
 
     private boolean valid(String refreshToken){

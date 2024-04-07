@@ -1,6 +1,8 @@
 package com.beginvegan.domain.auth.dto;
 
+import com.beginvegan.domain.user.domain.VeganType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import jakarta.validation.constraints.Email;
@@ -11,14 +13,15 @@ public class SignUpReq {
     @Schema( type = "string", example = "123123", description="카카오 고유 유저 ID 입니다.")
     private String providerId;
 
-    @Schema( type = "string", example = "string", description="카카오톡 닉네임 입니다.")
+    @Schema( type = "string", example = "string", description="닉네임 입니다.")
+    @Pattern(regexp = "^[가-힣a-zA-Z]{2,12}$")
     private String nickname;
 
     @Schema( type = "string", example = "string@aa.bb", description="계정 이메일 입니다.")
     @Email
     private String email;
 
-    @Schema( type = "string", example = "http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_640x640.jpg", description="프로필 사진 URL 입니다.")
-    private String profileImgUrl;
+    @Schema( type = "string", example = "UNKNOWN, VEGAN, LACTO_VEGETARIAN, OVO_VEGETARIAN, LACTO_OVO_VEGETARIAN, POLLOTARIAN, PASCATARIAN, FLEXITARIAN", description = "비건 타입입니다.")
+    private VeganType veganType;
 
 }

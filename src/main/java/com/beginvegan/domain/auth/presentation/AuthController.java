@@ -11,10 +11,7 @@ import com.beginvegan.global.payload.Message;
 import com.beginvegan.domain.auth.application.AuthService;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Authorization", description = "Authorization API")
 @RequiredArgsConstructor
@@ -41,9 +39,10 @@ public class AuthController {
     })
     @PostMapping(value="/sign-up")
     public ResponseEntity<?> signUp(
-            @Parameter(description = "SignUpReq Schema를 확인해주세요.", required = true) @RequestBody SignUpReq signUpReq
+            @Parameter(description = "SignUpReq Schema를 확인해주세요.", required = true)
+            @Valid @RequestPart SignUpReq signUpReq, @RequestPart Boolean isDefaultImage, @RequestPart MultipartFile file
     ) {
-        return authService.signUp(signUpReq);
+        return authService.signUp(signUpReq, isDefaultImage, file);
     }
 
     @Operation(summary = "유저 로그인", description = "유저 로그인을 수행합니다.")
