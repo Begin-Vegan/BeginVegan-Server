@@ -1,0 +1,111 @@
+name: Github with jira
+on: 
+  issues: 
+    types: [opened] 
+
+jobs:
+
+  jira-login: 
+    name: Jira Login
+    runs-on: ubuntu-latest
+    steps:
+    # githut secret 파싱 -> github.actor 생성자에 맞게 변환
+    - name: Secrets Parsing
+      id: secret
+      run: |
+        echo "JIRA_API_TOKEN=JIRA_API_TOKEN_${{ github.actor }}" >> $GITHUB_OUTPUT
+        echo "JIRA_USER_EMAIL=JIRA_USER_EMAIL_${{ github.actor }}" >> $GITHUB_OUTPUT
+
+    # Jira Login
+    - name: Login
+      uses: atlassian/gajira-login@v3 
+      env: 
+        JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }} 
+        JIRA_API_TOKEN: ${{ secrets[steps.secret.outputs.JIRA_API_TOKEN] }}
+        JIRA_USER_EMAIL: ${{ secrets[steps.secret.outputs.JIRA_USER_EMAIL] }}
+        
+    # ref에 브랜치로 이동    
+    - name: Checkout develop code
+      uses: actions/checkout@v4
+      with:
+        ref: develop
+
+    # 생성한 이슈 파싱
+    - name: Issue Parser
+      uses: stefanbuck/github-issue-praser@v3
+      id: issue-parser
+      with:
+        template-path: .github/ISSUE_TEMPLATE/github_with_jira_issue.yml
+
+    # 생성한 이슈 파싱 로그
+    - name: Log Issue Parser
+      run: echo '${{ steps.issue-parser.outputs.jsonString }}'
+
+    # 마크다운 -> Jira 변경
+    - name: Convert markdown to Jira Syntax
+      uses: peter-evans/jira2md@v1
+      id: md2jira
+      with:
+        input-text: |
+          ## Summary 
+          ${{ steps.issue-parser.outputs.issueparser_description }}
+          
+          ## Description
+          ${{ steps.issue-parser.outputs.issueparser_details }}
+          
+          ## Reference
+          ${{ steps.issue-parser.outputs.issueparser_references }}
+          
+          ## Github Issue Link
+          ${{ github.event.issue.html_url }}
+          
+          
+        mode: md2jira
+
+    # Jira 이슈 생성 [파트] 이슈 타이틀 
+    - name: Create Issue 
+      id: create
+      uses: atlassian/gajira-create@v3
+      with:
+        project: BVVER24
+        issuetype: 개발
+        summary: "[Server] ${{ github.event.issue.title }}"
+        description: "${{ steps.md2jira.outputs.output-text }}"
+        fields: |
+          {
+              "parent": {
+                 "key": "BVVER24-${{ steps.issue-parser.outputs.issueparser_parent }}"
+              }
+          }
+
+    # Jira 이슈 생성 로그
+    - name: Log created issue
+      run: echo "Issue ${{ steps.create.outputs.issue }} was created"         
+
+    # Jira 이슈 생성자 로그
+    - name: Log created issue
+      run: echo "Issue ${{ github.actor }} was created"
+
+    # Github 이슈 타이틀 수정 "[이슈번호] 이슈타이틀"
+    - name: Update issue title
+      uses: actions-cool/issues-helper@v3
+      with:
+        actions: "update-issue"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title: "[${{ steps.create.outputs.issue }}] ${{ github.event.issue.title }}"
+    
+    # Github 이슈 자기 자신 Assignnes 등록
+    - name: Add assigness
+      uses: actions-cool/issues-helper@v3
+      with:
+        actions: 'add-assignees'
+        uses: actions-cool/issues-helper@v3      
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        assignees: '${{ github.actor }}'
+          
+    # 브랜치 생성 ->  "브랜치타입"/"지라 이슈번호"-"브랜치 이름"
+    - name: Create branch with Ticket number
+      run: |
+        git checkout -b ${{ steps.issue-parser.outputs.issueparser_branchType }}/${{ steps.create.outputs.issue }}-${{ steps.issue-parser.outputs.issueparser_branchName }}
+        git push origin ${{ steps.issue-parser.outputs.issueparser_branchType }}/${{ steps.create.outputs.issue }}-${{ steps.issue-parser.outputs.issueparser_branchName }}
