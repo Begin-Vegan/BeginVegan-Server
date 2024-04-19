@@ -104,7 +104,9 @@ public class UserService {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
-        s3Uploader.deleteFile(user.getImageUrl());
+        // 기존 프로필 이미지 삭제
+        String originalFile = user.getImageUrl().split("amazonaws.com/")[1];
+        s3Uploader.deleteFile(originalFile);
 
         String imageUrl = registerImage(isDefaultImage, file);
         // 최초 설정인지 확인하여 포인트 부여

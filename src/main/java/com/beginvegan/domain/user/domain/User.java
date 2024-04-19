@@ -1,6 +1,5 @@
 package com.beginvegan.domain.user.domain;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -86,7 +85,7 @@ public class User extends BaseEntity {
        this.alarmSetting = alarmSetting;
     }
 
-    // 포인트 부여(기존 포인트 기반)
+    // 기존 포인트에 더하는 방식
     public void updatePoint(Integer additionalPoint) { this.point += additionalPoint; }
 
 }
