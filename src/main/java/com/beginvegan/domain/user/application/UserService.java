@@ -42,6 +42,21 @@ public class UserService {
         return ResponseEntity.ok(userDetailRes);
     }
 
+    public ResponseEntity<?> getVeganTestResult(UserPrincipal userPrincipal) {
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(InvalidUserException::new);
+
+        VeganTestResultRes veganTestResultRes = VeganTestResultRes.builder()
+                .nickname(user.getNickname())
+                .veganType(user.getVeganType())
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(veganTestResultRes).build();
+        return  ResponseEntity.ok(apiResponse);
+    }
+
     @Transactional
     public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq) {
         User user = userRepository.findById(userPrincipal.getId())

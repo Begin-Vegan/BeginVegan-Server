@@ -55,17 +55,29 @@ public class UserController {
         return userService.updateAlarmSetting(userPrincipal, updateAlarmSettingReq);
     }
 
-    @Operation(summary = "유저 비건 타입 변경", description = "유저의 비건 타입을 변경합니다.")
+    @Operation(summary = "비건 테스트", description = "유저가 비건 테스트를 수행합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "유저 비건 타입 변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "유저 비건 타입 변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "유저 비건 테스트 수행 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "유저 비건 테스트 수행 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PostMapping("/vegan-type")
+    @PutMapping("/vegan-test")
     public ResponseEntity<?> updateVeganType(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "UpdateVeganTypeReq Schema를 확인해주세요", required = true) @RequestBody UpdateVeganTypeReq updateVeganTypeReq
             ) {
         return userService.updateVeganType(userPrincipal, updateVeganTypeReq);
+    }
+
+    @Operation(summary = "비건 테스트 결과 조회", description = "비건 테스트 결과를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "비건 테스트 결과 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "비건 테스트 결과 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/vegan-test")
+    public ResponseEntity<?> getVeganTestResult(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return userService.getVeganTestResult(userPrincipal);
     }
 
     @Operation(summary = "유저 닉네임 변경", description = "유저의 닉네임을 변경합니다.")
