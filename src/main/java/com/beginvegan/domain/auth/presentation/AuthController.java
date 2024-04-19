@@ -39,8 +39,9 @@ public class AuthController {
     })
     @PostMapping(value="/sign-up")
     public ResponseEntity<?> signUp(
-            @Parameter(description = "SignUpReq Schema를 확인해주세요.", required = true)
-            @Valid @RequestPart SignUpReq signUpReq, @RequestPart Boolean isDefaultImage, @RequestPart MultipartFile file
+            @Parameter(description = "SignUpReq Schema를 확인해주세요.", required = true) @Valid @RequestPart SignUpReq signUpReq,
+            @Parameter(description = "프로필 변경 시 기본 이미지 여부를 입력해주세요.", required = true) @RequestPart Boolean isDefaultImage,
+            @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile file
     ) {
         return authService.signUp(signUpReq, isDefaultImage, file);
     }

@@ -86,4 +86,7 @@ public class User extends BaseEntity {
        this.alarmSetting = alarmSetting;
     }
 
+    // 포인트 부여(기존 포인트 기반)
+    public void updatePoint(Integer additionalPoint) { this.point += additionalPoint; }
+
 }

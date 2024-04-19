@@ -20,6 +20,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Users", description = "Users API")
 @RequiredArgsConstructor
@@ -78,6 +79,20 @@ public class UserController {
             @Parameter(description = "UpdateNicknameReq Schema를 확인해주세요", required = true) @Valid @RequestBody UpdateNicknameReq updateNicknameReq
     ) {
         return userService.updateNickname(userPrincipal, updateNicknameReq);
+    }
+
+    @Operation(summary = "유저 프로필 변경", description = "유저의 프로필을 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "유저 프로필 변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "유저 프로필 변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PostMapping("/profile")
+    public ResponseEntity<?> updateProfile(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "프로필 변경 시 기본 이미지 여부를 입력해주세요.", required = true) @RequestPart Boolean isDefaultImage,
+            @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile file
+    ) {
+        return userService.updateProfileImage(userPrincipal, isDefaultImage, file);
     }
 
 }

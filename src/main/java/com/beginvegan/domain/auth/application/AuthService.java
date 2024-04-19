@@ -117,6 +117,8 @@ public class AuthService {
                 .build();
 
         userRepository.save(newUser);
+        // 프로필 설정 여부 확인하고 포인트 지급
+        rewardInitialProfileImage(newUser);
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -209,6 +211,13 @@ public class AuthService {
                 .information(authResponse).build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // Description : [회원 가입] 프로필 최초 설정 시 포인트 지급
+    private void rewardInitialProfileImage(User user) {
+        if (user.getImageUrl().contains("amazonaws.com/")) {
+            user.updatePoint(1);
+        }
     }
 
 }
