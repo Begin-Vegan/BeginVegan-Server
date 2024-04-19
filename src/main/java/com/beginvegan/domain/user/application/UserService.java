@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -90,16 +91,22 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateNickname(UserPrincipal userPrincipal, UpdateNicknameReq updateNicknameReq) {
+    public ResponseEntity<?> updateProfile(UserPrincipal userPrincipal, UpdateNicknameReq updateNicknameReq, Boolean isDefaultImage, MultipartFile file) {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
-        user.updateUserCode(generateUserCode(updateNicknameReq.getNickname()));
-        user.updateNickname(updateNicknameReq.getNickname());
+        String newNickname = updateNicknameReq.getNickname();
+        if (!Objects.equals(user.getNickname(), newNickname)) {
+            // 닉네임 수정
+            user.updateUserCode(generateUserCode(newNickname));
+            user.updateNickname(newNickname);
+        }
+        // 이미지 수정
+        updateProfileImage(user, isDefaultImage, file);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(Message.builder().message("유저 닉네임이 변경되었습니다.").build())
+                .information(Message.builder().message("유저 프로필이 변경되었습니다.").build())
                 .build();
 
         return ResponseEntity.ok(apiResponse);
@@ -112,29 +119,17 @@ public class UserService {
         return String.format("%04d", count + 1);
     }
 
-    @Transactional
-    public ResponseEntity<?> updateProfileImage(UserPrincipal userPrincipal, Boolean isDefaultImage, MultipartFile file) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(InvalidUserException::new);
-
+    private void updateProfileImage(User user, Boolean isDefaultImage, MultipartFile file) {
         if (user.getImageUrl().contains("amazonaws.com/")) {
             // 기존 프로필 이미지 삭제
             String originalFile = user.getImageUrl().split("amazonaws.com/")[1];
             s3Uploader.deleteFile(originalFile);
         }
-
         String imageUrl = registerImage(isDefaultImage, file);
         user.updateImageUrl(imageUrl);
 
         // 최초 1회인지 확인하여 포인트 부여
         rewardInitialProfileImage(user, isDefaultImage);
-
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information(Message.builder().message("유저 프로필이 변경되었습니다.").build())
-                .build();
-
-        return ResponseEntity.ok(apiResponse);
     }
 
     private String registerImage(Boolean isDefaultImage, MultipartFile file) {

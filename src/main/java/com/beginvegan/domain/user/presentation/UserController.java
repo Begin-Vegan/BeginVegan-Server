@@ -80,31 +80,19 @@ public class UserController {
         return userService.getVeganTestResult(userPrincipal);
     }
 
-    @Operation(summary = "유저 닉네임 변경", description = "유저의 닉네임을 변경합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "유저 닉네임 변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "유저 닉네임 변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
-    })
-    @PostMapping("/nickname")
-    public ResponseEntity<?> updateNickname(
-            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "UpdateNicknameReq Schema를 확인해주세요", required = true) @Valid @RequestBody UpdateNicknameReq updateNicknameReq
-    ) {
-        return userService.updateNickname(userPrincipal, updateNicknameReq);
-    }
-
     @Operation(summary = "유저 프로필 변경", description = "유저의 프로필을 변경합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "유저 프로필 변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "유저 프로필 변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PostMapping("/profile")
+    @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "UpdateNicknameReq Schema를 확인해주세요", required = true) @Valid @RequestPart UpdateNicknameReq updateNicknameReq,
             @Parameter(description = "프로필 변경 시 기본 이미지 여부를 입력해주세요.", required = true) @RequestPart Boolean isDefaultImage,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile file
     ) {
-        return userService.updateProfileImage(userPrincipal, isDefaultImage, file);
+        return userService.updateProfile(userPrincipal, updateNicknameReq, isDefaultImage, file);
     }
 
     @Operation(summary = "유저 정보 조회", description = "홈 화면에서 유저의 정보(닉네임, 레벨)를 조회합니다.")
