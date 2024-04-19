@@ -1,5 +1,6 @@
 package com.beginvegan.domain.bookmark.domain;
 
+import com.beginvegan.domain.bookmark.domain.repository.ContentType;
 import com.beginvegan.domain.common.BaseEntity;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.user.domain.User;
@@ -24,10 +25,15 @@ public class Bookmark extends BaseEntity {
     // 매거진, 레시피, 레스토랑 id
     private Long contentId;
 
+    // 매거진 / 레시피 / 레스토랑
+    @Enumerated(EnumType.STRING)
+    private ContentType contentType;
+
     @Builder
-    public Bookmark(Long id, User user, Long contentId) {
+    public Bookmark(Long id, User user, Long contentId, ContentType contentType) {
         this.id = id;
         this.user = user;
         this.contentId = contentId;
+        this.contentType = contentType;
     }
 }
