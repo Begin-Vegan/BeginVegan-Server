@@ -170,18 +170,17 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    // TODO : 이미지 받으면 s3에 추가하고 이미지 경로로 수정해두기
     private String countUserLevel(Integer point) {
         String userLevel;
 
-        if (point < 2) { userLevel = "seed";}
-        else if (point < 5) { userLevel = "root";}
-        else if (point < 10) { userLevel = "sprout";}
-        else if (point < 20) { userLevel = "stem";}
-        else if (point < 30) { userLevel = "leaf";}
-        else if (point < 50) { userLevel = "tree";}
-        else if (point < 100) { userLevel = "flower";}
-        else { userLevel = "fruit"; }
+        if (point < 2) { userLevel = "SEED";}
+        else if (point < 5) { userLevel = "ROOT";}
+        else if (point < 10) { userLevel = "SPROUT";}
+        else if (point < 20) { userLevel = "STEM";}
+        else if (point < 30) { userLevel = "LEAF";}
+        else if (point < 50) { userLevel = "TREE";}
+        else if (point < 100) { userLevel = "FLOWER";}
+        else { userLevel = "FRUIT"; }
 
         return userLevel;
     }

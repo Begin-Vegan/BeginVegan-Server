@@ -95,4 +95,16 @@ public class UserController {
         return userService.updateProfileImage(userPrincipal, isDefaultImage, file);
     }
 
+    @Operation(summary = "유저 정보 조회", description = "홈 화면에서 유저의 정보(닉네임, 레벨)를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "유저 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/home")
+    public ResponseEntity<?> getUserHomeInfo(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return userService.getUserHomeInfo(userPrincipal);
+    }
+
 }
