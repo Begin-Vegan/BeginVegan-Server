@@ -3,10 +3,7 @@ package com.beginvegan.domain.user.application;
 import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
-import com.beginvegan.domain.user.dto.UpdateAlarmSettingReq;
-import com.beginvegan.domain.user.dto.UpdateNicknameReq;
-import com.beginvegan.domain.user.dto.UpdateVeganTypeReq;
-import com.beginvegan.domain.user.dto.UserDetailRes;
+import com.beginvegan.domain.user.dto.*;
 import com.beginvegan.domain.user.exception.InvalidUserException;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.error.DefaultException;
@@ -143,16 +140,51 @@ public class UserService {
     }
 
     // 프로필 수정 시 기존 프로필 조회
+    // public ResponseEntity<?> getMyProfileImage(UserPrincipal userPrincipal) {
+    //     User user = userRepository.findById(userPrincipal.getId())
+    //             .orElseThrow(InvalidUserException::new);
+
+    //     ApiResponse apiResponse = ApiResponse.builder()
+    //             .check(true)
+    //             .information(user.getImageUrl())
+    //             .build();
+
+    //     return ResponseEntity.ok(apiResponse);
+    // }
 
     // 닉네임, 등급별 이미지 출력
-    // public ResponseEntity<?> getUserHomeInfo(UserPrincipal userPrincipal) {
-    //     User user = userRepository.findById(userPrincipal.getId())
-    //             .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
+    public ResponseEntity<?> getUserHomeInfo(UserPrincipal userPrincipal) {
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
 
-    //}
+        String userLevel = countUserLevel(user.getPoint());
+        UserHomeInfoRes userHomeInfoRes = UserHomeInfoRes.builder()
+                .nickname(user.getNickname())
+                .userLevel(userLevel)
+                .build();
 
-    // 유저 등급
-    // private countUserLevel
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(userHomeInfoRes)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    // TODO : 이미지 받으면 s3에 추가하고 이미지 경로로 수정해두기
+    private String countUserLevel(Integer point) {
+        String userLevel;
+
+        if (point < 2) { userLevel = "seed";}
+        else if (point < 5) { userLevel = "root";}
+        else if (point < 10) { userLevel = "sprout";}
+        else if (point < 20) { userLevel = "stem";}
+        else if (point < 30) { userLevel = "leaf";}
+        else if (point < 50) { userLevel = "tree";}
+        else if (point < 100) { userLevel = "flower";}
+        else { userLevel = "fruit"; }
+
+        return userLevel;
+    }
 
 
 
