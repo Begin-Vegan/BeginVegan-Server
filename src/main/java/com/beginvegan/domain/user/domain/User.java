@@ -49,8 +49,13 @@ public class User extends BaseEntity {
 
     private String userCode;
 
+
+    private Boolean veganTestCompleted = false;
+
+    private Boolean customProfileCompleted = false;
+
     @Builder
-    public User(Long id, String imageUrl, String nickname, String email, String password, VeganType veganType, Provider provider, Role role, String providerId, Integer point, Boolean alarmSetting, String userCode) {
+    public User(Long id, String imageUrl, String nickname, String email, String password, VeganType veganType, Provider provider, Role role, String providerId, Integer point, Boolean alarmSetting, String userCode, Boolean veganTestCompleted, Boolean customProfileCompleted) {
         this.id = id;
         this.imageUrl = imageUrl;
         this.nickname = nickname;
@@ -63,6 +68,8 @@ public class User extends BaseEntity {
         this.point = point;
         this.alarmSetting = alarmSetting;
         this.userCode = userCode;
+        this.veganTestCompleted = veganTestCompleted;
+        this.customProfileCompleted = customProfileCompleted;
     }
 
     public void updateNickname(String nickname){
@@ -85,7 +92,11 @@ public class User extends BaseEntity {
        this.alarmSetting = alarmSetting;
     }
 
-    // 기존 포인트에 더하는 방식
+    public void updateVeganTestCompleted(Boolean veganTestCompleted) { this.veganTestCompleted = veganTestCompleted; }
+
+    public void updateCustomProfileCompleted(Boolean customProfileCompleted) { this.customProfileCompleted = customProfileCompleted; }
+
+    // Description : 해당 함수 호출 시 더해야 하는 포인트 값만 요청
     public void updatePoint(Integer additionalPoint) { this.point += additionalPoint; }
 
 }
