@@ -42,13 +42,14 @@ public class UserService {
         return ResponseEntity.ok(userDetailRes);
     }
 
-    // TODO : 비건테스트 최초 1회만 포인트 지급
     @Transactional
     public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq) {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
         user.updateVeganType(updateVeganTypeReq.getVeganType());
+        // 최초 1회인지 확인하여 포인트 부여
+        rewardInitialVeganTest(user);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -101,14 +102,17 @@ public class UserService {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
-        // 기존 프로필 이미지 삭제
-        String originalFile = user.getImageUrl().split("amazonaws.com/")[1];
-        s3Uploader.deleteFile(originalFile);
+        if (user.getImageUrl().contains("amazonaws.com/")) {
+            // 기존 프로필 이미지 삭제
+            String originalFile = user.getImageUrl().split("amazonaws.com/")[1];
+            s3Uploader.deleteFile(originalFile);
+        }
 
         String imageUrl = registerImage(isDefaultImage, file);
-        // 최초 설정인지 확인하여 포인트 부여
-        rewardInitialProfileImage(user, imageUrl);
         user.updateImageUrl(imageUrl);
+
+        // 최초 1회인지 확인하여 포인트 부여
+        rewardInitialProfileImage(user, isDefaultImage);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -129,13 +133,21 @@ public class UserService {
     }
 
     // Description : 프로필 최초 설정 시 포인트 지급
-    private void rewardInitialProfileImage(User user, String newImageUrl) {
-        // 기존 이미지가 aws에 올라가있는지 확인
-        if (!user.getImageUrl().contains("amazonaws.com/")) {
-            // 이번에 올리는 이미지가 aws 올라갈 경우 포인트 부여
-            if (newImageUrl.contains("amazonaws.com/")) {
+    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) {
+        // 프로필 이미지 설정 여부 확인
+        if (!user.getCustomProfileCompleted()) {
+            if (!isDefaultImage) {
                 user.updatePoint(1);
+                user.updateCustomProfileCompleted(true);
             }
+        }
+    }
+
+    // Description : 비건테스트 최초 수행 시 포인트 지급
+    private void rewardInitialVeganTest(User user) {
+        if (!user.getVeganTestCompleted()) {
+            user.updatePoint(1);
+            user.updateVeganTestCompleted(true);
         }
     }
 

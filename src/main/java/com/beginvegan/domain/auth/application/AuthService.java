@@ -113,12 +113,14 @@ public class AuthService {
                 .veganType(signUpReq.getVeganType())
                 .alarmSetting(true)
                 .point(0)
+                .veganTestCompleted(false)
+                .customProfileCompleted(false)
                 .role(Role.USER)
                 .build();
 
         userRepository.save(newUser);
         // 프로필 설정 여부 확인하고 포인트 지급
-        rewardInitialProfileImage(newUser);
+        rewardInitialProfileImage(newUser, isDefaultImage);
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -214,9 +216,11 @@ public class AuthService {
     }
 
     // Description : [회원 가입] 프로필 최초 설정 시 포인트 지급
-    private void rewardInitialProfileImage(User user) {
-        if (user.getImageUrl().contains("amazonaws.com/")) {
+    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) {
+        if (!isDefaultImage) {
             user.updatePoint(1);
+            // 프로필 이미지 최초 설정하여 값 변경
+            user.updateCustomProfileCompleted(true);
         }
     }
 
