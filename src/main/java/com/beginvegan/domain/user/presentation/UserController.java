@@ -2,6 +2,7 @@ package com.beginvegan.domain.user.presentation;
 
 import com.beginvegan.domain.auth.dto.AuthRes;
 import com.beginvegan.domain.user.application.UserService;
+import com.beginvegan.domain.user.domain.VeganType;
 import com.beginvegan.domain.user.dto.UpdateAlarmSettingReq;
 import com.beginvegan.domain.user.dto.UpdateNicknameReq;
 import com.beginvegan.domain.user.dto.UpdateVeganTypeReq;
@@ -55,12 +56,12 @@ public class UserController {
         return userService.updateAlarmSetting(userPrincipal, updateAlarmSettingReq);
     }
 
-    @Operation(summary = "비건 테스트", description = "유저가 비건 테스트를 수행합니다.")
+    @Operation(summary = "유저 비건 타입 변경", description = "유저의 비건 타입을 변경합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "유저 비건 테스트 수행 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "유저 비건 테스트 수행 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "유저 비건 타입 변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "유저 비건 타입 변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PutMapping("/vegan-test")
+    @PutMapping("/vegan-type")
     public ResponseEntity<?> updateVeganType(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "UpdateVeganTypeReq Schema를 확인해주세요", required = true) @RequestBody UpdateVeganTypeReq updateVeganTypeReq
@@ -73,11 +74,12 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "비건 테스트 결과 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "비건 테스트 결과 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/vegan-test")
+    @GetMapping("/vegan-test/{veganType}")
     public ResponseEntity<?> getVeganTestResult(
-            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "veganType을 입력해주세요.", required = true) @PathVariable VeganType veganType
     ) {
-        return userService.getVeganTestResult(userPrincipal);
+        return userService.getVeganTestResult(userPrincipal, veganType);
     }
 
     @Operation(summary = "유저 프로필 변경", description = "유저의 프로필을 변경합니다.")
@@ -95,7 +97,7 @@ public class UserController {
         return userService.updateProfile(userPrincipal, updateNicknameReq, isDefaultImage, file);
     }
 
-    @Operation(summary = "유저 정보 조회", description = "홈 화면에서 유저의 정보(닉네임, 레벨)를 조회합니다.")
+    @Operation(summary = "유저 정보 조회(홈)", description = "홈 화면에서 유저의 정보(닉네임, 레벨)를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "유저 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
@@ -104,7 +106,19 @@ public class UserController {
     public ResponseEntity<?> getUserHomeInfo(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
     ) {
-        return userService.getUserHomeInfo(userPrincipal);
+        return userService.getHomeUserInfo(userPrincipal);
+    }
+
+    @Operation(summary = "유저 정보 조회(마이페이지)", description = "마이페이지에서 유저의 정보(이미지, 닉네임, 레벨, 비건 타입)를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "유저 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/my-page")
+    public ResponseEntity<?> getMyPageUserInfo(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return userService.getMyPageUserInfo(userPrincipal);
     }
 
 }

@@ -2,6 +2,7 @@ package com.beginvegan.domain.user.application;
 
 import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.User;
+import com.beginvegan.domain.user.domain.VeganType;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.domain.user.dto.*;
 import com.beginvegan.domain.user.exception.InvalidUserException;
@@ -43,13 +44,17 @@ public class UserService {
         return ResponseEntity.ok(userDetailRes);
     }
 
-    public ResponseEntity<?> getVeganTestResult(UserPrincipal userPrincipal) {
+    // Description : 비건테스트 결과 조회
+    public ResponseEntity<?> getVeganTestResult(UserPrincipal userPrincipal, VeganType veganType) {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
+        // 최초 1회인지 확인하여 포인트 부여
+        rewardInitialVeganTest(user);
+
         VeganTestResultRes veganTestResultRes = VeganTestResultRes.builder()
                 .nickname(user.getNickname())
-                .veganType(user.getVeganType())
+                .veganType(veganType)
                 .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -58,14 +63,13 @@ public class UserService {
         return  ResponseEntity.ok(apiResponse);
     }
 
+    // Description : [마이페이지] 비건 타입 변경
     @Transactional
     public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq) {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
         user.updateVeganType(updateVeganTypeReq.getVeganType());
-        // 최초 1회인지 확인하여 포인트 부여
-        rewardInitialVeganTest(user);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -161,7 +165,7 @@ public class UserService {
         }
     }
 
-    // 프로필 수정 시 기존 프로필 조회
+    // 프로필 수정 시 기존 프로필 이미지 조회
     // public ResponseEntity<?> getMyProfileImage(UserPrincipal userPrincipal) {
     //     User user = userRepository.findById(userPrincipal.getId())
     //             .orElseThrow(InvalidUserException::new);
@@ -175,19 +179,19 @@ public class UserService {
     // }
 
     // 닉네임, 등급별 이미지 출력
-    public ResponseEntity<?> getUserHomeInfo(UserPrincipal userPrincipal) {
+    public ResponseEntity<?> getHomeUserInfo(UserPrincipal userPrincipal) {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
 
         String userLevel = countUserLevel(user.getPoint());
-        UserHomeInfoRes userHomeInfoRes = UserHomeInfoRes.builder()
+        HomeUserInfoRes homeUserInfoRes = HomeUserInfoRes.builder()
                 .nickname(user.getNickname())
                 .userLevel(userLevel)
                 .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(userHomeInfoRes)
+                .information(homeUserInfoRes)
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
@@ -207,6 +211,25 @@ public class UserService {
         return userLevel;
     }
 
+    // Description : 마이페이지 회원 정보 조회
+    public ResponseEntity<?> getMyPageUserInfo(UserPrincipal userPrincipal) {
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
+
+        MyPageUserInfoRes myPageUserInfoRes = MyPageUserInfoRes.builder()
+                .id(user.getId())
+                .imageUrl(user.getImageUrl())
+                .nickname(user.getNickname())
+                .userLevel(countUserLevel(user.getPoint()))
+                .veganType(user.getVeganType())
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(myPageUserInfoRes)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 
 
 }
