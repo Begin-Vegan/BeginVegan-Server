@@ -45,16 +45,18 @@ public class UserService {
     }
 
     // Description : 비건테스트 결과 조회
+    @Transactional
     public ResponseEntity<?> getVeganTestResult(UserPrincipal userPrincipal, VeganType veganType) {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
+        user.updateVeganType(veganType);
         // 최초 1회인지 확인하여 포인트 부여
         rewardInitialVeganTest(user);
 
         VeganTestResultRes veganTestResultRes = VeganTestResultRes.builder()
                 .nickname(user.getNickname())
-                .veganType(veganType)
+                .veganType(user.getVeganType())
                 .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
