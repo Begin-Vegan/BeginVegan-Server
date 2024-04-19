@@ -79,6 +79,19 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    public ResponseEntity<?> getAlarmSetting(UserPrincipal userPrincipal) {
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(InvalidUserException::new);
+
+        AlarmSettingRes alarmSettingRes = AlarmSettingRes.builder()
+                .alarmSetting(user.getAlarmSetting()).build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(alarmSettingRes).build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @Transactional
     public ResponseEntity<?> updateAlarmSetting(UserPrincipal userPrincipal, UpdateAlarmSettingReq alarmSettingReq) {
         User user = userRepository.findById(userPrincipal.getId())
@@ -230,6 +243,5 @@ public class UserService {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
-
 
 }

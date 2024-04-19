@@ -3,9 +3,7 @@ package com.beginvegan.domain.user.presentation;
 import com.beginvegan.domain.auth.dto.AuthRes;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.VeganType;
-import com.beginvegan.domain.user.dto.UpdateAlarmSettingReq;
-import com.beginvegan.domain.user.dto.UpdateNicknameReq;
-import com.beginvegan.domain.user.dto.UpdateVeganTypeReq;
+import com.beginvegan.domain.user.dto.*;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ErrorResponse;
@@ -43,12 +41,24 @@ public class UserController {
         return userService.findUserByToken(userPrincipal);
     }
 
-    @Operation(summary = "유저의 알림 여부 설정", description = "유저의 알림 여부를 설정합니다.")
+    @Operation(summary = "유저의 알림 여부 조회", description = "유저의 알림 여부를 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
-            @ApiResponse(responseCode = "400", description = "유저 정보 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+            @ApiResponse(responseCode = "200", description = "유저 알람 여부 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = AlarmSettingRes.class))}),
+            @ApiResponse(responseCode = "400", description = "유저 알람 여부 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @PatchMapping
+    @GetMapping("/alarm")
+    public ResponseEntity<?> getAlarmSetting(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return userService.getAlarmSetting(userPrincipal);
+    }
+
+    @Operation(summary = "유저의 알림 여부 변경", description = "유저의 알림 여부를 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "유저 알람 여부 변경 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "유저 알람 여부 변경 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PatchMapping("/alarm")
     public ResponseEntity<?> updateAlarmSetting(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "UpdateAlarmSettingReq Schema를 확인해주세요.", required = true) @RequestBody UpdateAlarmSettingReq updateAlarmSettingReq
@@ -61,7 +71,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "유저 비건 타입 변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "유저 비건 타입 변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PutMapping("/vegan-type")
+    @PatchMapping("/vegan-type")
     public ResponseEntity<?> updateVeganType(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "UpdateVeganTypeReq Schema를 확인해주세요", required = true) @RequestBody UpdateVeganTypeReq updateVeganTypeReq
@@ -71,7 +81,7 @@ public class UserController {
 
     @Operation(summary = "비건 테스트 결과 조회", description = "비건 테스트 결과를 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "비건 테스트 결과 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "비건 테스트 결과 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = VeganTestResultRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "비건 테스트 결과 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("/vegan-test/{veganType}")
@@ -99,7 +109,7 @@ public class UserController {
 
     @Operation(summary = "유저 정보 조회(홈)", description = "홈 화면에서 유저의 정보(닉네임, 레벨)를 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = HomeUserInfoRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "유저 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("/home")
@@ -111,7 +121,7 @@ public class UserController {
 
     @Operation(summary = "유저 정보 조회(마이페이지)", description = "마이페이지에서 유저의 정보(이미지, 닉네임, 레벨, 비건 타입)를 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = MyPageUserInfoRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "유저 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("/my-page")
