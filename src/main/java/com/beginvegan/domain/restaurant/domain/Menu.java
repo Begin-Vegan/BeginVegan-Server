@@ -17,14 +17,20 @@ public class Menu extends BaseEntity {
 
     private String name;
 
+    private Long price;
+
+    private String description;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
     @Builder
-    public Menu(Long id, String name,  Restaurant restaurant) {
+    public Menu(Long id, String name, Long price, String description, Restaurant restaurant) {
         this.id = id;
         this.name = name;
+        this.price = price;
+        this.description = description;
         this.restaurant = restaurant;
     }
 
