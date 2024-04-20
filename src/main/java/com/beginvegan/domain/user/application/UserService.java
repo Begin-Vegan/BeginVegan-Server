@@ -7,6 +7,7 @@ import com.beginvegan.domain.user.dto.UpdateNicknameReq;
 import com.beginvegan.domain.user.dto.UpdateVeganTypeReq;
 import com.beginvegan.domain.user.dto.UserDetailRes;
 import com.beginvegan.domain.user.exception.InvalidUserException;
+import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.error.DefaultException;
 import com.beginvegan.global.payload.ApiResponse;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -83,6 +86,13 @@ public class UserService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // Description : 유효성 검증 함수
+    public User validateUserById(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        DefaultAssert.isTrue(user.isPresent(), "유저 정보가 올바르지 않습니다.");
+        return user.get();
     }
 
 }

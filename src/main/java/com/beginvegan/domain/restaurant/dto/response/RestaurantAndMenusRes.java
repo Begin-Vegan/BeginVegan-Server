@@ -1,7 +1,5 @@
-package com.beginvegan.domain.restaurant.dto;
+package com.beginvegan.domain.restaurant.dto.response;
 
-import com.beginvegan.domain.restaurant.domain.Menu;
-import com.beginvegan.domain.restaurant.domain.Restaurant;
 import lombok.Builder;
 import lombok.Data;
 
