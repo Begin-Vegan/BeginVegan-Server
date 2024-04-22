@@ -5,6 +5,7 @@ import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
 import com.beginvegan.domain.bookmark.domain.repository.ContentType;
 import com.beginvegan.domain.food.domain.Food;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
+import com.beginvegan.domain.restaurant.domain.Menu;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
 import com.beginvegan.domain.restaurant.dto.*;
@@ -49,15 +50,52 @@ public class RestaurantService {
     // 지구의 반지름
     private static final int EARTH_RADIUS = 6371;
 
-    public ResponseEntity<?> findRestaurantById(Long restaurantId) {
+    public ResponseEntity<?> findRestaurantById(UserPrincipal userPrincipal, Long restaurantId, LocationReq locationReq) {
+
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(InvalidUserException::new);
+
         Restaurant restaurant = restaurantRepository.findRestaurantById(restaurantId)
                 .orElseThrow(InvalidRestaurantException::new);
 
+        Optional<Bookmark> findBookmark = bookmarkRepository.findByContentIdAndContentTypeAndUser(restaurant.getId(), ContentType.RESTAURANT, user);
+
+
+        double userLatitude = Double.parseDouble(locationReq.getLatitude());
+        double userLongitude = Double.parseDouble(locationReq.getLongitude());
+
+        double restaurantLatitude = Double.parseDouble(restaurant.getLatitude());
+        double restaurantLongitude = Double.parseDouble(restaurant.getLongitude());
+
+        double distance = calculateDistance(userLatitude, userLongitude, restaurantLatitude, restaurantLongitude);
+
+        int reviewCount = reviewRepository.countAllByRestaurant(restaurant);
+
+        RestaurantDetailRes restaurantDetailRes = RestaurantDetailRes.builder()
+                .restaurantId(restaurant.getId())
+                .name(restaurant.getName())
+                .restaurantType(restaurant.getRestaurantType())
+                .address(restaurant.getAddress())
+                .distance(distance)
+                .rate(restaurant.getRate())
+                .reviewCount(reviewCount)
+                .isBookmark(findBookmark.isPresent())
+                .contactNumber(restaurant.getContactNumber())
+                .build();
+
+        List<Menu> menus = restaurant.getMenus();
+        List<MenuDetailRes> menuDetailResList = new ArrayList<>();
+        for (Menu menu : menus) {
+            MenuDetailRes menuDetailRes = MenuDetailRes.builder()
+                    .id(menu.getId())
+                    .name(menu.getName())
+                    .build();
+            menuDetailResList.add(menuDetailRes);
+        }
+
         RestaurantAndMenusRes restaurantAndMenusRes = RestaurantAndMenusRes.builder()
-                .restaurant(RestaurantDetailRes.toDto(restaurant))
-                .menus(restaurant.getMenus().stream()
-                        .map(MenuDetailRes::toDto)
-                        .toList())
+                .restaurant(restaurantDetailRes)
+                .menus(menuDetailResList)
                 .build();
 
         ApiResponse apiResponse = ApiResponse.builder()

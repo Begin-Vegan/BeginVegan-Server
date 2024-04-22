@@ -16,4 +16,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @EntityGraph(attributePaths = {"user"})
     Page<Review> findReviewsByRestaurant(Restaurant restaurant, Pageable pageable);
 
+    int countAllByRestaurant(Restaurant restaurant);
+
 }

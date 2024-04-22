@@ -9,45 +9,45 @@ import lombok.Data;
 @Data
 public class RestaurantDetailRes {
 
-    private Long id;
+    private Long restaurantId;
+
     private String name;
-    private String businessHours;
-    private String contactNumber;
-    private Address address;
-    private String latitude;
-    private String longitude;
-    private String kakaoMapUrl;
-    private String imageUrl;
-    private String imageSource;
+
     private RestaurantType restaurantType;
 
+    private Address address;
+
+    private Double distance; // 내 위치와의 거리
+
+    private Double rate;
+
+    // 리뷰 수 필요
+    private int reviewCount;
+
+    private boolean isBookmark; // 북마크 여부
+
+    private String contactNumber; // 전화번호
+
     @Builder
-    public RestaurantDetailRes(Long id, String name, String businessHours, String contactNumber, Address address, String latitude, String longitude, String kakaoMapUrl, String imageUrl, String imageSource, RestaurantType restaurantType) {
-        this.id = id;
+    public RestaurantDetailRes(Long restaurantId, String name, RestaurantType restaurantType, Address address, Double distance, Double rate, int reviewCount, boolean isBookmark, String contactNumber) {
+        this.restaurantId = restaurantId;
         this.name = name;
-        this.businessHours = businessHours;
-        this.contactNumber = contactNumber;
-        this.address = address;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.kakaoMapUrl = kakaoMapUrl;
-        this.imageUrl = imageUrl;
-        this.imageSource = imageSource;
         this.restaurantType = restaurantType;
+        this.address = address;
+        this.distance = distance;
+        this.rate = rate;
+        this.reviewCount = reviewCount;
+        this.isBookmark = isBookmark;
+        this.contactNumber = contactNumber;
     }
 
     public static RestaurantDetailRes toDto(Restaurant restaurant) {
         return RestaurantDetailRes.builder()
-                .id(restaurant.getId())
+                .restaurantId(restaurant.getId())
                 .name(restaurant.getName())
                 .contactNumber(restaurant.getContactNumber())
                 .address(restaurant.getAddress())
-                .latitude(restaurant.getLatitude())
-                .longitude(restaurant.getLongitude())
-                .kakaoMapUrl(restaurant.getKakaoMapUrl())
-                .imageUrl(restaurant.getThumbnail())
                 .restaurantType(restaurant.getRestaurantType())
                 .build();
     }
-
 }

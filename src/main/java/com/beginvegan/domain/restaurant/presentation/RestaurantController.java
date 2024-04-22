@@ -31,6 +31,7 @@ public class RestaurantController {
 
     private final RestaurantService restaurantService;
 
+    // 식당 상세 조회 (메뉴 포함)
     @Operation(summary = "식당/카페 상세 정보(메뉴까지) 조희", description = "식당/카페 상세 정보(메뉴까지)를 조희합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "식당/카페 상세 정보(메뉴까지) 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RestaurantAndMenusRes.class))}),
@@ -38,9 +39,11 @@ public class RestaurantController {
     })
     @GetMapping("/{restaurant-id}")
     public ResponseEntity<?> findRestaurantById(
-            @Parameter(description = "식당/카페를 ID로 조회합니다.", required = true) @PathVariable(value = "restaurant-id") Long restaurantId
+            @Parameter(description = "AccessToken을 입력해주세요") @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "식당/카페를 ID로 조회합니다.", required = true) @PathVariable(value = "restaurant-id") Long restaurantId,
+            @Parameter(description = "LocationReq를 참고해주세요.", required = true) @RequestBody LocationReq locationReq
     ) {
-        return restaurantService.findRestaurantById(restaurantId);
+        return restaurantService.findRestaurantById(userPrincipal, restaurantId, locationReq);
     }
 
     @Operation(summary = "식당/카페 리뷰 조희", description = "식당/카페 리뷰를 조희합니다.")
