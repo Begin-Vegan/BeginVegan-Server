@@ -25,6 +25,7 @@ import com.beginvegan.global.payload.Message;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -160,15 +161,7 @@ public class RestaurantService {
                 double restaurantLatitude = Double.parseDouble(nearRestaurant.getLatitude());
                 double restaurantLongitude = Double.parseDouble(nearRestaurant.getLongitude());
 
-                // 거리 (라디안)
-                double dLatitude = Math.toRadians(restaurantLatitude - userLatitude);
-                double dLongitude = Math.toRadians(restaurantLongitude - userLongitude);
-
-                double a = Math.sin(dLatitude / 2) * Math.sin(dLatitude / 2) + Math.cos(Math.toRadians(userLatitude)) * Math.cos(Math.toRadians(restaurantLatitude)) * Math.sin(dLongitude / 2) * Math.sin(dLongitude / 2);
-                double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-                // 식당과 내 위치 거리 (km)
-                double distance = EARTH_RADIUS * c;
+                double distance = calculateDistance(userLatitude, userLongitude, restaurantLatitude, restaurantLongitude);
 
                 // 5km 안에 있는 식당들만 포함
                 if (distance <= 5) {
@@ -263,19 +256,11 @@ public class RestaurantService {
                 double restaurantLatitude = Double.parseDouble(restaurant.getLatitude());
                 double restaurantLongitude = Double.parseDouble(restaurant.getLongitude());
 
-                // 거리 (라디안)
-                double dLatitude = Math.toRadians(restaurantLatitude - userLatitude);
-                double dLongitude = Math.toRadians(restaurantLongitude - userLongitude);
-
-                double a = Math.sin(dLatitude / 2) * Math.sin(dLatitude / 2) + Math.cos(Math.toRadians(userLatitude)) * Math.cos(Math.toRadians(restaurantLatitude)) * Math.sin(dLongitude / 2) * Math.sin(dLongitude / 2);
-                double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-                // 식당과 내 위치 거리 (km)
-                double distance = EARTH_RADIUS * c;
+                double distance = calculateDistance(userLatitude, userLongitude, restaurantLatitude, restaurantLongitude);
 
                 Optional<Bookmark> findBookmark = bookmarkRepository.findByContentIdAndContentTypeAndUser(restaurant.getId(), ContentType.RESTAURANT, user);
 
-                // 5km 안에 있는 식당들만 포함
+                // 10km 안에 있는 식당들만 포함
                 if (distance <= 10) {
                     RandomRestaurantRes randomRestaurantRes = RandomRestaurantRes.builder()
                             .restaurantId(restaurant.getId())
@@ -305,5 +290,56 @@ public class RestaurantService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // Map 1depth - 식당 리스트 조회 : 가까운 순
+    public ResponseEntity<?> findAroundRestaurantList(LocationReq locationReq, Integer page) {
+
+        // 식당 id, 식당 이름, 식당 카테고리(한식, 양식 등), 내 위치로부터의 거리 (m 단위), 별점, 썸네일 이미지
+        Pageable pageable = PageRequest.of(page, 10);
+
+        double userLatitude = Double.parseDouble(locationReq.getLatitude());
+        double userLongitude = Double.parseDouble(locationReq.getLongitude());
+
+        Page<Restaurant> restaurantPage = restaurantRepository.findRestaurantsNearUser(userLatitude, userLongitude, pageable);
+        List<Restaurant> restaurantList = restaurantPage.getContent();
+        List<RestaurantBannerRes> restaurantBannerResList = new ArrayList<>();
+
+        for (Restaurant restaurant : restaurantList) {
+            double distance = calculateDistance(userLatitude, userLongitude,  Double.parseDouble(restaurant.getLatitude()),  Double.parseDouble(restaurant.getLongitude()));
+
+            RestaurantBannerRes restaurantBannerRes = RestaurantBannerRes.builder()
+                    .restaurantId(restaurant.getId())
+                    .restaurantName(restaurant.getName())
+                    .restaurantType(restaurant.getRestaurantType())
+                    .distance(distance)
+                    .rate(restaurant.getRate())
+                    .thumbnail(restaurant.getThumbnail())
+                    .build();
+            restaurantBannerResList.add(restaurantBannerRes);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(restaurantBannerResList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+
+    }
+
+
+    // Description : 유저 - 식당 거리 계산 함수
+    private double calculateDistance(double userLatitude, double userLongitude, double restaurantLatitude, double restaurantLongitude) {
+        double dLatitude = Math.toRadians(restaurantLatitude - userLatitude);
+        double dLongitude = Math.toRadians(restaurantLongitude - userLongitude);
+
+        double a = Math.sin(dLatitude / 2) * Math.sin(dLatitude / 2)
+                + Math.cos(Math.toRadians(userLatitude)) * Math.cos(Math.toRadians(restaurantLatitude))
+                * Math.sin(dLongitude / 2) * Math.sin(dLongitude / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        // 두 지점 간의 직선 거리를 반환 (단위: km)
+        return EARTH_RADIUS * c; // distance
     }
 }

@@ -5,6 +5,7 @@ import com.beginvegan.domain.restaurant.dto.response.AroundRestaurantListRes;
 import com.beginvegan.domain.restaurant.dto.response.RandomRestaurantRes;
 import com.beginvegan.domain.restaurant.dto.response.RestaurantAndMenusRes;
 import com.beginvegan.domain.restaurant.dto.request.LocationReq;
+import com.beginvegan.domain.restaurant.dto.response.RestaurantBannerRes;
 import com.beginvegan.domain.review.dto.ReviewListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
@@ -122,4 +123,18 @@ public class RestaurantController {
         return restaurantService.findRandomRestaurantWithPermission(userPrincipal, count, locationReq);
     }
 
+    // Map 1depth - 식당 리스트 조회 : 가까운 순
+    @Operation(summary = "식당 리스트 가까운 순 조회", description = "식당 리스트 가까운 순 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RestaurantBannerRes.class)))}),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/around")
+    public ResponseEntity<?> findAroundRestaurantList(
+            @Parameter(description = "LocationReq를 참고해주세요.", required = true) @RequestBody LocationReq locationReq,
+            @Parameter(description = "식당 리스트를 페이지별로 가까운 순 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
+
+    ) {
+        return restaurantService.findAroundRestaurantList(locationReq, page);
+    }
 }
