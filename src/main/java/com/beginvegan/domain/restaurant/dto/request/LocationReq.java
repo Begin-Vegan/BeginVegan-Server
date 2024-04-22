@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 public class LocationReq {
 
-    private Long id;
-
     private String latitude;
 
     private String longitude;

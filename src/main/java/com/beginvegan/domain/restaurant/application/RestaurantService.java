@@ -45,6 +45,9 @@ public class RestaurantService {
 
     private final UserService userService;
 
+    // 지구의 반지름
+    private static final int EARTH_RADIUS = 6371;
+
     public ResponseEntity<?> findRestaurantById(Long restaurantId) {
         Restaurant restaurant = restaurantRepository.findRestaurantById(restaurantId)
                 .orElseThrow(InvalidRestaurantException::new);
@@ -144,8 +147,6 @@ public class RestaurantService {
     }
 
     public ResponseEntity<?> findAroundRestaurant(LocationReq locationReq) {
-        // 지구의 반지름
-        final int EARTH_RADIUS = 6371;
 
         List<Restaurant> nearRestaurants = restaurantRepository.findAllWithMenus();
 
@@ -203,6 +204,7 @@ public class RestaurantService {
 
     // -------------- 새로운 비긴 비건 --------------
 
+    // home - 권한 동의 x, 랜덤 식당 3개 조회
     public ResponseEntity<?> findRandomRestaurant(UserPrincipal userPrincipal, Long count) {
 
         User user = userService.validateUserById(userPrincipal.getId());
@@ -241,4 +243,67 @@ public class RestaurantService {
 
     }
 
+    // home - 권한 동의 o, 10km 이내 랜덤 식당 3개 조회
+    public ResponseEntity<?> findRandomRestaurantWithPermission(UserPrincipal userPrincipal, Long count, LocationReq locationReq) {
+
+        // 지구의 반지름
+        final int EARTH_RADIUS = 6371;
+
+        User user = userService.validateUserById(userPrincipal.getId());
+        List<Restaurant> restaurants = restaurantRepository.findAll();
+
+        double userLatitude = Double.parseDouble(locationReq.getLatitude());
+        double userLongitude = Double.parseDouble(locationReq.getLongitude());
+
+        List<RandomRestaurantRes> restaurantResList = new ArrayList<>(); // 근처 식당 모음
+        List<RandomRestaurantRes> randomRestaurantResList = new ArrayList<>(); // 랜덤 3개 응답
+
+        if(!restaurants.isEmpty()) {
+            for (Restaurant restaurant : restaurants) {
+                double restaurantLatitude = Double.parseDouble(restaurant.getLatitude());
+                double restaurantLongitude = Double.parseDouble(restaurant.getLongitude());
+
+                // 거리 (라디안)
+                double dLatitude = Math.toRadians(restaurantLatitude - userLatitude);
+                double dLongitude = Math.toRadians(restaurantLongitude - userLongitude);
+
+                double a = Math.sin(dLatitude / 2) * Math.sin(dLatitude / 2) + Math.cos(Math.toRadians(userLatitude)) * Math.cos(Math.toRadians(restaurantLatitude)) * Math.sin(dLongitude / 2) * Math.sin(dLongitude / 2);
+                double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+                // 식당과 내 위치 거리 (km)
+                double distance = EARTH_RADIUS * c;
+
+                Optional<Bookmark> findBookmark = bookmarkRepository.findByContentIdAndContentTypeAndUser(restaurant.getId(), ContentType.RESTAURANT, user);
+
+                // 5km 안에 있는 식당들만 포함
+                if (distance <= 10) {
+                    RandomRestaurantRes randomRestaurantRes = RandomRestaurantRes.builder()
+                            .restaurantId(restaurant.getId())
+                            .name(restaurant.getName())
+                            .thumbnail(restaurant.getThumbnail())
+                            .isBookmark(findBookmark.isPresent())
+                            .build();
+                    restaurantResList.add(randomRestaurantRes);
+                }
+            }
+        }
+        // 랜덤 수 count개(3개) 추리기
+        Set<Integer> randomNum = new HashSet<>();
+        while(randomNum.size() < count){
+            randomNum.add((int)(Math.random() * restaurantResList.size()));
+        }
+
+        Iterator<Integer> iter = randomNum.iterator();
+        while(iter.hasNext()){
+            int num = iter.next();
+            randomRestaurantResList.add(restaurantResList.get(num));
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(randomRestaurantResList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 }
