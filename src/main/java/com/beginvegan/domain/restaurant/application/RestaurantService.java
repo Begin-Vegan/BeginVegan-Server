@@ -123,13 +123,15 @@ public class RestaurantService {
         Restaurant restaurant = restaurantRepository.findById(restaurantDetailReq.getRestaurantId())
                 .orElseThrow(InvalidRestaurantException::new);
 
+        Page<Review> reviewPage;
+        if (restaurantDetailReq.getFilter().equals("date")) {
+            PageRequest pageRequest = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "date"));
+            reviewPage = reviewRepository.findReviewsByRestaurant(restaurant, pageRequest);
+        } else {
+            Pageable pageable = PageRequest.of(page, 10);
+            reviewPage = reviewRepository.findReviewsOrderByRecommendationCount(pageable);
+        }
 
-        PageRequest pageRequest = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "date"));
-        Page<Review> reviewPage = reviewRepository.findReviewsByRestaurant(restaurant, pageRequest);
-
-        // 유저 id, 프로필 이미지, 닉네임, 고유번호, 일러스트 이미지(레벨? 점수?),
-        // 리뷰 id, 별점, 최종 수정일, (포토 리뷰의 경우) 이미지 (리스트), visible(관리자가 삭제 시 내용 안보이게 하기 위함), 추천 수, (조회 유저의) 추천 여부
-        // filter :: date, recommendation
 
         List<Review> reviews = reviewPage.getContent();
         List<RestaurantReviewDetailRes> restaurantReviewDetailResList = new ArrayList<>();
