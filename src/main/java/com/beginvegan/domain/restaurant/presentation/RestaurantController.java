@@ -12,6 +12,7 @@ import com.beginvegan.global.payload.ErrorResponse;
 import com.beginvegan.global.payload.Message;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -92,9 +93,10 @@ public class RestaurantController {
 
     // -------------- 새로운 비긴 비건 --------------
 
-    @Operation(summary = "홈화면 - 랜덤 식당 3개 조희", description = "홈화면에서 사용될 랜덤 식당 3개를 조희합니다.")
+    // 권한 x - 랜덤 식당 3개 조회
+    @Operation(summary = "홈 화면 - 위치 권한 x, 랜덤 식당 3개 조희", description = "홈 화면에서 사용될 위치 권한 미동의 시 랜덤 식당 3개를 조희합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RandomRestaurantRes.class))}),
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RandomRestaurantRes.class)))}),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
     @GetMapping("/random/{count}")
@@ -103,6 +105,21 @@ public class RestaurantController {
             @Parameter(description = "랜덤 조회할 개수를 입력해주세요. (기본 3개)", required = true) @PathVariable(value = "count") Long count
     ) {
         return restaurantService.findRandomRestaurant(userPrincipal, count);
+    }
+
+    // 권한 o - 주변 10km 이내 랜덤 식당 3개 조회
+    @Operation(summary = "홈 화면 - 위치 권한 o, 10km 이내 랜덤 식당 3개 조희", description = "홈 화면에서 사용될 위치 권한 동의 시 10km 이내 랜덤 식당 3개를 조희합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RandomRestaurantRes.class)))}),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/random/permission/{count}")
+    public ResponseEntity<?> findRandomRestaurantWithPermission(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal, // 스크랩 여부 확인 필요
+            @Parameter(description = "랜덤 조회할 개수를 입력해주세요. (기본 3개)", required = true) @PathVariable(value = "count") Long count,
+            @Parameter(description = "LocationReq를 참고해주세요.", required = true) @RequestBody LocationReq locationReq
+    ) {
+        return restaurantService.findRandomRestaurantWithPermission(userPrincipal, count, locationReq);
     }
 
 }
