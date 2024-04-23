@@ -1,11 +1,6 @@
 package com.beginvegan.domain.user.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 
 import com.beginvegan.domain.common.BaseEntity;
@@ -28,6 +23,7 @@ public class User extends BaseEntity {
     private String nickname;
 
     @Email
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String password;
@@ -70,6 +66,20 @@ public class User extends BaseEntity {
         this.userCode = userCode;
         this.veganTestCompleted = veganTestCompleted;
         this.customProfileCompleted = customProfileCompleted;
+    }
+
+    // Description : 회원가입 시에만 사용할 것
+    public void updateUser(String imageUrl, String nickname, String userCode, String password, VeganType veganType, Provider provider) {
+        this.imageUrl = imageUrl;
+        this.nickname = nickname;
+        this.userCode = userCode;
+        this.password = password;
+        this.veganType = veganType;
+        this.provider = provider;
+        this.point = 0;
+        this.alarmSetting = true;
+        this.veganTestCompleted = false;
+        this.customProfileCompleted = false;
     }
 
     public void updateNickname(String nickname){

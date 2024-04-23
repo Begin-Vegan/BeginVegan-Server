@@ -11,6 +11,7 @@ import com.beginvegan.domain.user.domain.Role;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;

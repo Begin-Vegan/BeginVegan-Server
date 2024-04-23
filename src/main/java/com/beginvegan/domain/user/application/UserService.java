@@ -146,7 +146,6 @@ public class UserService {
         }
         String imageUrl = registerImage(isDefaultImage, file);
         user.updateImageUrl(imageUrl);
-
         // 최초 1회인지 확인하여 포인트 부여
         rewardInitialProfileImage(user, isDefaultImage);
     }

@@ -98,54 +98,21 @@ public class AuthService {
     }
 
     @Transactional
-    public ResponseEntity<?> signUp(SignUpReq signUpReq, Boolean isDefaultImage, MultipartFile file) {
-        if(userRepository.existsByEmail(signUpReq.getEmail()))
-            throw new AlreadyExistEmailException();
+    public ResponseEntity<?> signUp(UserPrincipal userPrincipal, SignUpReq signUpReq, Boolean isDefaultImage, MultipartFile file) {
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
 
-        User newUser = User.builder()
-                .providerId(signUpReq.getProviderId())
-                .provider(Provider.kakao)
-                .nickname(signUpReq.getNickname())
-                .email(signUpReq.getEmail())
-                .imageUrl(registerImage(isDefaultImage, file))
-                .password(passwordEncoder.encode(signUpReq.getProviderId()))
-                .userCode(generateUserCode(signUpReq.getNickname()))
-                .veganType(signUpReq.getVeganType())
-                .alarmSetting(true)
-                .point(0)
-                .veganTestCompleted(false)
-                .customProfileCompleted(false)
-                .role(Role.USER)
-                .build();
+        String userCode = generateUserCode(signUpReq.getNickname());
+        String imageUrl = registerImage(isDefaultImage, file);
+        String password = passwordEncoder.encode(user.getProviderId());
+        user.updateUser(imageUrl, signUpReq.getNickname(), userCode, password, signUpReq.getVeganType(), Provider.kakao);
 
-        userRepository.save(newUser);
         // 프로필 설정 여부 확인하고 포인트 지급
-        rewardInitialProfileImage(newUser, isDefaultImage);
-
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        signUpReq.getEmail(),
-                        signUpReq.getProviderId()
-                )
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        TokenMapping tokenMapping = customTokenProviderService.createToken(authentication);
-        Token token = Token.builder()
-                .refreshToken(tokenMapping.getRefreshToken())
-                .userEmail(tokenMapping.getUserEmail())
-                .build();
-        tokenRepository.save(token);
-
-        AuthRes authRes = AuthRes.builder()
-                .accessToken(tokenMapping.getAccessToken())
-                .refreshToken(tokenMapping.getRefreshToken())
-                .build();
+        rewardInitialProfileImage(user, isDefaultImage);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(authRes)
+                .information(Message.builder().message("회원 가입이 완료되었습니다.").build())
                 .build();
 
         return ResponseEntity.ok(apiResponse);
@@ -187,13 +154,19 @@ public class AuthService {
     }
 
     public ResponseEntity<?> signIn(SignInReq signInReq) {
+        // Description : 회원가입 절차가 완료되지 않은 경우
+        User user = userRepository.findByEmail(signInReq.getEmail())
+                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
+        // 닉네임 입력 화면으로 리다이렉트?
+        DefaultAssert.isTrue(!(user.getNickname() ==null), "회원가입이 완료되지 않았습니다.");
+
+        // Description : 로그인 진행
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         signInReq.getEmail(),
                         signInReq.getProviderId()
                 )
         );
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         TokenMapping tokenMapping = customTokenProviderService.createToken(authentication);
