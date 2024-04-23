@@ -38,4 +38,5 @@ out/
 
 /src/main/resources/database/
 /src/main/resources/oauth2/
+/src/main/resources/s3/
 .DS_Store

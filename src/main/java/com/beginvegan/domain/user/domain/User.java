@@ -1,12 +1,6 @@
 package com.beginvegan.domain.user.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 
 import com.beginvegan.domain.common.BaseEntity;
@@ -24,20 +18,15 @@ public class User extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-
     private String imageUrl;
 
     private String nickname;
 
     @Email
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String password;
-
-    private Boolean emailVerified = false; // emailVerified / marketingConsent는 불필요시 삭제
-
-    private Boolean marketingConsent;
 
     @Enumerated(EnumType.STRING)
     private VeganType veganType;
@@ -52,20 +41,22 @@ public class User extends BaseEntity {
 
     private Integer point;
 
-    private Boolean alarmSetting;
+    private Boolean alarmSetting = true;
 
     private String userCode;
 
+
+    private Boolean veganTestCompleted = false;
+
+    private Boolean customProfileCompleted = false;
+
     @Builder
-    public User(Long id, String name, String imageUrl, String nickname, String email, String password, Boolean emailVerified, Boolean marketingConsent, VeganType veganType, Provider provider, Role role, String providerId, Integer point, Boolean alarmSetting, String userCode) {
+    public User(Long id, String imageUrl, String nickname, String email, String password, VeganType veganType, Provider provider, Role role, String providerId, Integer point, Boolean alarmSetting, String userCode, Boolean veganTestCompleted, Boolean customProfileCompleted) {
         this.id = id;
-        this.name = name;
         this.imageUrl = imageUrl;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
-        this.emailVerified = emailVerified;
-        this.marketingConsent = marketingConsent;
         this.veganType = veganType;
         this.provider = provider;
         this.role = role;
@@ -73,10 +64,30 @@ public class User extends BaseEntity {
         this.point = point;
         this.alarmSetting = alarmSetting;
         this.userCode = userCode;
+        this.veganTestCompleted = veganTestCompleted;
+        this.customProfileCompleted = customProfileCompleted;
     }
 
-    public void updateName(String name){
-        this.name = name;
+    // Description : 회원가입 시에만 사용할 것
+    public void updateUser(String imageUrl, String nickname, String userCode, String password, VeganType veganType, Provider provider) {
+        this.imageUrl = imageUrl;
+        this.nickname = nickname;
+        this.userCode = userCode;
+        this.password = password;
+        this.veganType = veganType;
+        this.provider = provider;
+        this.point = 0;
+        this.alarmSetting = true;
+        this.veganTestCompleted = false;
+        this.customProfileCompleted = false;
+    }
+
+    public void updateNickname(String nickname){
+        this.nickname = nickname;
+    }
+
+    public void updateUserCode(String userCode){
+        this.userCode = userCode;
     }
 
     public void updateImageUrl(String imageUrl){
@@ -87,8 +98,15 @@ public class User extends BaseEntity {
         this.veganType = veganType;
     }
 
-    public void updateMarketingConsent(Boolean marketingConsent) {
-        this.marketingConsent = marketingConsent;
+    public void updateAlarmSetting(Boolean alarmSetting) {
+       this.alarmSetting = alarmSetting;
     }
+
+    public void updateVeganTestCompleted(Boolean veganTestCompleted) { this.veganTestCompleted = veganTestCompleted; }
+
+    public void updateCustomProfileCompleted(Boolean customProfileCompleted) { this.customProfileCompleted = customProfileCompleted; }
+
+    // Description : 해당 함수 호출 시 더해야 하는 포인트 값만 요청
+    public void updatePoint(Integer additionalPoint) { this.point += additionalPoint; }
 
 }

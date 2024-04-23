@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.beginvegan.domain.auth.dto.*;
 import com.beginvegan.domain.auth.exception.AlreadyExistEmailException;
 import com.beginvegan.domain.auth.exception.InvalidTokenException;
+import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.Provider;
 import com.beginvegan.domain.user.domain.Role;
 import com.beginvegan.domain.user.domain.User;
@@ -13,7 +14,9 @@ import com.beginvegan.global.DefaultAssert;
 
 import com.beginvegan.domain.auth.domain.Token;
 import com.beginvegan.global.config.security.token.UserPrincipal;
+import com.beginvegan.global.error.DefaultException;
 import com.beginvegan.global.payload.ApiResponse;
+import com.beginvegan.global.payload.ErrorCode;
 import com.beginvegan.global.payload.Message;
 import com.beginvegan.domain.auth.domain.repository.TokenRepository;
 
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @RequiredArgsConstructor
@@ -37,6 +41,7 @@ public class AuthService {
     private final CustomTokenProviderService customTokenProviderService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final S3Uploader s3Uploader;
 
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
@@ -93,49 +98,42 @@ public class AuthService {
     }
 
     @Transactional
-    public ResponseEntity<?> signUp(SignUpReq signUpReq) {
-        if(userRepository.existsByEmail(signUpReq.getEmail()))
-            throw new AlreadyExistEmailException();
+    public ResponseEntity<?> signUp(UserPrincipal userPrincipal, SignUpReq signUpReq, Boolean isDefaultImage, MultipartFile file) {
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
 
-        User newUser = User.builder()
-                .providerId(signUpReq.getProviderId())
-                .provider(Provider.kakao)
-                .name(signUpReq.getNickname())
-                .email(signUpReq.getEmail())
-                .imageUrl(signUpReq.getProfileImgUrl())
-                .password(passwordEncoder.encode(signUpReq.getProviderId()))
-                .role(Role.USER)
-                .build();
+        String userCode = generateUserCode(signUpReq.getNickname());
+        String imageUrl = registerImage(isDefaultImage, file);
+        String password = passwordEncoder.encode(user.getProviderId());
+        user.updateUser(imageUrl, signUpReq.getNickname(), userCode, password, signUpReq.getVeganType(), Provider.kakao);
 
-        userRepository.save(newUser);
-
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        signUpReq.getEmail(),
-                        signUpReq.getProviderId()
-                )
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        TokenMapping tokenMapping = customTokenProviderService.createToken(authentication);
-        Token token = Token.builder()
-                .refreshToken(tokenMapping.getRefreshToken())
-                .userEmail(tokenMapping.getUserEmail())
-                .build();
-        tokenRepository.save(token);
-
-        AuthRes authRes = AuthRes.builder()
-                .accessToken(tokenMapping.getAccessToken())
-                .refreshToken(tokenMapping.getRefreshToken())
-                .build();
+        // 프로필 설정 여부 확인하고 포인트 지급
+        rewardInitialProfileImage(user, isDefaultImage);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(authRes)
+                .information(Message.builder().message("회원 가입이 완료되었습니다.").build())
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    private String registerImage(Boolean isDefaultImage, MultipartFile file) {
+        if (file.isEmpty() && isDefaultImage) {
+            return "/profile.png";
+        } else if (!file.isEmpty() && !isDefaultImage) {
+             return s3Uploader.uploadImage(file);
+        } else {
+            throw new DefaultException(ErrorCode.INVALID_PARAMETER, "잘못된 요청입니다.");
+        }
+    }
+
+    // UserCode 생성
+    private String generateUserCode(String nickname) {
+        Optional<User> recentUser = userRepository.findTopByNicknameOrderByUserCodeDesc(nickname);
+        int count = recentUser.map(user -> Integer.parseInt(user.getUserCode())).orElse(0);
+
+        return String.format("%04d", count + 1);
     }
 
     private boolean valid(String refreshToken){
@@ -156,13 +154,19 @@ public class AuthService {
     }
 
     public ResponseEntity<?> signIn(SignInReq signInReq) {
+        // Description : 회원가입 절차가 완료되지 않은 경우
+        User user = userRepository.findByEmail(signInReq.getEmail())
+                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
+        // 닉네임 입력 화면으로 리다이렉트?
+        DefaultAssert.isTrue(!(user.getNickname() ==null), "회원가입이 완료되지 않았습니다.");
+
+        // Description : 로그인 진행
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         signInReq.getEmail(),
                         signInReq.getProviderId()
                 )
         );
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         TokenMapping tokenMapping = customTokenProviderService.createToken(authentication);
@@ -182,6 +186,15 @@ public class AuthService {
                 .information(authResponse).build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // Description : [회원 가입] 프로필 최초 설정 시 포인트 지급
+    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) {
+        if (!isDefaultImage) {
+            user.updatePoint(1);
+            // 프로필 이미지 최초 설정하여 값 변경
+            user.updateCustomProfileCompleted(true);
+        }
     }
 
 }
