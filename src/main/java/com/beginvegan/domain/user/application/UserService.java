@@ -31,8 +31,7 @@ public class UserService {
     private final S3Uploader s3Uploader;
 
     public ResponseEntity<?> findUserByToken(UserPrincipal userPrincipal) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
+        User user = validateUserById(userPrincipal.getId());
 
         UserDetailRes userDetailRes = UserDetailRes.builder()
                 .id(user.getId())
@@ -48,8 +47,7 @@ public class UserService {
     // Description : 비건테스트 결과 조회
     @Transactional
     public ResponseEntity<?> getVeganTestResult(UserPrincipal userPrincipal, VeganType veganType) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(InvalidUserException::new);
+        User user = validateUserById(userPrincipal.getId());
 
         user.updateVeganType(veganType);
         // 최초 1회인지 확인하여 포인트 부여
@@ -69,8 +67,7 @@ public class UserService {
     // Description : [마이페이지] 비건 타입 변경
     @Transactional
     public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(InvalidUserException::new);
+        User user = validateUserById(userPrincipal.getId());
 
         user.updateVeganType(updateVeganTypeReq.getVeganType());
 
@@ -83,8 +80,7 @@ public class UserService {
     }
 
     public ResponseEntity<?> getAlarmSetting(UserPrincipal userPrincipal) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(InvalidUserException::new);
+        User user = validateUserById(userPrincipal.getId());
 
         AlarmSettingRes alarmSettingRes = AlarmSettingRes.builder()
                 .alarmSetting(user.getAlarmSetting()).build();
@@ -97,9 +93,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> updateAlarmSetting(UserPrincipal userPrincipal, UpdateAlarmSettingReq alarmSettingReq) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(InvalidUserException::new);
-
+        User user = validateUserById(userPrincipal.getId());
         user.updateAlarmSetting(alarmSettingReq.getAlarmSetting());
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -112,8 +106,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> updateProfile(UserPrincipal userPrincipal, UpdateNicknameReq updateNicknameReq, Boolean isDefaultImage, MultipartFile file) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(InvalidUserException::new);
+        User user = validateUserById(userPrincipal.getId());
 
         String newNickname = updateNicknameReq.getNickname();
         if (!Objects.equals(user.getNickname(), newNickname)) {
@@ -195,8 +188,7 @@ public class UserService {
 
     // 닉네임, 등급별 이미지 출력
     public ResponseEntity<?> getHomeUserInfo(UserPrincipal userPrincipal) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
+        User user = validateUserById(userPrincipal.getId());
 
         String userLevel = countUserLevel(user.getPoint());
         HomeUserInfoRes homeUserInfoRes = HomeUserInfoRes.builder()
@@ -228,8 +220,7 @@ public class UserService {
 
     // Description : 마이페이지 회원 정보 조회
     public ResponseEntity<?> getMyPageUserInfo(UserPrincipal userPrincipal) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
+        User user = validateUserById(userPrincipal.getId());
 
         MyPageUserInfoRes myPageUserInfoRes = MyPageUserInfoRes.builder()
                 .id(user.getId())
