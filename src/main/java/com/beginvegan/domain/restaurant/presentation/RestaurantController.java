@@ -1,10 +1,12 @@
 package com.beginvegan.domain.restaurant.presentation;
 
 import com.beginvegan.domain.restaurant.application.RestaurantService;
+import com.beginvegan.domain.restaurant.dto.request.RestaurantDetailReq;
 import com.beginvegan.domain.restaurant.dto.response.AroundRestaurantListRes;
 import com.beginvegan.domain.restaurant.dto.response.RandomRestaurantRes;
 import com.beginvegan.domain.restaurant.dto.response.RestaurantAndMenusRes;
 import com.beginvegan.domain.restaurant.dto.request.LocationReq;
+import com.beginvegan.domain.restaurant.dto.response.RestaurantBannerRes;
 import com.beginvegan.domain.review.dto.ReviewListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
@@ -30,6 +32,7 @@ public class RestaurantController {
 
     private final RestaurantService restaurantService;
 
+    // 식당 상세 조회 (메뉴 포함)
     @Operation(summary = "식당/카페 상세 정보(메뉴까지) 조희", description = "식당/카페 상세 정보(메뉴까지)를 조희합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "식당/카페 상세 정보(메뉴까지) 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RestaurantAndMenusRes.class))}),
@@ -37,9 +40,11 @@ public class RestaurantController {
     })
     @GetMapping("/{restaurant-id}")
     public ResponseEntity<?> findRestaurantById(
-            @Parameter(description = "식당/카페를 ID로 조회합니다.", required = true) @PathVariable(value = "restaurant-id") Long restaurantId
+            @Parameter(description = "AccessToken을 입력해주세요") @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "식당/카페를 ID로 조회합니다.", required = true) @PathVariable(value = "restaurant-id") Long restaurantId,
+            @Parameter(description = "LocationReq를 참고해주세요.", required = true) @RequestBody LocationReq locationReq
     ) {
-        return restaurantService.findRestaurantById(restaurantId);
+        return restaurantService.findRestaurantById(userPrincipal, restaurantId, locationReq);
     }
 
     @Operation(summary = "식당/카페 리뷰 조희", description = "식당/카페 리뷰를 조희합니다.")
@@ -47,12 +52,13 @@ public class RestaurantController {
             @ApiResponse(responseCode = "200", description = "식당/카페 리뷰 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ReviewListRes.class))}),
             @ApiResponse(responseCode = "400", description = "식당/카페 리뷰 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @GetMapping("/review/{restaurant-id}")
+    @GetMapping("/review")
     public ResponseEntity<?> findRestaurantReviewsById(
-            @Parameter(description = "식당/카페ID로 리뷰를 조회합니다.", required = true) @PathVariable(value = "restaurant-id") Long restaurantId,
+            @Parameter(description = "AccessToken을 입력해주세요") @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "RestaurantDetailReq를 참고해주세요.", required = true) @RequestBody RestaurantDetailReq restaurantDetailReq,
             @Parameter(description = "식당/카페의 리뷰 목록을 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
     ) {
-        return restaurantService.findRestaurantReviewsById(restaurantId, page);
+        return restaurantService.findRestaurantReviewsById(userPrincipal, restaurantDetailReq, page);
     }
 
     @Operation(summary = "식당/카페 스크랩", description = "식당/카페를 스크랩합니다.")
@@ -122,4 +128,18 @@ public class RestaurantController {
         return restaurantService.findRandomRestaurantWithPermission(userPrincipal, count, locationReq);
     }
 
+    // Map 1depth - 식당 리스트 조회 : 가까운 순
+    @Operation(summary = "식당 리스트 가까운 순 조회", description = "식당 리스트 가까운 순 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RestaurantBannerRes.class)))}),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/around")
+    public ResponseEntity<?> findAroundRestaurantList(
+            @Parameter(description = "LocationReq를 참고해주세요.", required = true) @RequestBody LocationReq locationReq,
+            @Parameter(description = "식당 리스트를 페이지별로 가까운 순 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
+
+    ) {
+        return restaurantService.findAroundRestaurantList(locationReq, page);
+    }
 }

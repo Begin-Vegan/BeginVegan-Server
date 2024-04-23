@@ -5,19 +5,26 @@ import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
 import com.beginvegan.domain.bookmark.domain.repository.ContentType;
 import com.beginvegan.domain.food.domain.Food;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
+import com.beginvegan.domain.image.domain.Image;
+import com.beginvegan.domain.image.domain.repository.ImageRepository;
+import com.beginvegan.domain.recommendation.domain.repository.RecommendationRepository;
+import com.beginvegan.domain.restaurant.domain.Menu;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
 import com.beginvegan.domain.restaurant.dto.*;
 import com.beginvegan.domain.restaurant.dto.request.LocationReq;
+import com.beginvegan.domain.restaurant.dto.request.RestaurantDetailReq;
 import com.beginvegan.domain.restaurant.dto.response.*;
 import com.beginvegan.domain.restaurant.exception.InvalidRestaurantException;
 import com.beginvegan.domain.review.domain.Review;
+import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
 import com.beginvegan.domain.review.dto.RestaurantReviewDetailRes;
 import com.beginvegan.domain.review.dto.ReviewListRes;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
+import com.beginvegan.domain.user.dto.UserRestaurantDetailRes;
 import com.beginvegan.domain.user.exception.InvalidUserException;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
@@ -25,6 +32,7 @@ import com.beginvegan.global.payload.Message;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -42,21 +50,60 @@ public class RestaurantService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final ImageRepository imageRepository;
+    private final RecommendationRepository recommendationRepository;
 
     private final UserService userService;
 
     // 지구의 반지름
     private static final int EARTH_RADIUS = 6371;
 
-    public ResponseEntity<?> findRestaurantById(Long restaurantId) {
+    public ResponseEntity<?> findRestaurantById(UserPrincipal userPrincipal, Long restaurantId, LocationReq locationReq) {
+
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(InvalidUserException::new);
+
         Restaurant restaurant = restaurantRepository.findRestaurantById(restaurantId)
                 .orElseThrow(InvalidRestaurantException::new);
 
+        Optional<Bookmark> findBookmark = bookmarkRepository.findByContentIdAndContentTypeAndUser(restaurant.getId(), ContentType.RESTAURANT, user);
+
+
+        double userLatitude = Double.parseDouble(locationReq.getLatitude());
+        double userLongitude = Double.parseDouble(locationReq.getLongitude());
+
+        double restaurantLatitude = Double.parseDouble(restaurant.getLatitude());
+        double restaurantLongitude = Double.parseDouble(restaurant.getLongitude());
+
+        double distance = calculateDistance(userLatitude, userLongitude, restaurantLatitude, restaurantLongitude);
+
+        int reviewCount = reviewRepository.countAllByRestaurant(restaurant);
+
+        RestaurantDetailRes restaurantDetailRes = RestaurantDetailRes.builder()
+                .restaurantId(restaurant.getId())
+                .name(restaurant.getName())
+                .restaurantType(restaurant.getRestaurantType())
+                .address(restaurant.getAddress())
+                .distance(distance)
+                .rate(restaurant.getRate())
+                .reviewCount(reviewCount)
+                .isBookmark(findBookmark.isPresent())
+                .contactNumber(restaurant.getContactNumber())
+                .build();
+
+        List<Menu> menus = restaurant.getMenus();
+        List<MenuDetailRes> menuDetailResList = new ArrayList<>();
+        for (Menu menu : menus) {
+            MenuDetailRes menuDetailRes = MenuDetailRes.builder()
+                    .id(menu.getId())
+                    .name(menu.getName())
+                    .build();
+            menuDetailResList.add(menuDetailRes);
+        }
+
         RestaurantAndMenusRes restaurantAndMenusRes = RestaurantAndMenusRes.builder()
-                .restaurant(RestaurantDetailRes.toDto(restaurant))
-                .menus(restaurant.getMenus().stream()
-                        .map(MenuDetailRes::toDto)
-                        .toList())
+                .restaurant(restaurantDetailRes)
+                .menus(menuDetailResList)
                 .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -67,25 +114,65 @@ public class RestaurantService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    public ResponseEntity<?> findRestaurantReviewsById(Long restaurantId, Integer page) {
-        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+    // 식당 리뷰 조회
+    public ResponseEntity<?> findRestaurantReviewsById(UserPrincipal userPrincipal, RestaurantDetailReq restaurantDetailReq, Integer page) {
+
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(InvalidUserException::new);
+
+        Restaurant restaurant = restaurantRepository.findById(restaurantDetailReq.getRestaurantId())
                 .orElseThrow(InvalidRestaurantException::new);
 
-        PageRequest pageRequest = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "date"));
-        Page<Review> reviewPage = reviewRepository.findReviewsByRestaurant(restaurant, pageRequest);
+        Page<Review> reviewPage;
+        if (restaurantDetailReq.getFilter().equals("date")) {
+            PageRequest pageRequest = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "date"));
+            reviewPage = reviewRepository.findReviewsByRestaurant(restaurant, pageRequest);
+        } else {
+            Pageable pageable = PageRequest.of(page, 10);
+            reviewPage = reviewRepository.findReviewsOrderByRecommendationCount(pageable);
+        }
+
 
         List<Review> reviews = reviewPage.getContent();
-        List<RestaurantReviewDetailRes> reviewDetailRes = reviews.stream()
-                .map(review -> RestaurantReviewDetailRes.builder()
-                        .id(review.getId())
-                        .content(review.getContent())
-                        .date(review.getDate())
-                        .user(review.getUser())
-                        .build())
-                .toList();
+        List<RestaurantReviewDetailRes> restaurantReviewDetailResList = new ArrayList<>();
+        for (Review review : reviews) {
+            // 리뷰 이미지
+            List<String> imageUrlList = new ArrayList<>();
+            if (review.getReviewType().equals(ReviewType.PHOTO)) {
+                List<Image> imageList = imageRepository.findByReview(review);
+                for (Image image : imageList) {
+                    imageUrlList.add(image.getImageUrl());
+                }
+            }
+
+            // 리뷰 작성 유저
+            User reviewUser = review.getUser();
+            UserRestaurantDetailRes userRestaurantDetailRes = UserRestaurantDetailRes.builder()
+                    .userId(reviewUser.getId())
+                    .imageUrl(reviewUser.getImageUrl())
+                    .nickname(reviewUser.getNickname())
+                    .userCode(reviewUser.getUserCode())
+                    .point(reviewUser.getPoint())
+                    .build();
+
+            // 최종 응답
+            RestaurantReviewDetailRes restaurantReviewDetailRes = RestaurantReviewDetailRes.builder()
+                    .reviewId(review.getId())
+                    .user(userRestaurantDetailRes)
+                    .reviewType(review.getReviewType())
+                    .imageUrl(imageUrlList)
+                    .rate(restaurant.getRate())
+                    .content(review.getContent())
+                    .visible(review.getVisible())
+                    .recommendationCount(recommendationRepository.countByReview(review)) // 추천 개수
+                    .isRecommendation(recommendationRepository.existsByUserAndReview(user, review))
+                    .build();
+            restaurantReviewDetailResList.add(restaurantReviewDetailRes);
+
+        }
 
         ReviewListRes reviewListRes = ReviewListRes.builder()
-                .reviews(reviewDetailRes)
+                .reviews(restaurantReviewDetailResList)
                 .totalCount(reviewPage.getTotalElements())
                 .build();
 
@@ -96,7 +183,7 @@ public class RestaurantService {
 
         return ResponseEntity.ok(apiResponse);
     }
-    
+
     // TODO : 스크랩 변경사항 때문에 스크랩 로직 변경 필요 --------------------------------------------------------------------------------------------------------------------------------
     @Transactional
     public ResponseEntity<?> scrapRestaurant(UserPrincipal userPrincipal, Long restaurantId) {
@@ -160,15 +247,7 @@ public class RestaurantService {
                 double restaurantLatitude = Double.parseDouble(nearRestaurant.getLatitude());
                 double restaurantLongitude = Double.parseDouble(nearRestaurant.getLongitude());
 
-                // 거리 (라디안)
-                double dLatitude = Math.toRadians(restaurantLatitude - userLatitude);
-                double dLongitude = Math.toRadians(restaurantLongitude - userLongitude);
-
-                double a = Math.sin(dLatitude / 2) * Math.sin(dLatitude / 2) + Math.cos(Math.toRadians(userLatitude)) * Math.cos(Math.toRadians(restaurantLatitude)) * Math.sin(dLongitude / 2) * Math.sin(dLongitude / 2);
-                double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-                // 식당과 내 위치 거리 (km)
-                double distance = EARTH_RADIUS * c;
+                double distance = calculateDistance(userLatitude, userLongitude, restaurantLatitude, restaurantLongitude);
 
                 // 5km 안에 있는 식당들만 포함
                 if (distance <= 5) {
@@ -263,19 +342,11 @@ public class RestaurantService {
                 double restaurantLatitude = Double.parseDouble(restaurant.getLatitude());
                 double restaurantLongitude = Double.parseDouble(restaurant.getLongitude());
 
-                // 거리 (라디안)
-                double dLatitude = Math.toRadians(restaurantLatitude - userLatitude);
-                double dLongitude = Math.toRadians(restaurantLongitude - userLongitude);
-
-                double a = Math.sin(dLatitude / 2) * Math.sin(dLatitude / 2) + Math.cos(Math.toRadians(userLatitude)) * Math.cos(Math.toRadians(restaurantLatitude)) * Math.sin(dLongitude / 2) * Math.sin(dLongitude / 2);
-                double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-                // 식당과 내 위치 거리 (km)
-                double distance = EARTH_RADIUS * c;
+                double distance = calculateDistance(userLatitude, userLongitude, restaurantLatitude, restaurantLongitude);
 
                 Optional<Bookmark> findBookmark = bookmarkRepository.findByContentIdAndContentTypeAndUser(restaurant.getId(), ContentType.RESTAURANT, user);
 
-                // 5km 안에 있는 식당들만 포함
+                // 10km 안에 있는 식당들만 포함
                 if (distance <= 10) {
                     RandomRestaurantRes randomRestaurantRes = RandomRestaurantRes.builder()
                             .restaurantId(restaurant.getId())
@@ -305,5 +376,56 @@ public class RestaurantService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // Map 1depth - 식당 리스트 조회 : 가까운 순
+    public ResponseEntity<?> findAroundRestaurantList(LocationReq locationReq, Integer page) {
+
+        // 식당 id, 식당 이름, 식당 카테고리(한식, 양식 등), 내 위치로부터의 거리 (m 단위), 별점, 썸네일 이미지
+        Pageable pageable = PageRequest.of(page, 10);
+
+        double userLatitude = Double.parseDouble(locationReq.getLatitude());
+        double userLongitude = Double.parseDouble(locationReq.getLongitude());
+
+        Page<Restaurant> restaurantPage = restaurantRepository.findRestaurantsNearUser(userLatitude, userLongitude, pageable);
+        List<Restaurant> restaurantList = restaurantPage.getContent();
+        List<RestaurantBannerRes> restaurantBannerResList = new ArrayList<>();
+
+        for (Restaurant restaurant : restaurantList) {
+            double distance = calculateDistance(userLatitude, userLongitude,  Double.parseDouble(restaurant.getLatitude()),  Double.parseDouble(restaurant.getLongitude()));
+
+            RestaurantBannerRes restaurantBannerRes = RestaurantBannerRes.builder()
+                    .restaurantId(restaurant.getId())
+                    .restaurantName(restaurant.getName())
+                    .restaurantType(restaurant.getRestaurantType())
+                    .distance(distance)
+                    .rate(restaurant.getRate())
+                    .thumbnail(restaurant.getThumbnail())
+                    .build();
+            restaurantBannerResList.add(restaurantBannerRes);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(restaurantBannerResList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+
+    }
+
+
+    // Description : 유저 - 식당 거리 계산 함수
+    private double calculateDistance(double userLatitude, double userLongitude, double restaurantLatitude, double restaurantLongitude) {
+        double dLatitude = Math.toRadians(restaurantLatitude - userLatitude);
+        double dLongitude = Math.toRadians(restaurantLongitude - userLongitude);
+
+        double a = Math.sin(dLatitude / 2) * Math.sin(dLatitude / 2)
+                + Math.cos(Math.toRadians(userLatitude)) * Math.cos(Math.toRadians(restaurantLatitude))
+                * Math.sin(dLongitude / 2) * Math.sin(dLongitude / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        // 두 지점 간의 직선 거리를 반환 (단위: km)
+        return EARTH_RADIUS * c; // distance
     }
 }
