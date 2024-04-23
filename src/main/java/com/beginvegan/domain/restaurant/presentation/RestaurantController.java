@@ -1,6 +1,7 @@
 package com.beginvegan.domain.restaurant.presentation;
 
 import com.beginvegan.domain.restaurant.application.RestaurantService;
+import com.beginvegan.domain.restaurant.dto.request.RestaurantDetailReq;
 import com.beginvegan.domain.restaurant.dto.response.AroundRestaurantListRes;
 import com.beginvegan.domain.restaurant.dto.response.RandomRestaurantRes;
 import com.beginvegan.domain.restaurant.dto.response.RestaurantAndMenusRes;
@@ -51,12 +52,13 @@ public class RestaurantController {
             @ApiResponse(responseCode = "200", description = "식당/카페 리뷰 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ReviewListRes.class))}),
             @ApiResponse(responseCode = "400", description = "식당/카페 리뷰 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @GetMapping("/review/{restaurant-id}")
+    @GetMapping("/review")
     public ResponseEntity<?> findRestaurantReviewsById(
-            @Parameter(description = "식당/카페ID로 리뷰를 조회합니다.", required = true) @PathVariable(value = "restaurant-id") Long restaurantId,
+            @Parameter(description = "AccessToken을 입력해주세요") @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "RestaurantDetailReq를 참고해주세요.", required = true) @RequestBody RestaurantDetailReq restaurantDetailReq,
             @Parameter(description = "식당/카페의 리뷰 목록을 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
     ) {
-        return restaurantService.findRestaurantReviewsById(restaurantId, page);
+        return restaurantService.findRestaurantReviewsById(userPrincipal, restaurantDetailReq, page);
     }
 
     @Operation(summary = "식당/카페 스크랩", description = "식당/카페를 스크랩합니다.")

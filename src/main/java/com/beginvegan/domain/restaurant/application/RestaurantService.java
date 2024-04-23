@@ -5,20 +5,26 @@ import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
 import com.beginvegan.domain.bookmark.domain.repository.ContentType;
 import com.beginvegan.domain.food.domain.Food;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
+import com.beginvegan.domain.image.domain.Image;
+import com.beginvegan.domain.image.domain.repository.ImageRepository;
+import com.beginvegan.domain.recommendation.domain.repository.RecommendationRepository;
 import com.beginvegan.domain.restaurant.domain.Menu;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
 import com.beginvegan.domain.restaurant.dto.*;
 import com.beginvegan.domain.restaurant.dto.request.LocationReq;
+import com.beginvegan.domain.restaurant.dto.request.RestaurantDetailReq;
 import com.beginvegan.domain.restaurant.dto.response.*;
 import com.beginvegan.domain.restaurant.exception.InvalidRestaurantException;
 import com.beginvegan.domain.review.domain.Review;
+import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
 import com.beginvegan.domain.review.dto.RestaurantReviewDetailRes;
 import com.beginvegan.domain.review.dto.ReviewListRes;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
+import com.beginvegan.domain.user.dto.UserRestaurantDetailRes;
 import com.beginvegan.domain.user.exception.InvalidUserException;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
@@ -44,6 +50,8 @@ public class RestaurantService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final ImageRepository imageRepository;
+    private final RecommendationRepository recommendationRepository;
 
     private final UserService userService;
 
@@ -106,25 +114,63 @@ public class RestaurantService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    public ResponseEntity<?> findRestaurantReviewsById(Long restaurantId, Integer page) {
-        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+    // 식당 리뷰 조회
+    public ResponseEntity<?> findRestaurantReviewsById(UserPrincipal userPrincipal, RestaurantDetailReq restaurantDetailReq, Integer page) {
+
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(InvalidUserException::new);
+
+        Restaurant restaurant = restaurantRepository.findById(restaurantDetailReq.getRestaurantId())
                 .orElseThrow(InvalidRestaurantException::new);
+
 
         PageRequest pageRequest = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "date"));
         Page<Review> reviewPage = reviewRepository.findReviewsByRestaurant(restaurant, pageRequest);
 
+        // 유저 id, 프로필 이미지, 닉네임, 고유번호, 일러스트 이미지(레벨? 점수?),
+        // 리뷰 id, 별점, 최종 수정일, (포토 리뷰의 경우) 이미지 (리스트), visible(관리자가 삭제 시 내용 안보이게 하기 위함), 추천 수, (조회 유저의) 추천 여부
+        // filter :: date, recommendation
+
         List<Review> reviews = reviewPage.getContent();
-        List<RestaurantReviewDetailRes> reviewDetailRes = reviews.stream()
-                .map(review -> RestaurantReviewDetailRes.builder()
-                        .id(review.getId())
-                        .content(review.getContent())
-                        .date(review.getDate())
-                        .user(review.getUser())
-                        .build())
-                .toList();
+        List<RestaurantReviewDetailRes> restaurantReviewDetailResList = new ArrayList<>();
+        for (Review review : reviews) {
+            // 리뷰 이미지
+            List<String> imageUrlList = new ArrayList<>();
+            if (review.getReviewType().equals(ReviewType.PHOTO)) {
+                List<Image> imageList = imageRepository.findByReview(review);
+                for (Image image : imageList) {
+                    imageUrlList.add(image.getImageUrl());
+                }
+            }
+
+            // 리뷰 작성 유저
+            User reviewUser = review.getUser();
+            UserRestaurantDetailRes userRestaurantDetailRes = UserRestaurantDetailRes.builder()
+                    .userId(reviewUser.getId())
+                    .imageUrl(reviewUser.getImageUrl())
+                    .nickname(reviewUser.getNickname())
+                    .userCode(reviewUser.getUserCode())
+                    .point(reviewUser.getPoint())
+                    .build();
+
+            // 최종 응답
+            RestaurantReviewDetailRes restaurantReviewDetailRes = RestaurantReviewDetailRes.builder()
+                    .reviewId(review.getId())
+                    .user(userRestaurantDetailRes)
+                    .reviewType(review.getReviewType())
+                    .imageUrl(imageUrlList)
+                    .rate(restaurant.getRate())
+                    .content(review.getContent())
+                    .visible(review.getVisible())
+                    .recommendationCount(recommendationRepository.countByReview(review)) // 추천 개수
+                    .isRecommendation(recommendationRepository.existsByUserAndReview(user, review))
+                    .build();
+            restaurantReviewDetailResList.add(restaurantReviewDetailRes);
+
+        }
 
         ReviewListRes reviewListRes = ReviewListRes.builder()
-                .reviews(reviewDetailRes)
+                .reviews(restaurantReviewDetailResList)
                 .totalCount(reviewPage.getTotalElements())
                 .build();
 
@@ -135,7 +181,7 @@ public class RestaurantService {
 
         return ResponseEntity.ok(apiResponse);
     }
-    
+
     // TODO : 스크랩 변경사항 때문에 스크랩 로직 변경 필요 --------------------------------------------------------------------------------------------------------------------------------
     @Transactional
     public ResponseEntity<?> scrapRestaurant(UserPrincipal userPrincipal, Long restaurantId) {
