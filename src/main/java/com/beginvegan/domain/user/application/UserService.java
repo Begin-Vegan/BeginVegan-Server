@@ -6,6 +6,7 @@ import com.beginvegan.domain.user.domain.VeganType;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.domain.user.dto.*;
 import com.beginvegan.domain.user.exception.InvalidUserException;
+import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.error.DefaultException;
 import com.beginvegan.global.payload.ApiResponse;
@@ -243,6 +244,13 @@ public class UserService {
                 .information(myPageUserInfoRes)
                 .build();
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // Description : 유효성 검증 함수
+    public User validateUserById(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        DefaultAssert.isTrue(user.isPresent(), "유저 정보가 올바르지 않습니다.");
+        return user.get();
     }
 
 }

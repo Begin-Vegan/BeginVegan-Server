@@ -2,7 +2,7 @@ package com.beginvegan.domain.review.application;
 
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
-import com.beginvegan.domain.restaurant.dto.RestaurantDetailRes;
+import com.beginvegan.domain.restaurant.dto.response.RestaurantDetailRes;
 import com.beginvegan.domain.restaurant.exception.InvalidRestaurantException;
 import com.beginvegan.domain.review.domain.Review;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;

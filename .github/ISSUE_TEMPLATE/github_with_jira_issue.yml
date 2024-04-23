@@ -21,7 +21,7 @@ body:
       placeholder: 'BVVER24-xx에서 xx에 해당하는 부분만 기입해주세요! ex) 1'
     validations:
       required: true
-
+      
   - type: input
     id: description
     attributes:
@@ -44,7 +44,7 @@ body:
 
   - type: dropdown
     id: branchType
-    attributes:
+    attributes: 
       label: '🔌 브랜치 타입 Branch-Type'
       description: '생성 할 브랜치 타입을 선택해주세요.'
       options:
@@ -53,17 +53,17 @@ body:
         - hotfix
         - refactor
     validations:
-      required: true
-
+      required: true    
+      
   - type: input
     id: branchName
-    attributes:
+    attributes: 
       label: '💡 브랜치 이름 Branch-Name'
       description: '만든 브랜치는 [브랜치 타입]/BVVER-no-[작성한 브랜치 이름]'
       placeholder: 'Branch Name'
     validations:
       required: true
-
+      
   - type: textarea
     id: references
     attributes:

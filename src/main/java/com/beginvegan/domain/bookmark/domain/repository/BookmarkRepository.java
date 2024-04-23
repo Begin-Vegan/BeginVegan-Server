@@ -8,6 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 
 //    @EntityGraph(attributePaths = {"restaurant"})
@@ -16,5 +19,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 //    Bookmark findBookmarkByUserAndRestaurant(User user, Restaurant restaurant);
 
 //    boolean existsBookmarkByUserAndRestaurant(User user, Restaurant restaurant);
+
+    Optional<Bookmark> findByContentIdAndContentTypeAndUser(Long contentId, ContentType contentType, User user);
 
 }
