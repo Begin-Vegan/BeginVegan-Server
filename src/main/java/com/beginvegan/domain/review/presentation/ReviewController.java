@@ -3,6 +3,7 @@ package com.beginvegan.domain.review.presentation;
 import com.beginvegan.domain.food.dto.response.FoodRecipeListRes;
 import com.beginvegan.domain.review.application.ReviewService;
 import com.beginvegan.domain.review.dto.PostReviewReq;
+import com.beginvegan.domain.review.dto.RestaurantInfoRes;
 import com.beginvegan.domain.review.dto.ReviewDetailRes;
 import com.beginvegan.domain.review.dto.ReviewListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
@@ -52,6 +53,19 @@ public class ReviewController {
             @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @RequestBody PostReviewReq postReviewReq
     ) {
         return reviewService.postReview(userPrincipal, postReviewReq);
+    }
+
+    @Operation(summary = "식당 정보 조회", description = "리뷰 작성 시 식당 정보를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RestaurantInfoRes.class)) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/{restaurantId}")
+    public ResponseEntity<?> postReview(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "식당 id를 입력해주세요..", required = true) @PathVariable Long restaurantId
+    ) {
+        return reviewService.getRestaurantInfoForReview(userPrincipal, restaurantId);
     }
 
 }

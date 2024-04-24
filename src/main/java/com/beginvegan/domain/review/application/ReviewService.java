@@ -7,8 +7,10 @@ import com.beginvegan.domain.restaurant.exception.InvalidRestaurantException;
 import com.beginvegan.domain.review.domain.Review;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
 import com.beginvegan.domain.review.dto.PostReviewReq;
+import com.beginvegan.domain.review.dto.RestaurantInfoRes;
 import com.beginvegan.domain.review.dto.ReviewDetailRes;
 import com.beginvegan.domain.review.dto.ReviewListRes;
+import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.domain.user.dto.UserDetailRes;
@@ -35,6 +37,34 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
+    private final S3Uploader s3Uploader;
+
+    // 식당 정보 조회
+    public ResponseEntity<?> getRestaurantInfoForReview(UserPrincipal userPrincipal, Long restaurantId) {
+        Restaurant restaurant = restaurantRepository.findById(userPrincipal.getId())
+                .orElseThrow(InvalidUserException::new);
+
+        RestaurantInfoRes restaurantInfoRes = RestaurantInfoRes.builder()
+                .name(restaurant.getName())
+                .restaurantType(restaurant.getRestaurantType())
+                .address(restaurant.getAddress()).build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(restaurantInfoRes)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    //- 리뷰 작성
+    //- 이미지 저장
+    //- 리뷰 목록 조회
+    //- 리뷰 추천
+    //- 포토 리뷰 필터
+    //- 리뷰 수정
+    //- 리뷰 삭제
+    //- 검증된 리뷰 삭제시 리워드 회수
 
     public ResponseEntity<?> findReviewsByUser(UserPrincipal userPrincipal, Integer page) {
         User user = userRepository.findById(userPrincipal.getId())
