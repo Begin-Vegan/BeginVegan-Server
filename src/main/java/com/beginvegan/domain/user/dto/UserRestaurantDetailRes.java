@@ -14,14 +14,14 @@ public class UserRestaurantDetailRes {
 
     private String userCode;
 
-    private Integer point;
+    private String level;
 
     @Builder
-    public UserRestaurantDetailRes(Long userId, String imageUrl, String nickname, String userCode, Integer point) {
+    public UserRestaurantDetailRes(Long userId, String imageUrl, String nickname, String userCode, String level) {
         this.userId = userId;
         this.imageUrl = imageUrl;
         this.nickname = nickname;
         this.userCode = userCode;
-        this.point = point;
+        this.level = level;
     }
 }

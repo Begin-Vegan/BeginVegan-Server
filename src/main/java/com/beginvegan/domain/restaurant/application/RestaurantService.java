@@ -14,6 +14,7 @@ import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
 import com.beginvegan.domain.restaurant.dto.*;
 import com.beginvegan.domain.restaurant.dto.request.LocationReq;
 import com.beginvegan.domain.restaurant.dto.request.RestaurantDetailReq;
+import com.beginvegan.domain.restaurant.dto.request.SearchRestaurantReq;
 import com.beginvegan.domain.restaurant.dto.response.*;
 import com.beginvegan.domain.restaurant.exception.InvalidRestaurantException;
 import com.beginvegan.domain.review.domain.Review;
@@ -152,7 +153,7 @@ public class RestaurantService {
                     .imageUrl(reviewUser.getImageUrl())
                     .nickname(reviewUser.getNickname())
                     .userCode(reviewUser.getUserCode())
-                    .point(reviewUser.getPoint())
+                    .level(userService.countUserLevel(reviewUser.getPoint()))
                     .build();
 
             // 최종 응답
@@ -414,6 +415,69 @@ public class RestaurantService {
 
     }
 
+    // Description : 식당 검색 + 정렬 (리뷰 많은 순 / 스크랩 많은 순 / 가까운 순)
+    public ResponseEntity<?> searchRestaurantsWithFilter(SearchRestaurantReq searchRestaurantReq, Integer page) {
+
+        Pageable pageable = PageRequest.of(page, 10);
+        Page<Restaurant> restaurantPage;
+
+        double userLatitude = Double.parseDouble(searchRestaurantReq.getLatitude());
+        double userLongitude = Double.parseDouble(searchRestaurantReq.getLongitude());
+
+        String searchWord = searchRestaurantReq.getSearchWord();
+
+        System.out.println(searchWord);
+
+        if (searchWord.contains("카페")) {
+            searchWord = searchWord.replace("카페", "CAFE");
+        }
+        if (searchWord.contains("양식")) {
+            searchWord = searchWord.replace("양식", "WESTERN");
+        }
+        if (searchWord.contains("중식")) {
+            searchWord = searchWord.replace("중식", "CHINESE");
+        }
+        if (searchWord.contains("베이커리")) {
+            searchWord = searchWord.replace("베이커리", "BAKERY");
+        }
+
+        System.out.println(searchWord);
+
+        if (searchRestaurantReq.getFilter().equals("SCRAP")) {
+            // 스크랩 많은 순 정렬
+            restaurantPage = restaurantRepository.searchWithPriorityAndBookmarkOrder(searchWord, pageable);
+
+        } else if (searchRestaurantReq.getFilter().equals("DISTANCE")) {
+            // 가까운 순 정렬
+            restaurantPage = restaurantRepository.searchWithPriorityAndDistanceNative(searchWord, userLatitude, userLongitude, pageable);
+        } else {
+            // 리뷰 수 정렬 : 기본
+            restaurantPage = restaurantRepository.searchWithPriorityAndReviewOrder(searchWord, pageable);
+        }
+
+        List<Restaurant> restaurantList = restaurantPage.getContent();
+        List<SearchRestaurantWithSortRes> searchRestaurantWithSortResList = new ArrayList<>();
+        for (Restaurant restaurant : restaurantList) {
+            Double distance = calculateDistance(userLatitude, userLongitude, Double.parseDouble(restaurant.getLatitude()), Double.parseDouble(restaurant.getLongitude()));
+
+            SearchRestaurantWithSortRes searchRestaurantWithSortRes = SearchRestaurantWithSortRes.builder()
+                    .restaurantId(restaurant.getId())
+                    .thumbnail(restaurant.getThumbnail())
+                    .name(restaurant.getName())
+                    .restaurantType(restaurant.getRestaurantType())
+                    .distance(distance)
+                    .rate(restaurant.getRate())
+                    .build();
+            searchRestaurantWithSortResList.add(searchRestaurantWithSortRes);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(searchRestaurantWithSortResList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 
     // Description : 유저 - 식당 거리 계산 함수
     private double calculateDistance(double userLatitude, double userLongitude, double restaurantLatitude, double restaurantLongitude) {
@@ -428,4 +492,5 @@ public class RestaurantService {
         // 두 지점 간의 직선 거리를 반환 (단위: km)
         return EARTH_RADIUS * c; // distance
     }
+
 }

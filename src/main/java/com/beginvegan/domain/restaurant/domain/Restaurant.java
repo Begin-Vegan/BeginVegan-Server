@@ -42,6 +42,9 @@ public class Restaurant extends BaseEntity {
     @OneToMany(mappedBy = "restaurant")
     List<Menu> menus = new ArrayList<>();
 
+    @OneToMany(mappedBy = "restaurant")
+    List<Review> reviews = new ArrayList<>();
+
     @Builder
     public Restaurant(Long id, String name, String contactNumber, RestaurantType restaurantType, Address address, String latitude, String longitude, String kakaoMapUrl, String thumbnail, Double rate, List<Menu> menus) {
         this.id = id;
