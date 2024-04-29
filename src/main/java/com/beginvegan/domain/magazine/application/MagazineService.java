@@ -2,7 +2,6 @@ package com.beginvegan.domain.magazine.application;
 
 import com.beginvegan.domain.block.dto.BlockDto;
 import com.beginvegan.domain.magazine.domain.Magazine;
-import com.beginvegan.domain.magazine.domain.MagazineType;
 import com.beginvegan.domain.magazine.domain.repository.MagazineRepository;
 import com.beginvegan.domain.magazine.dto.request.MagazineDetailReq;
 import com.beginvegan.domain.magazine.dto.response.MagazineDetailRes;
@@ -74,5 +73,31 @@ public class MagazineService {
 
         return ResponseEntity.ok(apiResponse);
 
+    }
+
+    //매거진 전체 조회
+    //createdAt 기준 내림차순
+    public ResponseEntity<?> findAllMagazines() {
+        List<Magazine> magazines = magazineRepository.findAll();
+
+        List<MagazineListRes> magazineList = new ArrayList<>();
+
+        for (Magazine magazine : magazines) {
+            MagazineListRes magazineListRes = MagazineListRes.builder()
+                    .id(magazine.getId())
+                    .title(magazine.getTitle())
+                    .editor(magazine.getEditor())
+                    .createdDate(magazine.getCreatedDate())
+                    .build();
+            magazineList.sort(Comparator.comparing(MagazineListRes::getCreatedDate).reversed());
+            magazineList.add(magazineListRes);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(magazineList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
     }
 }
