@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Magazines", description = "Magazines API")
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/magazines")
+@RequestMapping("/")
 public class MagazineController {
 
     private final MagazineService magazineService;
@@ -29,7 +29,7 @@ public class MagazineController {
             @ApiResponse(responseCode = "200", description = "2가지 매거진 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MagazineListRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "2가지 매거진 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/random-magazine-list")
+    @GetMapping("home/magazine")
     public ResponseEntity<?> findTwoMagazines(){
         return magazineService.findTwoMagazines();
     }
@@ -40,9 +40,19 @@ public class MagazineController {
             @ApiResponse(responseCode = "200", description = "매거진 상세 정보 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MagazineDetailRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "매거진 상세 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PostMapping("/magazine-detail")
+    @PostMapping("tips/magazine")
     public ResponseEntity<?> findMagazineDetail(@RequestBody MagazineDetailReq magazineDetailReq) {
         return magazineService.findMagazineDetail(magazineDetailReq);
     }
 
+    //매거진 전체 목록 조회
+    @Operation(summary = "전체 매거진 목록 조회", description = "전체 매거진 목록 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "전체 매거진 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MagazineListRes.class)) } ),
+            @ApiResponse(responseCode = "400", description = "전체 매거진 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("tips/magazine")
+    public ResponseEntity<?> findAllMagazines(){
+        return magazineService.findAllMagazines();
+    }
 }
