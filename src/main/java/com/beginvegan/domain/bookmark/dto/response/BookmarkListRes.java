@@ -1,4 +1,4 @@
-package com.beginvegan.domain.bookmark.dto;
+package com.beginvegan.domain.bookmark.dto.response;
 
 import com.beginvegan.domain.restaurant.dto.response.RestaurantDetailRes;
 import lombok.Builder;

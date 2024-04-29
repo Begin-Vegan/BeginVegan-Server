@@ -1,11 +1,12 @@
 package com.beginvegan.domain.bookmark.presentation;
 
 import com.beginvegan.domain.bookmark.application.BookmarkService;
-import com.beginvegan.domain.bookmark.dto.BookmarkListRes;
-import com.beginvegan.domain.food.dto.response.FoodRecipeListRes;
+import com.beginvegan.domain.bookmark.dto.request.BookmarkReq;
+import com.beginvegan.domain.bookmark.dto.response.BookmarkListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ErrorResponse;
+import com.beginvegan.global.payload.Message;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,10 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Bookmarks", description = "Bookmarks API")
 @RestController
@@ -39,5 +37,31 @@ public class BookmarkController {
             @Parameter(description = "유저의 스크랩 목록을 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
     ) {
         return bookmarkService.findBookmarksByUser(userPrincipal, page);
+    }
+
+    @Operation(summary = "스크랩 생성", description = "식당 / 매거진 / 레시피를 스크랩합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "스크랩 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "스크랩 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PostMapping
+    public ResponseEntity<?> createBookmark(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "BookmarkReq를 참고해주세요.", required = true) @RequestBody BookmarkReq bookmarkReq
+    ) {
+        return bookmarkService.createBookmark(userPrincipal, bookmarkReq);
+    }
+
+    @Operation(summary = "스크랩 해제", description = "식당 / 매거진 / 레시피를 스크랩 해제합니다..")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "스크랩 해제 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "스크랩 해제 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @DeleteMapping
+    public ResponseEntity<?> deleteBookmark(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "BookmarkReq를 참고해주세요.", required = true) @RequestBody BookmarkReq bookmarkReq
+    ) {
+        return bookmarkService.deleteBookmark(userPrincipal, bookmarkReq);
     }
 }
