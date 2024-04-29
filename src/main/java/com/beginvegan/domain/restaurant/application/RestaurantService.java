@@ -27,6 +27,7 @@ import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.domain.user.dto.UserRestaurantDetailRes;
 import com.beginvegan.domain.user.exception.InvalidUserException;
+import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.Message;
@@ -491,6 +492,12 @@ public class RestaurantService {
 
         // 두 지점 간의 직선 거리를 반환 (단위: km)
         return EARTH_RADIUS * c; // distance
+    }
+
+    public Restaurant validateRestaurantById(Long restaurantId) {
+        Optional<Restaurant> findRestaurant = restaurantRepository.findById(restaurantId);
+        DefaultAssert.isTrue(findRestaurant.isPresent(), "존재하지 않는 식당입니다.");
+        return findRestaurant.get();
     }
 
 }

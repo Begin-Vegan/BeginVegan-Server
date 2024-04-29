@@ -2,7 +2,11 @@ package com.beginvegan.domain.bookmark.application;
 
 import com.beginvegan.domain.bookmark.domain.Bookmark;
 import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
+import com.beginvegan.domain.bookmark.domain.repository.ContentType;
 import com.beginvegan.domain.bookmark.dto.request.BookmarkReq;
+import com.beginvegan.domain.restaurant.application.RestaurantService;
+import com.beginvegan.domain.restaurant.domain.Restaurant;
+import com.beginvegan.domain.restaurant.dto.response.BookmarkRestaurantRes;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
@@ -15,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -25,33 +31,8 @@ public class BookmarkService {
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
 
+    private final RestaurantService restaurantService;
     private final UserService userService;
-
-    public ResponseEntity<?> findBookmarksByUser(UserPrincipal userPrincipal, Integer page) {
-//        User user = userRepository.findById(userPrincipal.getId())
-//                .orElseThrow(InvalidUserException::new);
-//
-//        PageRequest pageRequest = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "createdDate"));
-//        Page<Bookmark> bookmarkPage = bookmarkRepository.findBookmarksByUser(user, pageRequest);
-//
-//        List<Bookmark> bookmarks = bookmarkPage.getContent();
-//        List<RestaurantDetailRes> restaurants = bookmarks.stream()
-//                .map(bookmark -> RestaurantDetailRes.toDto(bookmark.getContentId()))
-//                .toList();
-//
-//        BookmarkListRes bookmarkListRes = BookmarkListRes.builder()
-//                .restaurants(restaurants)
-//                .totalCount(bookmarkPage.getTotalElements())
-//                .build();
-//
-//        ApiResponse apiResponse = ApiResponse.builder()
-//                .check(true)
-//                .information(bookmarkListRes)
-//                .build();
-
-//        return ResponseEntity.ok(apiResponse);
-        return ResponseEntity.ok("엔티티 변경으로 인해 다시 구현해야 함");
-    }
 
     @Transactional
     public ResponseEntity<?> createBookmark(UserPrincipal userPrincipal, BookmarkReq bookmarkReq) {
@@ -95,4 +76,32 @@ public class BookmarkService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    // Description : 북마크한 식당 목록 조회
+    public ResponseEntity<?> findBookmarkRestaurant(UserPrincipal userPrincipal) {
+
+        User user = userService.validateUserById(userPrincipal.getId());
+        List<Bookmark> bookmarks = bookmarkRepository.findByContentTypeAndUser(ContentType.RESTAURANT, user);
+        List<BookmarkRestaurantRes> bookmarkRestaurantResList = new ArrayList<>();
+
+        for (Bookmark bookmark : bookmarks) {
+            Long restaurantId = bookmark.getContentId();
+            Restaurant restaurant = restaurantService.validateRestaurantById(restaurantId);
+
+            BookmarkRestaurantRes bookmarkRestaurantRes = BookmarkRestaurantRes.builder()
+                    .restaurantId(bookmark.getContentId())
+                    .thumbnail(restaurant.getThumbnail())
+                    .name(restaurant.getName())
+                    .restaurantType(restaurant.getRestaurantType())
+                    .address(restaurant.getAddress())
+                    .build();
+            bookmarkRestaurantResList.add(bookmarkRestaurantRes);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(bookmarkRestaurantResList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 }

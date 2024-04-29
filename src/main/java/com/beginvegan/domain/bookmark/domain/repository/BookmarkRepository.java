@@ -18,4 +18,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     Optional<Bookmark> findByContentIdAndContentTypeAndUser(Long contentId, ContentType contentType, User user);
 
     boolean existsBookmarkByContentIdAndContentTypeAndUser(Long contentId, ContentType contentType, User user);
+
+    List<Bookmark> findByContentTypeAndUser(ContentType contentType, User user);
+
 }
