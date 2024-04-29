@@ -15,13 +15,10 @@ public class FoodListRes {
 
     private VeganType veganType;
 
-    private String description;
-
     @Builder
-    public FoodListRes(Long id, String name, VeganType veganType, String description) {
+    public FoodListRes(Long id, String name, VeganType veganType) {
         this.id = id;
         this.name = name;
         this.veganType = veganType;
-        this.description = description;
     }
 }
