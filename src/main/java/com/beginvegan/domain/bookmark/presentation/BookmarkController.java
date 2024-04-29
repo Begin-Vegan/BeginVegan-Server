@@ -3,12 +3,15 @@ package com.beginvegan.domain.bookmark.presentation;
 import com.beginvegan.domain.bookmark.application.BookmarkService;
 import com.beginvegan.domain.bookmark.dto.request.BookmarkReq;
 import com.beginvegan.domain.bookmark.dto.response.BookmarkListRes;
+import com.beginvegan.domain.restaurant.dto.response.BookmarkRestaurantRes;
+import com.beginvegan.domain.restaurant.dto.response.RandomRestaurantRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ErrorResponse;
 import com.beginvegan.global.payload.Message;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -55,8 +58,8 @@ public class BookmarkController {
     // ------------ 북마크 조회 ------------
     @Operation(summary = "유저가 스크랩한 식당 목록 조회", description = "유저가 스크랩한 식당 목록을 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "스크랩 해제 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
-            @ApiResponse(responseCode = "400", description = "스크랩 해제 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+            @ApiResponse(responseCode = "200", description = "스크랩 식당 목록 조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BookmarkRestaurantRes.class)))}),
+            @ApiResponse(responseCode = "400", description = "스크랩 식당 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
     @GetMapping("/restaurant")
     public ResponseEntity<?> findBookmarkRestaurant(
