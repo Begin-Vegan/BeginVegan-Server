@@ -29,7 +29,7 @@ public class FoodController {
             @ApiResponse(responseCode = "200", description = "전체 레시피 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = FoodRecipeListRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "전체 레시피 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/recipe-list")
+    @GetMapping("/tips/recipe")
     public ResponseEntity<?> findAllFoodsWithIngredients() {
         return foodService.findAllFoodsWithIngredients();
     }
@@ -40,7 +40,7 @@ public class FoodController {
             @ApiResponse(responseCode = "200", description = "레시피 상세 정보 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = FoodDetailRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "레시피 상세 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PostMapping("/recipe-detail")
+    @PostMapping("/tips/recipe")
     public ResponseEntity<?> findFoodDetail(@RequestBody FoodDetailReq foodDetailReq) {
         return foodService.findFoodDetail(foodDetailReq);
     }
@@ -51,7 +51,7 @@ public class FoodController {
             @ApiResponse(responseCode = "200", description = "3가지 음식 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = FoodListRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "3가지 음식 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/random-food-list")
+    @GetMapping("home/recipe")
     public ResponseEntity<?> findThreeFoods(){
         return foodService.findThreeFoods();
     }
