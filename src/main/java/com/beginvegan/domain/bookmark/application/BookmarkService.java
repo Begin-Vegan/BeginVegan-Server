@@ -4,6 +4,9 @@ import com.beginvegan.domain.bookmark.domain.Bookmark;
 import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
 import com.beginvegan.domain.bookmark.domain.repository.ContentType;
 import com.beginvegan.domain.bookmark.dto.request.BookmarkReq;
+import com.beginvegan.domain.food.application.FoodService;
+import com.beginvegan.domain.food.domain.Food;
+import com.beginvegan.domain.food.dto.response.BookmarkFoodRes;
 import com.beginvegan.domain.restaurant.application.RestaurantService;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.dto.response.BookmarkRestaurantRes;
@@ -32,6 +35,7 @@ public class BookmarkService {
     private final UserRepository userRepository;
 
     private final RestaurantService restaurantService;
+    private final FoodService foodService;
     private final UserService userService;
 
     @Transactional
@@ -100,6 +104,34 @@ public class BookmarkService {
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(bookmarkRestaurantResList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    // Description : 북마크한 레시피 목록 조회
+    public ResponseEntity<?> findBookmarkRecipe(UserPrincipal userPrincipal) {
+
+        User user = userService.validateUserById(userPrincipal.getId());
+        List<Bookmark> bookmarks = bookmarkRepository.findByContentTypeAndUser(ContentType.RECIPE, user);
+        List<BookmarkFoodRes> bookmarkFoodResList = new ArrayList<>();
+
+        for (Bookmark bookmark : bookmarks) {
+            Long foodId = bookmark.getContentId();
+            Food food = foodService.validateFoodById(foodId);
+
+            BookmarkFoodRes bookmarkFoodRes = BookmarkFoodRes.builder()
+                    .foodId(foodId)
+                    .name(food.getName())
+                    .veganType(food.getVeganType())
+                    .build();
+
+            bookmarkFoodResList.add(bookmarkFoodRes);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(bookmarkFoodResList)
                 .build();
 
         return ResponseEntity.ok(apiResponse);

@@ -3,6 +3,7 @@ package com.beginvegan.domain.bookmark.presentation;
 import com.beginvegan.domain.bookmark.application.BookmarkService;
 import com.beginvegan.domain.bookmark.dto.request.BookmarkReq;
 import com.beginvegan.domain.bookmark.dto.response.BookmarkListRes;
+import com.beginvegan.domain.food.dto.response.BookmarkFoodRes;
 import com.beginvegan.domain.restaurant.dto.response.BookmarkRestaurantRes;
 import com.beginvegan.domain.restaurant.dto.response.RandomRestaurantRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
@@ -56,6 +57,7 @@ public class BookmarkController {
     }
 
     // ------------ 북마크 조회 ------------
+    // Description : 식당
     @Operation(summary = "유저가 스크랩한 식당 목록 조회", description = "유저가 스크랩한 식당 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "스크랩 식당 목록 조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BookmarkRestaurantRes.class)))}),
@@ -67,4 +69,19 @@ public class BookmarkController {
     ) {
         return bookmarkService.findBookmarkRestaurant(userPrincipal);
     }
+
+    // Description : 레시피
+    @Operation(summary = "유저가 스크랩한 레시피 목록 조회", description = "유저가 스크랩한 레시피 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "스크랩 레시피 목록 조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BookmarkFoodRes.class)))}),
+            @ApiResponse(responseCode = "400", description = "스크랩 레시피 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/recipe")
+    public ResponseEntity<?> findBookmarkRecipe(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return bookmarkService.findBookmarkRecipe(userPrincipal);
+    }
+
+    // Description : 매거진
 }
