@@ -2,6 +2,7 @@ package com.beginvegan.domain.review.presentation;
 
 import com.beginvegan.domain.review.application.ReviewService;
 import com.beginvegan.domain.review.dto.request.PostReviewReq;
+import com.beginvegan.domain.review.dto.request.UpdateReviewReq;
 import com.beginvegan.domain.review.dto.response.RestaurantInfoRes;
 import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
@@ -70,6 +71,7 @@ public class ReviewController {
         return reviewService.getRestaurantInfoForReview(userPrincipal, restaurantId);
     }
 
+
     @Operation(summary = "리뷰 삭제", description = "내가 작성한 리뷰를 삭제합니다.")
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<?> deleteReview(
@@ -77,6 +79,17 @@ public class ReviewController {
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
     ) {
         return reviewService.deleteReview(userPrincipal, reviewId);
+    }
+
+    @Operation(summary = "리뷰 수정", description = "내가 작성한 리뷰를 수정합니다.")
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<?> updateReview(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
+            @Parameter(description = "UpdateReviewReq Schema를 확인해주세요.", required = true) @RequestBody UpdateReviewReq updateReviewReq,
+            @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile[] files
+    ) {
+        return reviewService.updateReview(userPrincipal, reviewId, updateReviewReq, files);
     }
 
 }
