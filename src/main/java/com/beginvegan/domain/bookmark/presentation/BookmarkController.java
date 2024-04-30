@@ -4,6 +4,7 @@ import com.beginvegan.domain.bookmark.application.BookmarkService;
 import com.beginvegan.domain.bookmark.dto.request.BookmarkReq;
 import com.beginvegan.domain.bookmark.dto.response.BookmarkListRes;
 import com.beginvegan.domain.food.dto.response.BookmarkFoodRes;
+import com.beginvegan.domain.magazine.dto.response.BookmarkMagazineRes;
 import com.beginvegan.domain.restaurant.dto.response.BookmarkRestaurantRes;
 import com.beginvegan.domain.restaurant.dto.response.RandomRestaurantRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
@@ -84,4 +85,15 @@ public class BookmarkController {
     }
 
     // Description : 매거진
+    @Operation(summary = "유저가 스크랩한 매거진 목록 조회", description = "유저가 스크랩한 매거진 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "스크랩 매거진 목록 조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BookmarkMagazineRes.class)))}),
+            @ApiResponse(responseCode = "400", description = "스크랩 매거진 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/magazine")
+    public ResponseEntity<?> findBookmarkMagazine(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return bookmarkService.findBookmarkMagazine(userPrincipal);
+    }
 }

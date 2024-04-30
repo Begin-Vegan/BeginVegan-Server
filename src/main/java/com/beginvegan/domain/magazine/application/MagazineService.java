@@ -8,6 +8,7 @@ import com.beginvegan.domain.magazine.dto.request.MagazineDetailReq;
 import com.beginvegan.domain.magazine.dto.response.MagazineDetailRes;
 import com.beginvegan.domain.magazine.dto.response.MagazineListRes;
 import com.beginvegan.domain.magazine.exception.MagazineNotFoundException;
+import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -74,5 +75,11 @@ public class MagazineService {
 
         return ResponseEntity.ok(apiResponse);
 
+    }
+
+    public Magazine validateMagazineById(Long magazineId) {
+        Optional<Magazine> findMagazine = magazineRepository.findById(magazineId);
+        DefaultAssert.isTrue(findMagazine.isPresent(), "잘못된 매거진 정보입니다.");
+        return findMagazine.get();
     }
 }

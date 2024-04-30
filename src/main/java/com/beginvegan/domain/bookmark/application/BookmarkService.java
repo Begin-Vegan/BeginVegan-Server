@@ -7,6 +7,9 @@ import com.beginvegan.domain.bookmark.dto.request.BookmarkReq;
 import com.beginvegan.domain.food.application.FoodService;
 import com.beginvegan.domain.food.domain.Food;
 import com.beginvegan.domain.food.dto.response.BookmarkFoodRes;
+import com.beginvegan.domain.magazine.application.MagazineService;
+import com.beginvegan.domain.magazine.domain.Magazine;
+import com.beginvegan.domain.magazine.dto.response.BookmarkMagazineRes;
 import com.beginvegan.domain.restaurant.application.RestaurantService;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.dto.response.BookmarkRestaurantRes;
@@ -36,6 +39,7 @@ public class BookmarkService {
 
     private final RestaurantService restaurantService;
     private final FoodService foodService;
+    private final MagazineService magazineService;
     private final UserService userService;
 
     @Transactional
@@ -132,6 +136,35 @@ public class BookmarkService {
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(bookmarkFoodResList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    // Description : 북마크한 매거진 목록 조회
+    public ResponseEntity<?> findBookmarkMagazine(UserPrincipal userPrincipal) {
+
+        User user = userService.validateUserById(userPrincipal.getId());
+        List<Bookmark> bookmarks = bookmarkRepository.findByContentTypeAndUser(ContentType.MAGAZINE, user);
+        List<BookmarkMagazineRes> bookmarkMagazineResList = new ArrayList<>();
+
+        for (Bookmark bookmark : bookmarks) {
+            Long magazineId = bookmark.getContentId();
+            Magazine magazine = magazineService.validateMagazineById(magazineId);
+
+            BookmarkMagazineRes bookmarkMagazineRes = BookmarkMagazineRes.builder()
+                    .magazineId(magazineId)
+                    .title(magazine.getTitle())
+                    .writeTime(magazine.getCreatedDate().toLocalDate())
+                    .editor(magazine.getEditor())
+                    .build();
+
+            bookmarkMagazineResList.add(bookmarkMagazineRes);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(bookmarkMagazineResList)
                 .build();
 
         return ResponseEntity.ok(apiResponse);
