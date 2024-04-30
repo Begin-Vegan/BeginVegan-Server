@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Reviews", description = "Reviews API")
 @RestController
@@ -50,9 +51,11 @@ public class ReviewController {
     @PostMapping
     public ResponseEntity<?> postReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @RequestBody PostReviewReq postReviewReq
+            @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @RequestBody PostReviewReq postReviewReq,
+            @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile[] files
+
     ) {
-        return reviewService.postReview(userPrincipal, postReviewReq);
+        return reviewService.postReview(userPrincipal, postReviewReq, files);
     }
 
     @Operation(summary = "식당 정보 조회", description = "리뷰 작성 시 식당 정보를 조회합니다.")
