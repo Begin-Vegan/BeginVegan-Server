@@ -117,7 +117,7 @@ public class RestaurantService {
     }
 
     // 식당 리뷰 조회
-    public ResponseEntity<?> findRestaurantReviewsById(UserPrincipal userPrincipal, RestaurantDetailReq restaurantDetailReq, Integer page) {
+    public ResponseEntity<?> findRestaurantReviewsById(UserPrincipal userPrincipal, RestaurantDetailReq restaurantDetailReq, Boolean isPhoto, Integer page) {
 
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
@@ -126,12 +126,18 @@ public class RestaurantService {
                 .orElseThrow(InvalidRestaurantException::new);
 
         Page<Review> reviewPage;
+        // 최신순
         if (restaurantDetailReq.getFilter().equals("date")) {
-            PageRequest pageRequest = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "date"));
-            reviewPage = reviewRepository.findReviewsByRestaurant(restaurant, pageRequest);
+            PageRequest pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "modifiedDate"));
+            // photo 여부에 따라
+            reviewPage = isPhoto ?
+                    reviewRepository.findReviewsByRestaurantAndReviewType(restaurant, pageable, ReviewType.PHOTO) :
+                    reviewRepository.findReviewsByRestaurant(restaurant, pageable);
         } else {
             Pageable pageable = PageRequest.of(page, 10);
-            reviewPage = reviewRepository.findReviewsOrderByRecommendationCount(pageable);
+            reviewPage = isPhoto ?
+                    reviewRepository.findReviewsByRestaurantAndReviewTypeOrderByRecommendationCount(pageable, restaurant, ReviewType.PHOTO) :
+                    reviewRepository.findReviewsByRestaurantOrderByRecommendationCount(pageable, restaurant);
         }
 
 
@@ -166,6 +172,7 @@ public class RestaurantService {
                     .rate(restaurant.getRate())
                     .content(review.getContent())
                     .visible(review.getVisible())
+                    .date(review.getModifiedDate().toLocalDate())
                     .recommendationCount(recommendationRepository.countByReview(review)) // 추천 개수
                     .isRecommendation(recommendationRepository.existsByUserAndReview(user, review))
                     .build();
@@ -185,6 +192,10 @@ public class RestaurantService {
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    // TODO : 포토리뷰만 보기
+
+
 
     // TODO : 스크랩 변경사항 때문에 스크랩 로직 변경 필요 --------------------------------------------------------------------------------------------------------------------------------
     @Transactional

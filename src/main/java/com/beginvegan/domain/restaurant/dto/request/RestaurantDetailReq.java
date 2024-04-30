@@ -7,6 +7,6 @@ public class RestaurantDetailReq {
 
     private Long restaurantId;
 
-    private String filter;
+    private String filter = "date";
 
 }
