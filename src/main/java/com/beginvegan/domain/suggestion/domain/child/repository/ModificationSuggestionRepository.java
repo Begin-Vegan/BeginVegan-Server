@@ -1,4 +1,4 @@
-package com.beginvegan.domain.suggestion.domain.parent.repository;
+package com.beginvegan.domain.suggestion.domain.child.repository;
 
 import com.beginvegan.domain.suggestion.domain.child.ModificationSuggestion;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -27,11 +27,4 @@ public class Suggestion extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Inspection inspection;
 
-//    @Builder
-//    public Suggestion(Long id, User user, SuggestionType suggestionType, Inspection inspection) {
-//        this.id = id;
-//        this.user = user;
-//        this.suggestionType = suggestionType;
-//        this.inspection = inspection;
-//    }
 }
