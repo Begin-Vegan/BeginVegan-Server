@@ -9,6 +9,7 @@ import com.beginvegan.domain.food.dto.request.FoodDetailReq;
 import com.beginvegan.domain.food.dto.response.FoodDetailRes;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.food.exception.FoodNotFoundException;
+import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -122,6 +123,12 @@ public class FoodService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    public Food validateFoodById(Long foodId) {
+        Optional<Food> findFood = foodRepository.findById(foodId);
+        DefaultAssert.isTrue(findFood.isPresent(), "잘못된 레시피 아이디입니다.");
+        return findFood.get();
     }
 
 }
