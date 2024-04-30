@@ -71,6 +71,14 @@ public class ReviewController {
         return reviewService.getRestaurantInfoForReview(userPrincipal, restaurantId);
     }
 
+    @Operation(summary = "리뷰 조회", description = "리뷰를 조회합니다.")
+    @GetMapping("/{reviewId}")
+    public ResponseEntity<?> getReview(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
+    ) {
+        return reviewService.getReviewInfo(userPrincipal, reviewId);
+    }
 
     @Operation(summary = "리뷰 삭제", description = "내가 작성한 리뷰를 삭제합니다.")
     @DeleteMapping("/{reviewId}")

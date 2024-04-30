@@ -4,7 +4,6 @@ import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
-import com.beginvegan.domain.restaurant.dto.response.RestaurantDetailRes;
 import com.beginvegan.domain.review.domain.Review;
 import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
@@ -12,14 +11,11 @@ import com.beginvegan.domain.review.dto.request.PostReviewReq;
 import com.beginvegan.domain.review.dto.request.UpdateReviewReq;
 import com.beginvegan.domain.review.dto.response.RestaurantInfoRes;
 import com.beginvegan.domain.review.dto.response.ReviewDetailRes;
-import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.suggestion.domain.parent.Inspection;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
-import com.beginvegan.domain.user.dto.UserDetailRes;
-import com.beginvegan.domain.user.exception.InvalidUserException;
 import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
@@ -64,6 +60,32 @@ public class ReviewService {
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(restaurantInfoRes)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    public ResponseEntity<?> getReviewInfo(UserPrincipal userPrincipal, Long reviewId) {
+        Review review = validateReviewById(reviewId);
+        List<Image> images = imageRepository.findByReview(review);
+
+        RestaurantInfoRes restaurantInfoRes = RestaurantInfoRes.builder()
+                .name(review.getRestaurant().getName())
+                .address(review.getRestaurant().getAddress())
+                .restaurantType(review.getRestaurant().getRestaurantType())
+                .build();
+
+        ReviewDetailRes reviewDetailRes = ReviewDetailRes.builder()
+                .id(reviewId)
+                .content(review.getContent())
+                .rate(review.getRate())
+                .restaurantInfoRes(restaurantInfoRes)
+                .images(images)
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(reviewDetailRes)
                 .build();
 
         return ResponseEntity.ok(apiResponse);
@@ -178,31 +200,11 @@ public class ReviewService {
 
 
     public ResponseEntity<?> findReviewsByUser(UserPrincipal userPrincipal, Integer page) {
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(InvalidUserException::new);
 
-        PageRequest pageRequest = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "date"));
-        Page<Review> reviewPage = reviewRepository.findReviewsByUser(user, pageRequest);
-
-        List<Review> reviews = reviewPage.getContent();
-        List<ReviewDetailRes> reviewDetailResList = reviews.stream()
-                .map(review -> ReviewDetailRes.builder()
-                        .id(review.getId())
-                        .content(review.getContent())
-                        .date(review.getCreatedDate().toLocalDate())
-                        .restaurantDetailRes(RestaurantDetailRes.toDto(review.getRestaurant()))
-                        .userDetailRes(UserDetailRes.toDto(user))
-                        .build())
-                .toList();
-
-        ReviewListRes reviewListRes = ReviewListRes.builder()
-                .reviews(reviewDetailResList)
-                .totalCount(reviewPage.getTotalElements())
-                .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(reviewListRes)
+                .information("나의 리뷰 조회 수정 중")
                 .build();
 
         return ResponseEntity.ok(apiResponse);
