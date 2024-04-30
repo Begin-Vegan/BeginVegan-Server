@@ -3,8 +3,6 @@ package com.beginvegan.domain.restaurant.application;
 import com.beginvegan.domain.bookmark.domain.Bookmark;
 import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
 import com.beginvegan.domain.bookmark.domain.repository.ContentType;
-import com.beginvegan.domain.food.domain.Food;
-import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
 import com.beginvegan.domain.recommendation.domain.repository.RecommendationRepository;
@@ -20,8 +18,8 @@ import com.beginvegan.domain.restaurant.exception.InvalidRestaurantException;
 import com.beginvegan.domain.review.domain.Review;
 import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
-import com.beginvegan.domain.review.dto.RestaurantReviewDetailRes;
-import com.beginvegan.domain.review.dto.ReviewListRes;
+import com.beginvegan.domain.review.dto.response.RestaurantReviewDetailRes;
+import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
@@ -192,10 +190,6 @@ public class RestaurantService {
 
         return ResponseEntity.ok(apiResponse);
     }
-
-    // TODO : 포토리뷰만 보기
-
-
 
     // TODO : 스크랩 변경사항 때문에 스크랩 로직 변경 필요 --------------------------------------------------------------------------------------------------------------------------------
     @Transactional

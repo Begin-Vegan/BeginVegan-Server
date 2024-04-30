@@ -5,15 +5,16 @@ import com.beginvegan.domain.image.domain.repository.ImageRepository;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
 import com.beginvegan.domain.restaurant.dto.response.RestaurantDetailRes;
-import com.beginvegan.domain.restaurant.exception.InvalidRestaurantException;
 import com.beginvegan.domain.review.domain.Review;
 import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
-import com.beginvegan.domain.review.dto.PostReviewReq;
-import com.beginvegan.domain.review.dto.RestaurantInfoRes;
-import com.beginvegan.domain.review.dto.ReviewDetailRes;
-import com.beginvegan.domain.review.dto.ReviewListRes;
+import com.beginvegan.domain.review.dto.request.PostReviewReq;
+import com.beginvegan.domain.review.dto.request.UpdateReviewReq;
+import com.beginvegan.domain.review.dto.response.RestaurantInfoRes;
+import com.beginvegan.domain.review.dto.response.ReviewDetailRes;
+import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.domain.s3.application.S3Uploader;
+import com.beginvegan.domain.suggestion.domain.parent.Inspection;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
@@ -51,10 +52,9 @@ public class ReviewService {
     private final UserService userService;
     private final S3Uploader s3Uploader;
 
-    // 식당 정보 조회
+    // 리뷰 작성 시 식당 정보 조회
     public ResponseEntity<?> getRestaurantInfoForReview(UserPrincipal userPrincipal, Long restaurantId) {
-        Restaurant restaurant = restaurantRepository.findById(restaurantId)
-                .orElseThrow(InvalidUserException::new);
+        Restaurant restaurant = validateRestaurantById(restaurantId);
 
         RestaurantInfoRes restaurantInfoRes = RestaurantInfoRes.builder()
                 .name(restaurant.getName())
@@ -69,7 +69,7 @@ public class ReviewService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    //- 리뷰 작성
+    // 리뷰 등록
     @Transactional
     public ResponseEntity<?> postReview(UserPrincipal userPrincipal, PostReviewReq postReviewReq, MultipartFile[] images) {
         User user = userService.validateUserById(userPrincipal.getId());
@@ -127,12 +127,55 @@ public class ReviewService {
         }
     }
 
-    //- 리뷰 목록 조회
-    //- 리뷰 추천
-    //- 포토 리뷰 필터
-    //- 리뷰 수정
-    //- 리뷰 삭제
-    //- 검증된 리뷰 삭제시 리워드 회수
+    // 리뷰 추천
+
+    // 리뷰 수정
+    @Transactional
+    public ResponseEntity<?> updateReview(UserPrincipal userPrincipal, Long reviewId, UpdateReviewReq updateReviewReq, MultipartFile[] images) {
+        User user = userService.validateUserById(userPrincipal.getId());
+        Review review = validateReviewById(reviewId);
+
+        DefaultAssert.isTrue(review.getUser() == user, "리뷰 수정 권한이 없습니다.");
+        review.updateReview(updateReviewReq.getContent(), updateReviewReq.getRate());
+        if (review.getReviewType() == ReviewType.PHOTO && images.length > 0) {
+            List<Image> originalImages = imageRepository.findByReview(review);
+            // s3에서 삭제
+            for (Image image : originalImages) {
+                String originalFile = image.getImageUrl().split("amazonaws.com/")[1];
+                s3Uploader.deleteFile(originalFile);
+            }
+            // 데이터 삭제
+            imageRepository.deleteAll(originalImages);
+            // 업로드
+            uploadReviewImages(images, review);
+        }
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("리뷰가 수정되었습니다.").build())
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    // 리뷰 삭제 - 검증된 리뷰 삭제시 리워드 회수
+    @Transactional
+    public ResponseEntity<?> deleteReview(UserPrincipal userPrincipal, Long reviewId) {
+            User user = userService.validateUserById(userPrincipal.getId());
+            Review review = validateReviewById(reviewId);
+
+            DefaultAssert.isTrue(review.getUser() == user, "리뷰 삭제 권한이 없습니다.");
+
+            if (review.getInspection() == Inspection.COMPLETE_REWARD) {
+                user.subPoint(3);
+            }
+            reviewRepository.delete(review);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("리뷰가 삭제되었습니다.").build())
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
 
     public ResponseEntity<?> findReviewsByUser(UserPrincipal userPrincipal, Integer page) {
         User user = userRepository.findById(userPrincipal.getId())
@@ -169,6 +212,12 @@ public class ReviewService {
         Optional<Restaurant> restaurant = restaurantRepository.findById(restaurantId);
         DefaultAssert.isTrue(restaurant.isPresent(), "식당 정보가 올바르지 않습니다.");
         return restaurant.get();
+    }
+
+    public Review validateReviewById(Long reviewId) {
+        Optional<Review> review = reviewRepository.findById(reviewId);
+        DefaultAssert.isTrue(review.isPresent(), "리뷰 정보가 올바르지 않습니다.");
+        return review.get();
     }
 
 }

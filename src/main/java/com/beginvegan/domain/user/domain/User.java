@@ -109,4 +109,6 @@ public class User extends BaseEntity {
     // Description : 해당 함수 호출 시 더해야 하는 포인트 값만 요청
     public void updatePoint(Integer additionalPoint) { this.point += additionalPoint; }
 
+    public void subPoint(Integer point) { this.point -= point; }
+
 }

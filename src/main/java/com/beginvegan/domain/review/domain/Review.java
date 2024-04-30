@@ -53,4 +53,9 @@ public class Review extends BaseEntity {
         this.reviewType = reviewType;
         this.inspection = Inspection.INCOMPLETE;
     }
+
+    public void updateReview(String content, Double rate) {
+        this.content = content;
+        this.rate = rate;
+    }
 }

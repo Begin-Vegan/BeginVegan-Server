@@ -5,7 +5,7 @@ import com.beginvegan.domain.restaurant.dto.request.RestaurantDetailReq;
 import com.beginvegan.domain.restaurant.dto.request.SearchRestaurantReq;
 import com.beginvegan.domain.restaurant.dto.response.*;
 import com.beginvegan.domain.restaurant.dto.request.LocationReq;
-import com.beginvegan.domain.review.dto.ReviewListRes;
+import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ErrorResponse;

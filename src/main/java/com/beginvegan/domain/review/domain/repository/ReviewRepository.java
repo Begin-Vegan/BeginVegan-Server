@@ -24,6 +24,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @EntityGraph(attributePaths = {"user"})
     Page<Review> findReviewsByRestaurant(Restaurant restaurant, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"user"})
+    Page<Review> findReviewsByRestaurantAndReviewType(Restaurant restaurant, Pageable pageable, ReviewType reviewType);
+
     int countAllByRestaurant(Restaurant restaurant);
 
     // 추천순 정렬
@@ -39,8 +42,4 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT AVG(r.rate) FROM Review r WHERE r.restaurant = :restaurant AND r.visible = true")
     BigDecimal findAverageRateByRestaurant(Restaurant restaurant);
-
-    @EntityGraph(attributePaths = {"user"})
-    Page<Review> findReviewsByRestaurantAndReviewType(Restaurant restaurant, Pageable pageable, ReviewType reviewType);
-
 }

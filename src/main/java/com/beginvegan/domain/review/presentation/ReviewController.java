@@ -1,11 +1,9 @@
 package com.beginvegan.domain.review.presentation;
 
-import com.beginvegan.domain.food.dto.response.FoodRecipeListRes;
 import com.beginvegan.domain.review.application.ReviewService;
-import com.beginvegan.domain.review.dto.PostReviewReq;
-import com.beginvegan.domain.review.dto.RestaurantInfoRes;
-import com.beginvegan.domain.review.dto.ReviewDetailRes;
-import com.beginvegan.domain.review.dto.ReviewListRes;
+import com.beginvegan.domain.review.dto.request.PostReviewReq;
+import com.beginvegan.domain.review.dto.response.RestaurantInfoRes;
+import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ErrorResponse;
@@ -30,6 +28,7 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
+    // TODO : 나의 리뷰 조회 - 수정 필요
     @Operation(summary = "유저의 리뷰 조희", description = "유저의 리뷰들을 최신순으로 가져옵니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "유저 리뷰 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ReviewListRes.class)) } ),
@@ -69,6 +68,15 @@ public class ReviewController {
             @Parameter(description = "식당 id를 입력해주세요..", required = true) @PathVariable Long restaurantId
     ) {
         return reviewService.getRestaurantInfoForReview(userPrincipal, restaurantId);
+    }
+
+    @Operation(summary = "리뷰 삭제", description = "내가 작성한 리뷰를 삭제합니다.")
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<?> deleteReview(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
+    ) {
+        return reviewService.deleteReview(userPrincipal, reviewId);
     }
 
 }
