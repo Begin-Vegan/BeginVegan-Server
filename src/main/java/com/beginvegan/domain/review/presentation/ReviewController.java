@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +54,7 @@ public class ReviewController {
     @PostMapping
     public ResponseEntity<?> postReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @RequestPart PostReviewReq postReviewReq,
+            @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @Valid @RequestPart PostReviewReq postReviewReq,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
 
     ) {
@@ -96,7 +97,7 @@ public class ReviewController {
     public ResponseEntity<?> updateReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
-            @Parameter(description = "UpdateReviewReq Schema를 확인해주세요.", required = true) @RequestPart UpdateReviewReq updateReviewReq,
+            @Parameter(description = "UpdateReviewReq Schema를 확인해주세요.", required = true) @Valid @RequestPart UpdateReviewReq updateReviewReq,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
     ) {
         return reviewService.updateReview(userPrincipal, reviewId, updateReviewReq, files);
