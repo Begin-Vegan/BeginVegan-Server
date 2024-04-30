@@ -12,4 +12,6 @@ public interface RecommendationRepository extends JpaRepository<Recommendation, 
     boolean existsByUserAndReview(User user, Review review);
 
     int countByReview(Review review);
+
+    Recommendation findByUserAndReview(User user, Review review);
 }

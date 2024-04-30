@@ -102,4 +102,13 @@ public class ReviewController {
         return reviewService.updateReview(userPrincipal, reviewId, updateReviewReq, files);
     }
 
+    @Operation(summary = "리뷰 추천 및 추천 취소", description = "유저의 리뷰 추천 상태에 따라 리뷰를 추천하거나 추천을 취소합니다.")
+    @PostMapping("/{reviewId}/recommendation")
+    public ResponseEntity<?> recommendReview(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
+    ) {
+        return reviewService.recommendReviews(userPrincipal, reviewId);
+    }
+
 }

@@ -2,6 +2,8 @@ package com.beginvegan.domain.review.application;
 
 import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
+import com.beginvegan.domain.recommendation.domain.Recommendation;
+import com.beginvegan.domain.recommendation.domain.repository.RecommendationRepository;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
 import com.beginvegan.domain.review.domain.Review;
@@ -9,6 +11,7 @@ import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
 import com.beginvegan.domain.review.dto.request.PostReviewReq;
 import com.beginvegan.domain.review.dto.request.UpdateReviewReq;
+import com.beginvegan.domain.review.dto.response.RecommendationByUserAndReviewRes;
 import com.beginvegan.domain.review.dto.response.RestaurantInfoRes;
 import com.beginvegan.domain.review.dto.response.ReviewDetailRes;
 import com.beginvegan.domain.s3.application.S3Uploader;
@@ -41,6 +44,7 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
     private final ImageRepository imageRepository;
+    private final RecommendationRepository recommendationRepository;
 
     private final UserService userService;
     private final S3Uploader s3Uploader;
@@ -146,7 +150,42 @@ public class ReviewService {
     }
 
     // 리뷰 추천
-    // 내가 추천했는지
+    @Transactional
+    public ResponseEntity<?> recommendReviews(UserPrincipal userPrincipal, Long reviewId) {
+        User user = userService.validateUserById(userPrincipal.getId());
+        Review review = validateReviewById(reviewId);
+
+        boolean isRecommend = false;
+        // 내 리뷰도 추천 가능한지?
+        // 리뷰 추천(포인트 부여) - 취소 - 재추천 시 포인트 부여하는지?
+        // 부여하지 않는다면 recommendation 데이터 삭제가 아니라 컬럼 추가해서 업데이트하는 방식
+        if (recommendationRepository.existsByUserAndReview(user, review)) {
+            Recommendation recommendation = recommendationRepository.findByUserAndReview(user, review);
+            recommendationRepository.delete(recommendation);
+        } else {
+            Recommendation recommendation = Recommendation.builder()
+                    .review(review)
+                    .user(user).build();
+            recommendationRepository.save(recommendation);
+            isRecommend = true;
+            // 리뷰 작성자에게 포인트 부여
+            review.getUser().updatePoint(2);
+        }
+
+        int count = recommendationRepository.countByReview(review);
+
+        RecommendationByUserAndReviewRes recommendationRes = RecommendationByUserAndReviewRes.builder()
+                .recommendationCount(count)
+                .isRecommendation(isRecommend)
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(recommendationRes)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 
     // 리뷰 수정
     // Description : 수정 시 무조건 이미지 삭제(사용자가 이미지를 삭제했는지, 변경사항이 없는지 구분이 불가함. 따라서 리뷰 수정 시 이미지는 무조건 삭제 후 다시 저장하는 방향으로)
