@@ -66,9 +66,10 @@ public class BookmarkController {
     })
     @GetMapping("/restaurant")
     public ResponseEntity<?> findBookmarkRestaurant(
-            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "식당 검색 결과를 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
     ) {
-        return bookmarkService.findBookmarkRestaurant(userPrincipal);
+        return bookmarkService.findBookmarkRestaurant(userPrincipal, page);
     }
 
     // Description : 레시피
@@ -79,9 +80,10 @@ public class BookmarkController {
     })
     @GetMapping("/recipe")
     public ResponseEntity<?> findBookmarkRecipe(
-            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "식당 검색 결과를 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
     ) {
-        return bookmarkService.findBookmarkRecipe(userPrincipal);
+        return bookmarkService.findBookmarkRecipe(userPrincipal, page);
     }
 
     // Description : 매거진
@@ -92,8 +94,9 @@ public class BookmarkController {
     })
     @GetMapping("/magazine")
     public ResponseEntity<?> findBookmarkMagazine(
-            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "식당 검색 결과를 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
     ) {
-        return bookmarkService.findBookmarkMagazine(userPrincipal);
+        return bookmarkService.findBookmarkMagazine(userPrincipal, page);
     }
 }

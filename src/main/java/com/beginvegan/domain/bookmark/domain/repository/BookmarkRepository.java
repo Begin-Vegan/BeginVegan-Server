@@ -4,6 +4,7 @@ import com.beginvegan.domain.bookmark.domain.Bookmark;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.user.domain.User;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,5 +21,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     boolean existsBookmarkByContentIdAndContentTypeAndUser(Long contentId, ContentType contentType, User user);
 
     List<Bookmark> findByContentTypeAndUser(ContentType contentType, User user);
+
+    Page<Bookmark> findBookmarksByContentTypeAndUser(ContentType contentType, User user, PageRequest pageRequest);
 
 }

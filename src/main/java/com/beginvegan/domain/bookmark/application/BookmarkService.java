@@ -21,6 +21,9 @@ import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.Message;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,13 +88,16 @@ public class BookmarkService {
     }
 
     // Description : 북마크한 식당 목록 조회
-    public ResponseEntity<?> findBookmarkRestaurant(UserPrincipal userPrincipal) {
+    public ResponseEntity<?> findBookmarkRestaurant(UserPrincipal userPrincipal, Integer page) {
 
         User user = userService.validateUserById(userPrincipal.getId());
-        List<Bookmark> bookmarks = bookmarkRepository.findByContentTypeAndUser(ContentType.RESTAURANT, user);
+
+        PageRequest pageRequest = PageRequest.of(page, 15, Sort.by(Sort.Direction.DESC, "createdDate"));
+        Page<Bookmark> bookmarkPage = bookmarkRepository.findBookmarksByContentTypeAndUser(ContentType.RESTAURANT, user, pageRequest);
+
         List<BookmarkRestaurantRes> bookmarkRestaurantResList = new ArrayList<>();
 
-        for (Bookmark bookmark : bookmarks) {
+        for (Bookmark bookmark : bookmarkPage) {
             Long restaurantId = bookmark.getContentId();
             Restaurant restaurant = restaurantService.validateRestaurantById(restaurantId);
 
@@ -114,13 +120,16 @@ public class BookmarkService {
     }
 
     // Description : 북마크한 레시피 목록 조회
-    public ResponseEntity<?> findBookmarkRecipe(UserPrincipal userPrincipal) {
+    public ResponseEntity<?> findBookmarkRecipe(UserPrincipal userPrincipal, Integer page) {
 
         User user = userService.validateUserById(userPrincipal.getId());
-        List<Bookmark> bookmarks = bookmarkRepository.findByContentTypeAndUser(ContentType.RECIPE, user);
+
+        PageRequest pageRequest = PageRequest.of(page, 15, Sort.by(Sort.Direction.DESC, "createdDate"));
+        Page<Bookmark> bookmarkPage = bookmarkRepository.findBookmarksByContentTypeAndUser(ContentType.RECIPE, user, pageRequest);
+
         List<BookmarkFoodRes> bookmarkFoodResList = new ArrayList<>();
 
-        for (Bookmark bookmark : bookmarks) {
+        for (Bookmark bookmark : bookmarkPage) {
             Long foodId = bookmark.getContentId();
             Food food = foodService.validateFoodById(foodId);
 
@@ -142,13 +151,16 @@ public class BookmarkService {
     }
 
     // Description : 북마크한 매거진 목록 조회
-    public ResponseEntity<?> findBookmarkMagazine(UserPrincipal userPrincipal) {
+    public ResponseEntity<?> findBookmarkMagazine(UserPrincipal userPrincipal, Integer page) {
 
         User user = userService.validateUserById(userPrincipal.getId());
-        List<Bookmark> bookmarks = bookmarkRepository.findByContentTypeAndUser(ContentType.MAGAZINE, user);
+
+        PageRequest pageRequest = PageRequest.of(page, 15, Sort.by(Sort.Direction.DESC, "createdDate"));
+        Page<Bookmark> bookmarkPage = bookmarkRepository.findBookmarksByContentTypeAndUser(ContentType.MAGAZINE, user, pageRequest);
+
         List<BookmarkMagazineRes> bookmarkMagazineResList = new ArrayList<>();
 
-        for (Bookmark bookmark : bookmarks) {
+        for (Bookmark bookmark : bookmarkPage) {
             Long magazineId = bookmark.getContentId();
             Magazine magazine = magazineService.validateMagazineById(magazineId);
 
