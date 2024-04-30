@@ -206,7 +206,7 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    private String countUserLevel(Integer point) {
+    public String countUserLevel(Integer point) {
         String userLevel;
 
         if (point < 2) { userLevel = "SEED";}
