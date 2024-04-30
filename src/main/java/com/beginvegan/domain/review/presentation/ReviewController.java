@@ -21,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Optional;
+
 @Tag(name = "Reviews", description = "Reviews API")
 @RestController
 @RequiredArgsConstructor
@@ -43,7 +45,7 @@ public class ReviewController {
         return reviewService.findReviewsByUser(userPrincipal, page);
     }
 
-    @Operation(summary = " 리뷰 등록", description = "리뷰를 등록합니다.")
+    @Operation(summary = "리뷰 등록", description = "리뷰를 등록합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "리뷰 등록 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class)) } ),
             @ApiResponse(responseCode = "400", description = "리뷰 등록 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
@@ -51,8 +53,8 @@ public class ReviewController {
     @PostMapping
     public ResponseEntity<?> postReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @RequestBody PostReviewReq postReviewReq,
-            @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile[] files
+            @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @RequestPart PostReviewReq postReviewReq,
+            @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
 
     ) {
         return reviewService.postReview(userPrincipal, postReviewReq, files);
@@ -63,8 +65,8 @@ public class ReviewController {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RestaurantInfoRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/{restaurantId}")
-    public ResponseEntity<?> postReview(
+    @GetMapping("/restaurants/{restaurantId}")
+    public ResponseEntity<?> getRestaurantInfo(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "식당 id를 입력해주세요..", required = true) @PathVariable Long restaurantId
     ) {
@@ -94,8 +96,8 @@ public class ReviewController {
     public ResponseEntity<?> updateReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
-            @Parameter(description = "UpdateReviewReq Schema를 확인해주세요.", required = true) @RequestBody UpdateReviewReq updateReviewReq,
-            @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile[] files
+            @Parameter(description = "UpdateReviewReq Schema를 확인해주세요.", required = true) @RequestPart UpdateReviewReq updateReviewReq,
+            @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
     ) {
         return reviewService.updateReview(userPrincipal, reviewId, updateReviewReq, files);
     }

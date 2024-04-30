@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
@@ -37,8 +38,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT r FROM Review r LEFT JOIN Recommendation rec ON r.id = rec.review.id WHERE r.restaurant = :restaurant AND r.reviewType = :reviewType GROUP BY r.id ORDER BY COUNT(rec) DESC")
     Page<Review> findReviewsByRestaurantAndReviewTypeOrderByRecommendationCount(Pageable pageable, Restaurant restaurant, ReviewType reviewType);
 
-    @Query("SELECT DISTINCT res FROM Review r JOIN r.restaurant res WHERE r.modifiedDate = :modifiedDate")
-    List<Restaurant> findDistinctRestaurantsByModifiedDate(LocalDate modifiedDate);
+    @Query("SELECT DISTINCT r.restaurant FROM Review r WHERE r.modifiedDate >= :start AND r.modifiedDate <= :end")
+    List<Restaurant> findDistinctRestaurantsByModifiedDate(LocalDateTime start, LocalDateTime end);
 
     @Query("SELECT AVG(r.rate) FROM Review r WHERE r.restaurant = :restaurant AND r.visible = true")
     BigDecimal findAverageRateByRestaurant(Restaurant restaurant);

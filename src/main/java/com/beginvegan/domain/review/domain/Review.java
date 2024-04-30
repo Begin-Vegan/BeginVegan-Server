@@ -58,4 +58,6 @@ public class Review extends BaseEntity {
         this.content = content;
         this.rate = rate;
     }
+
+    public void updateReviewType(ReviewType reviewType) { this.reviewType = reviewType; }
 }

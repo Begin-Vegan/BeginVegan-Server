@@ -21,9 +21,6 @@ import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.Message;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -32,7 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -93,11 +90,11 @@ public class ReviewService {
 
     // 리뷰 등록
     @Transactional
-    public ResponseEntity<?> postReview(UserPrincipal userPrincipal, PostReviewReq postReviewReq, MultipartFile[] images) {
+    public ResponseEntity<?> postReview(UserPrincipal userPrincipal, PostReviewReq postReviewReq, Optional<MultipartFile[]> images) {
         User user = userService.validateUserById(userPrincipal.getId());
         Restaurant restaurant = validateRestaurantById(postReviewReq.getRestaurantId());
 
-        boolean hasImages = images != null && images.length > 0;
+        boolean hasImages = images.isPresent();
         ReviewType reviewType = hasImages ? ReviewType.PHOTO : ReviewType.NORMAL;
 
         Review review = Review.builder()
@@ -109,7 +106,7 @@ public class ReviewService {
                 .build();
         reviewRepository.save(review);
 
-        if (hasImages) { uploadReviewImages(images, review); }
+        if (hasImages) { uploadReviewImages(images.get(), review); }
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -135,42 +132,40 @@ public class ReviewService {
     @Transactional
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateReviewRatings() {
-        LocalDate today = LocalDate.now();
+        LocalDateTime start = LocalDateTime.now().minusDays(1);
+        LocalDateTime end = LocalDateTime.now();
         // 변경된 리뷰가 있는 식당 가져오기
-        List<Restaurant> updatedRestaurants = reviewRepository.findDistinctRestaurantsByModifiedDate(today);
+        List<Restaurant> updatedRestaurants = reviewRepository.findDistinctRestaurantsByModifiedDate(start, end);
         for (Restaurant restaurant : updatedRestaurants) {
             // 평균 평점 구하기
             BigDecimal averageRate = reviewRepository.findAverageRateByRestaurant(restaurant);
-            if (averageRate != null) {
-                // 소수점 둘째 자리에서 반올림
-                BigDecimal roundedAverageRate = averageRate.setScale(1, RoundingMode.HALF_UP);
-                restaurant.updateRate(roundedAverageRate.doubleValue());
-            }
+            // 소수점 둘째 자리에서 반올림
+            BigDecimal roundedAverageRate = averageRate.setScale(1, RoundingMode.HALF_UP);
+            restaurant.updateRate(roundedAverageRate.doubleValue());
         }
     }
 
     // 리뷰 추천
+    // 내가 추천했는지
 
     // 리뷰 수정
+    // Description : 수정 시 무조건 이미지 삭제(사용자가 이미지를 삭제했는지, 변경사항이 없는지 구분이 불가함. 따라서 리뷰 수정 시 이미지는 무조건 삭제 후 다시 저장하는 방향으로)
     @Transactional
-    public ResponseEntity<?> updateReview(UserPrincipal userPrincipal, Long reviewId, UpdateReviewReq updateReviewReq, MultipartFile[] images) {
+    public ResponseEntity<?> updateReview(UserPrincipal userPrincipal, Long reviewId, UpdateReviewReq updateReviewReq, Optional<MultipartFile[]> images) {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
 
         DefaultAssert.isTrue(review.getUser() == user, "리뷰 수정 권한이 없습니다.");
         review.updateReview(updateReviewReq.getContent(), updateReviewReq.getRate());
-        if (review.getReviewType() == ReviewType.PHOTO && images.length > 0) {
-            List<Image> originalImages = imageRepository.findByReview(review);
-            // s3에서 삭제
-            for (Image image : originalImages) {
-                String originalFile = image.getImageUrl().split("amazonaws.com/")[1];
-                s3Uploader.deleteFile(originalFile);
-            }
-            // 데이터 삭제
-            imageRepository.deleteAll(originalImages);
-            // 업로드
-            uploadReviewImages(images, review);
-        }
+        // 수정 시 무조건 이미지 삭제
+        deleteReviewImages(review);
+        // 이미지 존재하면 업로드
+        if (images.isPresent()) {
+            uploadReviewImages(images.get(), review);
+            // 이미지 여부에 따라 리뷰 타입 변경하는지?
+            // review.updateReviewType(ReviewType.PHOTO);
+        } // else { review.updateReviewType(ReviewType.NORMAL);}
+
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(Message.builder().message("리뷰가 수정되었습니다.").build())
@@ -185,10 +180,11 @@ public class ReviewService {
             Review review = validateReviewById(reviewId);
 
             DefaultAssert.isTrue(review.getUser() == user, "리뷰 삭제 권한이 없습니다.");
-
             if (review.getInspection() == Inspection.COMPLETE_REWARD) {
                 user.subPoint(3);
             }
+            // 이미지 삭제
+            deleteReviewImages(review);
             reviewRepository.delete(review);
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -196,6 +192,18 @@ public class ReviewService {
                 .information(Message.builder().message("리뷰가 삭제되었습니다.").build())
                 .build();
         return ResponseEntity.ok(apiResponse);
+    }
+
+    private void deleteReviewImages(Review review) {
+        if (!imageRepository.findByReview(review).isEmpty()) {
+            List<Image> originalImages = imageRepository.findByReview(review);
+            // s3에서 삭제
+            for (Image image : originalImages) {
+                String originalFile = image.getImageUrl().split("amazonaws.com/")[1];
+                s3Uploader.deleteFile(originalFile);
+            }
+            imageRepository.deleteAll(originalImages);
+        }
     }
 
 
