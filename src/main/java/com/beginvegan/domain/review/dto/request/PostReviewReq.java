@@ -1,4 +1,4 @@
-package com.beginvegan.domain.review.dto;
+package com.beginvegan.domain.review.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

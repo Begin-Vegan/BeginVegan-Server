@@ -1,4 +1,4 @@
-package com.beginvegan.domain.review.dto;
+package com.beginvegan.domain.review.dto.response;
 
 import com.beginvegan.domain.restaurant.domain.Address;
 import com.beginvegan.domain.restaurant.domain.RestaurantType;
