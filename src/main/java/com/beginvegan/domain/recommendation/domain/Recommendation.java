@@ -1,6 +1,7 @@
 package com.beginvegan.domain.recommendation.domain;
 
 import com.beginvegan.domain.common.BaseEntity;
+import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.review.domain.Review;
 import com.beginvegan.domain.user.domain.User;
 import jakarta.persistence.*;

@@ -1,5 +1,6 @@
 package com.beginvegan.domain.review.application;
 
+import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
 import com.beginvegan.domain.recommendation.domain.Recommendation;
@@ -163,23 +164,27 @@ public class ReviewService {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
 
-        boolean isRecommend = false;
-        // 리뷰 추천(포인트 부여) - 취소 - 재추천 시 포인트 부여하는지?
-        // 부여하지 않는다면 recommendation 데이터 삭제가 아니라 컬럼 추가해서 업데이트하는 방식
+        boolean isRecommend = true;
+        // 리뷰 추천(포인트 부여) - 취소 - 재추천 시 포인트 부여하지 않음
+        // recommendation 테이블 soft delete
         if (recommendationRepository.existsByUserAndReview(user, review)) {
             Recommendation recommendation = recommendationRepository.findByUserAndReview(user, review);
-            recommendationRepository.delete(recommendation);
+            if (recommendation.getStatus() == Status.DELETE) {          // 재추천
+                recommendation.updateStatus(Status.ACTIVE);
+            } else {      // 추천 취소
+                recommendation.updateStatus(Status.DELETE);
+                isRecommend = false;
+            }
         } else {
             Recommendation recommendation = Recommendation.builder()
                     .review(review)
                     .user(user).build();
             recommendationRepository.save(recommendation);
-            isRecommend = true;
             // 리뷰 작성자에게 포인트 부여
             review.getUser().updatePoint(2);
         }
 
-        int count = recommendationRepository.countByReview(review);
+        int count = recommendationRepository.countByReviewAndStatus(review, Status.ACTIVE);
 
         RecommendationByUserAndReviewRes recommendationRes = RecommendationByUserAndReviewRes.builder()
                 .recommendationCount(count)
@@ -213,8 +218,8 @@ public class ReviewService {
             // 검증 필요하므로 초기화
             review.updateInspection(Inspection.INCOMPLETE);
         } else {
-            // 검증된 리뷰 수정 시 사진 삭제 - 포인트 차감
-            if (review.getReviewType() == ReviewType.PHOTO) { user.subPoint(3);}
+            // 검증된 리뷰 수정 시 사진 삭제하면 포인트 차감
+            if (review.getReviewType() == ReviewType.PHOTO && review.getInspection() == Inspection.COMPLETE_REWARD) { user.subPoint(3);}
             review.updateReviewType(ReviewType.NORMAL);
         }
 
@@ -285,7 +290,7 @@ public class ReviewService {
         User user = userService.validateUserById(userPrincipal.getId());
         PageRequest pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "modifiedDate"));
 
-        Page<Review> myReviews = reviewRepository.findReviewsByUser(user, pageable);
+        Page<Review> myReviews = reviewRepository.findReviewsByUserAndVisible(user, pageable, true);
         List<MyReviewRes> myReviewResList = myReviews.stream()
                 .map(review -> MyReviewRes.builder()
                         .reviewId(review.getId())
@@ -293,8 +298,8 @@ public class ReviewService {
                         .date(review.getModifiedDate().toLocalDate())
                         .rate(review.getRate())
                         .content(review.getContent())
-                        .countRecommendation(recommendationRepository.countByReview(review))
-                        .isRecommendation(recommendationRepository.existsByUserAndReview(user, review))
+                        .countRecommendation(recommendationRepository.countByReviewAndStatus(review, Status.ACTIVE))
+                        .isRecommendation(recommendationRepository.existsByUserAndReviewAndStatus(user, review, Status.ACTIVE))
                         .images(imageRepository.findByReview(review))
                         .build())
                 .toList();

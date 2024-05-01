@@ -3,6 +3,7 @@ package com.beginvegan.domain.restaurant.application;
 import com.beginvegan.domain.bookmark.domain.Bookmark;
 import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
 import com.beginvegan.domain.bookmark.domain.repository.ContentType;
+import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
 import com.beginvegan.domain.recommendation.domain.repository.RecommendationRepository;
@@ -171,8 +172,8 @@ public class RestaurantService {
                     .content(review.getContent())
                     .visible(review.getVisible())
                     .date(review.getModifiedDate().toLocalDate())
-                    .recommendationCount(recommendationRepository.countByReview(review)) // 추천 개수
-                    .isRecommendation(recommendationRepository.existsByUserAndReview(user, review))
+                    .recommendationCount(recommendationRepository.countByReviewAndStatus(review, Status.ACTIVE)) // 추천 개수
+                    .isRecommendation(recommendationRepository.existsByUserAndReviewAndStatus(user, review, Status.ACTIVE))
                     .build();
             restaurantReviewDetailResList.add(restaurantReviewDetailRes);
 

@@ -1,5 +1,6 @@
 package com.beginvegan.domain.recommendation.domain.repository;
 
+import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.recommendation.domain.Recommendation;
 import com.beginvegan.domain.review.domain.Review;
 import com.beginvegan.domain.user.domain.User;
@@ -14,4 +15,8 @@ public interface RecommendationRepository extends JpaRepository<Recommendation, 
     int countByReview(Review review);
 
     Recommendation findByUserAndReview(User user, Review review);
+
+    int countByReviewAndStatus(Review review, Status status);
+
+    boolean existsByUserAndReviewAndStatus(User user, Review review, Status status);
 }
