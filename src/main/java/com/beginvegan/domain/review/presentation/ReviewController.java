@@ -116,7 +116,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "리뷰 신고", description = "부적절한 리뷰를 신고합니다.")
-    @DeleteMapping("/{reviewId}/report")
+    @PostMapping("/{reviewId}/report")
     public ResponseEntity<?> deleteReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,

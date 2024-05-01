@@ -259,6 +259,7 @@ public class ReviewService {
     }
 
     // 리뷰 신고
+    @Transactional
     public ResponseEntity<?> reportReview(UserPrincipal userPrincipal, Long reviewId, ReportContentReq reportContentReq) {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
