@@ -32,7 +32,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "유저 회원가입", description = "유저 회원가입을 수행합니다.")
+    @Operation(summary = "유저 회원가입", description = "유저 회원가입 이후 추가 정보를 수행합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "회원가입 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = AuthRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "회원가입 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),

@@ -4,6 +4,9 @@ import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
 import com.beginvegan.domain.recommendation.domain.Recommendation;
 import com.beginvegan.domain.recommendation.domain.repository.RecommendationRepository;
+import com.beginvegan.domain.report.domain.Report;
+import com.beginvegan.domain.report.domain.repository.ReportRepository;
+import com.beginvegan.domain.report.dto.ReportContentReq;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
 import com.beginvegan.domain.review.domain.Review;
@@ -42,6 +45,7 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
+    private final ReportRepository reportRepository;
     private final RestaurantRepository restaurantRepository;
     private final ImageRepository imageRepository;
     private final RecommendationRepository recommendationRepository;
@@ -156,7 +160,6 @@ public class ReviewService {
         Review review = validateReviewById(reviewId);
 
         boolean isRecommend = false;
-        // 내 리뷰도 추천 가능한지?
         // 리뷰 추천(포인트 부여) - 취소 - 재추천 시 포인트 부여하는지?
         // 부여하지 않는다면 recommendation 데이터 삭제가 아니라 컬럼 추가해서 업데이트하는 방식
         if (recommendationRepository.existsByUserAndReview(user, review)) {
@@ -201,9 +204,15 @@ public class ReviewService {
         // 이미지 존재하면 업로드
         if (images.isPresent()) {
             uploadReviewImages(images.get(), review);
-            // 이미지 여부에 따라 리뷰 타입 변경하는지?
-            // review.updateReviewType(ReviewType.PHOTO);
-        } // else { review.updateReviewType(ReviewType.NORMAL);}
+            // 이미지 여부에 따라 리뷰 타입 변경
+            review.updateReviewType(ReviewType.PHOTO);
+            // 검증 필요하므로 초기화
+            review.updateInspection(Inspection.INCOMPLETE);
+        } else {
+            // 검증된 리뷰 수정 시 사진 삭제 - 포인트 차감
+            if (review.getReviewType() == ReviewType.PHOTO) { user.subPoint(3);}
+            review.updateReviewType(ReviewType.NORMAL);
+        }
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -243,6 +252,28 @@ public class ReviewService {
             }
             imageRepository.deleteAll(originalImages);
         }
+    }
+
+    // 리뷰 신고
+    public ResponseEntity<?> reportReview(UserPrincipal userPrincipal, Long reviewId, ReportContentReq reportContentReq) {
+        User user = userService.validateUserById(userPrincipal.getId());
+        Review review = validateReviewById(reviewId);
+
+        // 추후 필요 시 enum 값으로 수정
+        Report report = Report.builder()
+                .user(user)
+                .review(review)
+                .content(reportContentReq.getContent())
+                .build();
+        reportRepository.save(report);
+        // 리뷰 숨김 처리
+        review.updateVisible(false);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("신고가 접수되었습니다.").build())
+                .build();
+        return ResponseEntity.ok(apiResponse);
     }
 
 
