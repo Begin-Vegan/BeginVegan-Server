@@ -14,6 +14,7 @@ import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
 import com.beginvegan.domain.review.dto.request.PostReviewReq;
 import com.beginvegan.domain.review.dto.request.UpdateReviewReq;
+import com.beginvegan.domain.review.dto.response.MyReviewRes;
 import com.beginvegan.domain.review.dto.response.RecommendationByUserAndReviewRes;
 import com.beginvegan.domain.review.dto.response.RestaurantInfoRes;
 import com.beginvegan.domain.review.dto.response.ReviewDetailRes;
@@ -27,6 +28,9 @@ import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.Message;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -277,12 +281,28 @@ public class ReviewService {
     }
 
 
+    // TODO : 디자인 확정되면 수정
     public ResponseEntity<?> findReviewsByUser(UserPrincipal userPrincipal, Integer page) {
+        User user = userService.validateUserById(userPrincipal.getId());
+        PageRequest pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "modifiedDate"));
 
+        Page<Review> myReviews = reviewRepository.findReviewsByUser(user, pageable);
+        List<MyReviewRes> myReviewResList = myReviews.stream()
+                .map(review -> MyReviewRes.builder()
+                        .reviewId(review.getId())
+                        .restaurantName(review.getRestaurant().getName())
+                        .date(review.getModifiedDate().toLocalDate())
+                        .rate(review.getRate())
+                        .content(review.getContent())
+                        .countRecommendation(recommendationRepository.countByReview(review))
+                        .isRecommendation(recommendationRepository.existsByUserAndReview(user, review))
+                        .images(imageRepository.findByReview(review))
+                        .build())
+                .toList();
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information("나의 리뷰 조회 수정 중")
+                .information(myReviewResList)
                 .build();
 
         return ResponseEntity.ok(apiResponse);
