@@ -270,8 +270,6 @@ public class ReviewService {
                 .content(reportContentReq.getContent())
                 .build();
         reportRepository.save(report);
-        // 리뷰 숨김 처리
-        review.updateVisible(false);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
