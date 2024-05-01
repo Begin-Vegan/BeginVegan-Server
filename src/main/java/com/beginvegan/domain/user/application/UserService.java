@@ -108,7 +108,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateProfile(UserPrincipal userPrincipal, UpdateNicknameReq updateNicknameReq, Boolean isDefaultImage, MultipartFile file) {
+    public ResponseEntity<?> updateProfile(UserPrincipal userPrincipal, UpdateNicknameReq updateNicknameReq, Boolean isDefaultImage, Optional<MultipartFile> file) {
         User user = validateUserById(userPrincipal.getId());
 
         String newNickname = updateNicknameReq.getNickname();
@@ -118,7 +118,7 @@ public class UserService {
             user.updateNickname(newNickname);
         }
         // 이미지 수정
-        updateProfileImage(user, isDefaultImage, file);
+        file.ifPresent(multipartFile -> updateProfileImage(user, isDefaultImage, multipartFile));
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
