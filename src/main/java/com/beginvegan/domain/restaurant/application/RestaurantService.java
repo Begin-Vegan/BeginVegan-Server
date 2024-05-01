@@ -365,16 +365,18 @@ public class RestaurantService {
                 }
             }
         }
-        // 랜덤 수 count개(3개) 추리기
-        Set<Integer> randomNum = new HashSet<>();
-        while(randomNum.size() < count){
-            randomNum.add((int)(Math.random() * restaurantResList.size()));
-        }
+        if (!restaurantResList.isEmpty()) {
+            // 랜덤 수 count개(3개) 추리기
+            Set<Integer> randomNum = new HashSet<>();
+            while(randomNum.size() < count){
+                randomNum.add((int)(Math.random() * restaurantResList.size()));
+            }
 
-        Iterator<Integer> iter = randomNum.iterator();
-        while(iter.hasNext()){
-            int num = iter.next();
-            randomRestaurantResList.add(restaurantResList.get(num));
+            Iterator<Integer> iter = randomNum.iterator();
+            while(iter.hasNext()){
+                int num = iter.next();
+                randomRestaurantResList.add(restaurantResList.get(num));
+            }
         }
 
         ApiResponse apiResponse = ApiResponse.builder()
