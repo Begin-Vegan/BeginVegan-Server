@@ -59,4 +59,6 @@ public class Restaurant extends BaseEntity {
         this.rate = rate;
         this.menus = menus;
     }
+
+    public void updateRate(Double rate) { this.rate = rate; }
 }

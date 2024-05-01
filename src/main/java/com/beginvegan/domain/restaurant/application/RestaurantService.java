@@ -3,8 +3,6 @@ package com.beginvegan.domain.restaurant.application;
 import com.beginvegan.domain.bookmark.domain.Bookmark;
 import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
 import com.beginvegan.domain.bookmark.domain.repository.ContentType;
-import com.beginvegan.domain.food.domain.Food;
-import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
 import com.beginvegan.domain.recommendation.domain.repository.RecommendationRepository;
@@ -20,8 +18,8 @@ import com.beginvegan.domain.restaurant.exception.InvalidRestaurantException;
 import com.beginvegan.domain.review.domain.Review;
 import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
-import com.beginvegan.domain.review.dto.RestaurantReviewDetailRes;
-import com.beginvegan.domain.review.dto.ReviewListRes;
+import com.beginvegan.domain.review.dto.response.RestaurantReviewDetailRes;
+import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
@@ -117,7 +115,7 @@ public class RestaurantService {
     }
 
     // 식당 리뷰 조회
-    public ResponseEntity<?> findRestaurantReviewsById(UserPrincipal userPrincipal, RestaurantDetailReq restaurantDetailReq, Integer page) {
+    public ResponseEntity<?> findRestaurantReviewsById(UserPrincipal userPrincipal, RestaurantDetailReq restaurantDetailReq, Boolean isPhoto, Integer page) {
 
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
@@ -126,12 +124,18 @@ public class RestaurantService {
                 .orElseThrow(InvalidRestaurantException::new);
 
         Page<Review> reviewPage;
+        // 최신순
         if (restaurantDetailReq.getFilter().equals("date")) {
-            PageRequest pageRequest = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "date"));
-            reviewPage = reviewRepository.findReviewsByRestaurant(restaurant, pageRequest);
+            PageRequest pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "modifiedDate"));
+            // photo 여부에 따라
+            reviewPage = isPhoto ?
+                    reviewRepository.findReviewsByRestaurantAndReviewType(restaurant, pageable, ReviewType.PHOTO) :
+                    reviewRepository.findReviewsByRestaurant(restaurant, pageable);
         } else {
             Pageable pageable = PageRequest.of(page, 10);
-            reviewPage = reviewRepository.findReviewsOrderByRecommendationCount(pageable);
+            reviewPage = isPhoto ?
+                    reviewRepository.findReviewsByRestaurantAndReviewTypeOrderByRecommendationCount(pageable, restaurant, ReviewType.PHOTO) :
+                    reviewRepository.findReviewsByRestaurantOrderByRecommendationCount(pageable, restaurant);
         }
 
 
@@ -166,6 +170,7 @@ public class RestaurantService {
                     .rate(restaurant.getRate())
                     .content(review.getContent())
                     .visible(review.getVisible())
+                    .date(review.getModifiedDate().toLocalDate())
                     .recommendationCount(recommendationRepository.countByReview(review)) // 추천 개수
                     .isRecommendation(recommendationRepository.existsByUserAndReview(user, review))
                     .build();

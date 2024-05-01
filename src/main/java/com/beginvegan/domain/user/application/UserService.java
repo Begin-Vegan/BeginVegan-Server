@@ -5,7 +5,6 @@ import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.VeganType;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.domain.user.dto.*;
-import com.beginvegan.domain.user.exception.InvalidUserException;
 import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.error.DefaultException;
@@ -92,13 +91,17 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateAlarmSetting(UserPrincipal userPrincipal, UpdateAlarmSettingReq alarmSettingReq) {
+    public ResponseEntity<?> updateAlarmSetting(UserPrincipal userPrincipal) {
         User user = validateUserById(userPrincipal.getId());
-        user.updateAlarmSetting(alarmSettingReq.getAlarmSetting());
+        boolean isAlarmSetting = !user.getAlarmSetting();
+        user.updateAlarmSetting(isAlarmSetting);
+
+        UpdateAlarmSettingRes updateAlarmSettingRes = UpdateAlarmSettingRes.builder()
+                .alarmSetting(isAlarmSetting).build();
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(Message.builder().message("유저의 알림 여부 설정이 완료되었습니다.").build())
+                .information(updateAlarmSettingRes)
                 .build();
 
         return ResponseEntity.ok(apiResponse);
@@ -219,6 +222,7 @@ public class UserService {
     }
 
     // Description : 마이페이지 회원 정보 조회
+    // TODO : Point
     public ResponseEntity<?> getMyPageUserInfo(UserPrincipal userPrincipal) {
         User user = validateUserById(userPrincipal.getId());
 

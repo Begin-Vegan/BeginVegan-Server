@@ -22,7 +22,7 @@ public class Review extends BaseEntity {
 
     private String content;
 
-    private LocalDate date;
+    // private LocalDate date;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id")
@@ -32,11 +32,7 @@ public class Review extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String thumbnail;
-
     private Double rate;
-
-    private Boolean verified = false;
 
     private Boolean visible = true;
 
@@ -47,17 +43,21 @@ public class Review extends BaseEntity {
     private Inspection inspection; // 검수 여부
 
     @Builder
-    public Review(Long id, String content, LocalDate date, Restaurant restaurant, User user, String thumbnail, Double rate, Boolean verified, Boolean visible, ReviewType reviewType, Inspection inspection) {
+    public Review(Long id, String content, Restaurant restaurant, User user, Double rate, ReviewType reviewType) {
         this.id = id;
         this.content = content;
-        this.date = date;
         this.restaurant = restaurant;
         this.user = user;
-        this.thumbnail = thumbnail;
         this.rate = rate;
-        this.verified = verified;
-        this.visible = visible;
+        this.visible = true;
         this.reviewType = reviewType;
-        this.inspection = inspection;
+        this.inspection = Inspection.INCOMPLETE;
     }
+
+    public void updateReview(String content, Double rate) {
+        this.content = content;
+        this.rate = rate;
+    }
+
+    public void updateReviewType(ReviewType reviewType) { this.reviewType = reviewType; }
 }

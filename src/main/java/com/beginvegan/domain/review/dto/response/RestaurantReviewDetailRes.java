@@ -1,4 +1,4 @@
-package com.beginvegan.domain.review.dto;
+package com.beginvegan.domain.review.dto.response;
 
 import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.user.domain.User;

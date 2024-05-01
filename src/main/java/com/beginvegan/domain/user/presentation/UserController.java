@@ -55,15 +55,14 @@ public class UserController {
 
     @Operation(summary = "유저의 알림 여부 변경", description = "유저의 알림 여부를 변경합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "유저 알람 여부 변경 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "200", description = "유저 알람 여부 변경 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = UpdateAlarmSettingRes.class))}),
             @ApiResponse(responseCode = "400", description = "유저 알람 여부 변경 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
     @PatchMapping("/alarm")
     public ResponseEntity<?> updateAlarmSetting(
-            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "UpdateAlarmSettingReq Schema를 확인해주세요.", required = true) @RequestBody UpdateAlarmSettingReq updateAlarmSettingReq
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
     ) {
-        return userService.updateAlarmSetting(userPrincipal, updateAlarmSettingReq);
+        return userService.updateAlarmSetting(userPrincipal);
     }
 
     @Operation(summary = "유저 비건 타입 변경", description = "유저의 비건 타입을 변경합니다.")

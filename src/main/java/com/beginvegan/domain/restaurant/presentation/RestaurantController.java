@@ -5,7 +5,7 @@ import com.beginvegan.domain.restaurant.dto.request.RestaurantDetailReq;
 import com.beginvegan.domain.restaurant.dto.request.SearchRestaurantReq;
 import com.beginvegan.domain.restaurant.dto.response.*;
 import com.beginvegan.domain.restaurant.dto.request.LocationReq;
-import com.beginvegan.domain.review.dto.ReviewListRes;
+import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ErrorResponse;
@@ -54,9 +54,10 @@ public class RestaurantController {
     public ResponseEntity<?> findRestaurantReviewsById(
             @Parameter(description = "AccessToken을 입력해주세요") @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "RestaurantDetailReq를 참고해주세요.", required = true) @RequestBody RestaurantDetailReq restaurantDetailReq,
+            @Parameter(description = "'포토 리뷰만 보기' 선택 여부입니다. 기본값은 false입니다.", required = true) @RequestParam(defaultValue = "false") Boolean isPhoto,
             @Parameter(description = "식당/카페의 리뷰 목록을 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
     ) {
-        return restaurantService.findRestaurantReviewsById(userPrincipal, restaurantDetailReq, page);
+        return restaurantService.findRestaurantReviewsById(userPrincipal, restaurantDetailReq, isPhoto, page);
     }
 
     @Operation(summary = "식당/카페 스크랩", description = "식당/카페를 스크랩합니다.")

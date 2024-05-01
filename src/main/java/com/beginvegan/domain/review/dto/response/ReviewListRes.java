@@ -1,4 +1,4 @@
-package com.beginvegan.domain.review.dto;
+package com.beginvegan.domain.review.dto.response;
 
 import lombok.Builder;
 import lombok.Data;
