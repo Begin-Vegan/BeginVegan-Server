@@ -111,4 +111,9 @@ public class User extends BaseEntity {
 
     public void subPoint(Integer point) { this.point -= point; }
 
+    public void softDeleteUser(String email, String password, String providerId) {
+        this.email = email;
+        this.password = password;
+        this.providerId = providerId;
+    }
 }
