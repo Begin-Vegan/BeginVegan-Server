@@ -6,6 +6,7 @@ import com.beginvegan.domain.magazine.dto.response.MagazineDetailRes;
 import com.beginvegan.domain.magazine.dto.response.MagazineListRes;
 import com.beginvegan.global.payload.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,13 +24,13 @@ public class MagazineController {
 
     private final MagazineService magazineService;
 
-    // 랜덤 매거진 2가지 조회
+    // 랜덤 매거진 2가지 조회(기존 비긴비건)
     @Operation(summary = "2가지 매거진 목록 조회", description = "2가지 매거진 목록 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "2가지 매거진 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MagazineListRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "2가지 매거진 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/random-magazine-list")
+    @GetMapping("home/magazine")
     public ResponseEntity<?> findTwoMagazines(){
         return magazineService.findTwoMagazines();
     }
@@ -40,9 +41,31 @@ public class MagazineController {
             @ApiResponse(responseCode = "200", description = "매거진 상세 정보 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MagazineDetailRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "매거진 상세 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PostMapping("/magazine-detail")
+    @GetMapping("/detail")
     public ResponseEntity<?> findMagazineDetail(@RequestBody MagazineDetailReq magazineDetailReq) {
         return magazineService.findMagazineDetail(magazineDetailReq);
     }
+    //매거진 전체 목록 조회
+    @Operation(summary = "전체 매거진 목록 조회", description = "전체 매거진 목록 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "전체 매거진 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MagazineListRes.class)) } ),
+            @ApiResponse(responseCode = "400", description = "전체 매거진 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("")
+    public ResponseEntity<?> findAllMagazines(
+            @Parameter(description = "레시피 리스트를 조회합니다. **Page는 0부터 시작합니다!**", required = true)
+            @RequestParam(value = "page") Integer page){
+        return magazineService.findAllMagazines(page);
+    }
 
+    //매거진 랜덤 3가지 조회
+    @Operation(summary = "3가지 매거진 목록 조회", description = "3가지 매거진 목록 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "3가지 매거진 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MagazineListRes.class)) } ),
+            @ApiResponse(responseCode = "400", description = "3가지 매거진 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("home/magazine")
+    public ResponseEntity<?> findThreeMagazines(){
+        return magazineService.findThreeMagazines();
+    }
 }
