@@ -21,15 +21,19 @@ public class MyPageUserInfoRes {
     @Schema(type = "string", example = "SEED, ROOT, SPROUT, STEM, LEAF, TREE, FLOWER, FRUIT", description = "유저의 사용자 레벨입니다.")
     private String userLevel;
 
+    @Schema(type = "Integer", example = "0", description = "유저의 관심도 포인트입니다.")
+    private Integer point;
+
     @Schema(type = "string", example = "UNKNOWN, VEGAN, LACTO_VEGETARIAN, OVO_VEGETARIAN, LACTO_OVO_VEGETARIAN, POLLOTARIAN, PASCATARIAN, FLEXITARIAN", description = "유저의 비건 타입을 변경합니다.")
     private VeganType veganType;
 
     @Builder
-    public MyPageUserInfoRes(Long id, String imageUrl, String nickname, String userLevel, VeganType veganType) {
+    public MyPageUserInfoRes(Long id, String imageUrl, String nickname, String userLevel, Integer point, VeganType veganType) {
         this.id = id;
         this.imageUrl = imageUrl;
         this.nickname = nickname;
         this.userLevel = userLevel;
+        this.point = point;
         this.veganType = veganType;
     }
 }
