@@ -43,4 +43,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT AVG(r.rate) FROM Review r WHERE r.restaurant = :restaurant AND r.visible = true")
     BigDecimal findAverageRateByRestaurant(Restaurant restaurant);
+
+    Page<Review> findReviewsByUserAndVisible(User user, PageRequest pageable, boolean b);
 }

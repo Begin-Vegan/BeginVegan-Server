@@ -1,8 +1,10 @@
 package com.beginvegan.domain.review.presentation;
 
+import com.beginvegan.domain.report.dto.ReportContentReq;
 import com.beginvegan.domain.review.application.ReviewService;
 import com.beginvegan.domain.review.dto.request.PostReviewReq;
 import com.beginvegan.domain.review.dto.request.UpdateReviewReq;
+import com.beginvegan.domain.review.dto.response.MyReviewRes;
 import com.beginvegan.domain.review.dto.response.RestaurantInfoRes;
 import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
@@ -11,6 +13,7 @@ import com.beginvegan.global.payload.ErrorResponse;
 import com.beginvegan.global.payload.Message;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,7 +38,7 @@ public class ReviewController {
     // TODO : 나의 리뷰 조회 - 수정 필요
     @Operation(summary = "유저의 리뷰 조희", description = "유저의 리뷰들을 최신순으로 가져옵니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "유저 리뷰 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ReviewListRes.class)) } ),
+            @ApiResponse(responseCode = "200", description = "유저 리뷰 목록 조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema( schema = @Schema(implementation = MyReviewRes.class))) } ),
             @ApiResponse(responseCode = "400", description = "유저 리뷰 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping
@@ -110,6 +113,16 @@ public class ReviewController {
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
     ) {
         return reviewService.recommendReviews(userPrincipal, reviewId);
+    }
+
+    @Operation(summary = "리뷰 신고", description = "부적절한 리뷰를 신고합니다.")
+    @PostMapping("/{reviewId}/report")
+    public ResponseEntity<?> deleteReview(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
+            @Parameter(description = "리뷰 신고 사유입니다.", required = true) @Valid @RequestBody ReportContentReq reportContentReq
+            ) {
+        return reviewService.reportReview(userPrincipal, reviewId, reportContentReq);
     }
 
 }

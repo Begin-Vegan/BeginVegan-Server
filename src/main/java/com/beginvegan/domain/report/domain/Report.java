@@ -25,10 +25,13 @@ public class Report extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
+    private String content;
+
     @Builder
-    public Report(Long id, Review review, User user) {
+    public Report(Long id, Review review, User user, String content) {
         this.id = id;
         this.review = review;
         this.user = user;
+        this.content = content;
     }
 }

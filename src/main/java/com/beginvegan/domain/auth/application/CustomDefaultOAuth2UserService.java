@@ -47,6 +47,9 @@ public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService{
             user = userOptional.get();
             DefaultAssert.isAuthentication(user.getProvider().equals(Provider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId())));
             // user = updateExistingUser(user, oAuth2UserInfo);
+
+            // user의 nickname이 null이면 추가정보 입력할 것
+            DefaultAssert.isTrue(user.getNickname() != null, "회원가입 절차가 완료되지 않았습니다.");
         } else {
             user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
         }

@@ -1,9 +1,13 @@
 package com.beginvegan.domain.review.application;
 
+import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
 import com.beginvegan.domain.recommendation.domain.Recommendation;
 import com.beginvegan.domain.recommendation.domain.repository.RecommendationRepository;
+import com.beginvegan.domain.report.domain.Report;
+import com.beginvegan.domain.report.domain.repository.ReportRepository;
+import com.beginvegan.domain.report.dto.ReportContentReq;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
 import com.beginvegan.domain.restaurant.domain.repository.RestaurantRepository;
 import com.beginvegan.domain.review.domain.Review;
@@ -11,6 +15,7 @@ import com.beginvegan.domain.review.domain.ReviewType;
 import com.beginvegan.domain.review.domain.repository.ReviewRepository;
 import com.beginvegan.domain.review.dto.request.PostReviewReq;
 import com.beginvegan.domain.review.dto.request.UpdateReviewReq;
+import com.beginvegan.domain.review.dto.response.MyReviewRes;
 import com.beginvegan.domain.review.dto.response.RecommendationByUserAndReviewRes;
 import com.beginvegan.domain.review.dto.response.RestaurantInfoRes;
 import com.beginvegan.domain.review.dto.response.ReviewDetailRes;
@@ -24,6 +29,9 @@ import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.Message;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -42,6 +50,7 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
+    private final ReportRepository reportRepository;
     private final RestaurantRepository restaurantRepository;
     private final ImageRepository imageRepository;
     private final RecommendationRepository recommendationRepository;
@@ -155,24 +164,27 @@ public class ReviewService {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
 
-        boolean isRecommend = false;
-        // 내 리뷰도 추천 가능한지?
-        // 리뷰 추천(포인트 부여) - 취소 - 재추천 시 포인트 부여하는지?
-        // 부여하지 않는다면 recommendation 데이터 삭제가 아니라 컬럼 추가해서 업데이트하는 방식
+        boolean isRecommend = true;
+        // 리뷰 추천(포인트 부여) - 취소 - 재추천 시 포인트 부여하지 않음
+        // recommendation 테이블 soft delete
         if (recommendationRepository.existsByUserAndReview(user, review)) {
             Recommendation recommendation = recommendationRepository.findByUserAndReview(user, review);
-            recommendationRepository.delete(recommendation);
+            if (recommendation.getStatus() == Status.DELETE) {          // 재추천
+                recommendation.updateStatus(Status.ACTIVE);
+            } else {      // 추천 취소
+                recommendation.updateStatus(Status.DELETE);
+                isRecommend = false;
+            }
         } else {
             Recommendation recommendation = Recommendation.builder()
                     .review(review)
                     .user(user).build();
             recommendationRepository.save(recommendation);
-            isRecommend = true;
             // 리뷰 작성자에게 포인트 부여
             review.getUser().updatePoint(2);
         }
 
-        int count = recommendationRepository.countByReview(review);
+        int count = recommendationRepository.countByReviewAndStatus(review, Status.ACTIVE);
 
         RecommendationByUserAndReviewRes recommendationRes = RecommendationByUserAndReviewRes.builder()
                 .recommendationCount(count)
@@ -201,9 +213,15 @@ public class ReviewService {
         // 이미지 존재하면 업로드
         if (images.isPresent()) {
             uploadReviewImages(images.get(), review);
-            // 이미지 여부에 따라 리뷰 타입 변경하는지?
-            // review.updateReviewType(ReviewType.PHOTO);
-        } // else { review.updateReviewType(ReviewType.NORMAL);}
+            // 이미지 여부에 따라 리뷰 타입 변경
+            review.updateReviewType(ReviewType.PHOTO);
+            // 검증 필요하므로 초기화
+            review.updateInspection(Inspection.INCOMPLETE);
+        } else {
+            // 검증된 리뷰 수정 시 사진 삭제하면 포인트 차감
+            if (review.getReviewType() == ReviewType.PHOTO && review.getInspection() == Inspection.COMPLETE_REWARD) { user.subPoint(3);}
+            review.updateReviewType(ReviewType.NORMAL);
+        }
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -245,13 +263,50 @@ public class ReviewService {
         }
     }
 
+    // 리뷰 신고
+    @Transactional
+    public ResponseEntity<?> reportReview(UserPrincipal userPrincipal, Long reviewId, ReportContentReq reportContentReq) {
+        User user = userService.validateUserById(userPrincipal.getId());
+        Review review = validateReviewById(reviewId);
 
-    public ResponseEntity<?> findReviewsByUser(UserPrincipal userPrincipal, Integer page) {
-
+        // 추후 필요 시 enum 값으로 수정
+        Report report = Report.builder()
+                .user(user)
+                .review(review)
+                .content(reportContentReq.getContent())
+                .build();
+        reportRepository.save(report);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information("나의 리뷰 조회 수정 중")
+                .information(Message.builder().message("신고가 접수되었습니다.").build())
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+
+    // TODO : 디자인 확정되면 수정
+    public ResponseEntity<?> findReviewsByUser(UserPrincipal userPrincipal, Integer page) {
+        User user = userService.validateUserById(userPrincipal.getId());
+        PageRequest pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "modifiedDate"));
+
+        Page<Review> myReviews = reviewRepository.findReviewsByUserAndVisible(user, pageable, true);
+        List<MyReviewRes> myReviewResList = myReviews.stream()
+                .map(review -> MyReviewRes.builder()
+                        .reviewId(review.getId())
+                        .restaurantName(review.getRestaurant().getName())
+                        .date(review.getModifiedDate().toLocalDate())
+                        .rate(review.getRate())
+                        .content(review.getContent())
+                        .countRecommendation(recommendationRepository.countByReviewAndStatus(review, Status.ACTIVE))
+                        .isRecommendation(recommendationRepository.existsByUserAndReviewAndStatus(user, review, Status.ACTIVE))
+                        .images(imageRepository.findByReview(review))
+                        .build())
+                .toList();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(myReviewResList)
                 .build();
 
         return ResponseEntity.ok(apiResponse);

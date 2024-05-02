@@ -60,4 +60,7 @@ public class Review extends BaseEntity {
     }
 
     public void updateReviewType(ReviewType reviewType) { this.reviewType = reviewType; }
+    public void updateInspection(Inspection inspection) { this.inspection = inspection; }
+
+    public void updateVisible(boolean visible) { this.visible = visible; }
 }
