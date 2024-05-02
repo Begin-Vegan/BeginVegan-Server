@@ -19,19 +19,16 @@ public class FoodDetailRes {
 
     private VeganType veganType;
 
-    private String source;
-
     private List<FoodIngredientDto> ingredients;
 
     private List<BlockDto> blocks;
 
     @Builder
-    public FoodDetailRes(Long id, String name, VeganType veganType, String source, List<FoodIngredientDto> ingredients, List<BlockDto> blocks) {
+    public FoodDetailRes(Long id, String name, VeganType veganType, List<FoodIngredientDto> ingredients, List<BlockDto> blocks) {
         this.id = id;
         this.name = name;
         this.veganType = veganType;
         this.ingredients = ingredients;
-        this.source = source;
         this.blocks = blocks;
     }
 }
