@@ -7,6 +7,7 @@ import com.beginvegan.domain.food.dto.response.FoodDetailRes;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.global.payload.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,8 +31,11 @@ public class FoodController {
             @ApiResponse(responseCode = "400", description = "전체 레시피 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("")
-    public ResponseEntity<?> findAllFoods() {
-        return foodService.findAllFoods();
+    public ResponseEntity<?> findAllFoods(
+            @Parameter(description = "레시피 리스트를 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
+
+    ) {
+        return foodService.findAllFoods(page);
     }
     // 레시피 상세 정보 조회
     @Operation(summary = "레시피 상세 정보 조회", description = "food_id를 통한 레시피 상세 정보를 조회합니다.")
@@ -40,7 +44,7 @@ public class FoodController {
             @ApiResponse(responseCode = "400", description = "레시피 상세 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
 
-    @PostMapping("")
+    @GetMapping("/detail")
     public ResponseEntity<?> findFoodDetail(@RequestBody FoodDetailReq foodDetailReq) {
         return foodService.findFoodDetail(foodDetailReq);
     }
