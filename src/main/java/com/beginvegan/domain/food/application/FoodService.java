@@ -131,4 +131,24 @@ public class FoodService {
         return findFood.get();
     }
 
+    public ResponseEntity<?> findAllFoods() {
+        List<Food> foods = foodRepository.findAll();
+        List<FoodListRes> foodList = new ArrayList<>();
+
+        for (Food food : foods) {
+            FoodListRes foodListRes = FoodListRes.builder()
+                    .id(food.getId())
+                    .name(food.getName())
+                    .veganType(food.getVeganType())
+                    .build();
+            foodList.add(foodListRes);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(foodList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 }

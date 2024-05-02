@@ -29,29 +29,28 @@ public class FoodController {
             @ApiResponse(responseCode = "200", description = "전체 레시피 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = FoodRecipeListRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "전체 레시피 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/recipe-list")
-    public ResponseEntity<?> findAllFoodsWithIngredients() {
-        return foodService.findAllFoodsWithIngredients();
+    @GetMapping("")
+    public ResponseEntity<?> findAllFoods() {
+        return foodService.findAllFoods();
     }
-
     // 레시피 상세 정보 조회
     @Operation(summary = "레시피 상세 정보 조회", description = "food_id를 통한 레시피 상세 정보를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "레시피 상세 정보 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = FoodDetailRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "레시피 상세 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PostMapping("/recipe-detail")
+
+    @PostMapping("")
     public ResponseEntity<?> findFoodDetail(@RequestBody FoodDetailReq foodDetailReq) {
         return foodService.findFoodDetail(foodDetailReq);
     }
-
     // 랜덤 음식 3가지 조회
     @Operation(summary = "3가지 음식 목록 조회", description = "3가지 음식 목록 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "3가지 음식 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = FoodListRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "3가지 음식 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/random-food-list")
+    @GetMapping("home/recipe")
     public ResponseEntity<?> findThreeFoods(){
         return foodService.findThreeFoods();
     }
