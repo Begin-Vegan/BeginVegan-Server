@@ -132,4 +132,16 @@ public class UserController {
         return userService.getMyPageUserInfo(userPrincipal);
     }
 
+    @Operation(summary = "유저 탈퇴", description = "유저가 서비스를 탈퇴합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "유저 탈퇴 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "유저 탈퇴 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PatchMapping("/delete")
+    public ResponseEntity<?> deleteUser(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return userService.deleteUser(userPrincipal);
+    }
+
 }

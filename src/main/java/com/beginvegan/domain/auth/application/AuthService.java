@@ -153,6 +153,7 @@ public class AuthService {
         return true;
     }
 
+    @Transactional
     public ResponseEntity<?> signIn(SignInReq signInReq) {
         // Description : 회원가입 절차가 완료되지 않은 경우
         User user = userRepository.findByEmail(signInReq.getEmail())

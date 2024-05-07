@@ -23,7 +23,6 @@ import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.suggestion.domain.parent.Inspection;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
-import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
@@ -49,7 +48,6 @@ import java.util.*;
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final UserRepository userRepository;
     private final ReportRepository reportRepository;
     private final RestaurantRepository restaurantRepository;
     private final ImageRepository imageRepository;
@@ -285,7 +283,6 @@ public class ReviewService {
     }
 
 
-    // TODO : 디자인 확정되면 수정
     public ResponseEntity<?> findReviewsByUser(UserPrincipal userPrincipal, Integer page) {
         User user = userService.validateUserById(userPrincipal.getId());
         PageRequest pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "modifiedDate"));
