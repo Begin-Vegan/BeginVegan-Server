@@ -13,13 +13,11 @@ public class MagazineListRes {
 
     private String editor;
 
-    private MagazineType magazineType;
 
     @Builder
-    public MagazineListRes(Long id, String title, String editor, MagazineType magazineType) {
+    public MagazineListRes(Long id, String title, String editor) {
         this.id = id;
         this.title = title;
         this.editor = editor;
-        this.magazineType = magazineType;
     }
 }
