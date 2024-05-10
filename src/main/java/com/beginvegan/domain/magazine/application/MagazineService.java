@@ -113,20 +113,30 @@ public class MagazineService {
         List<Magazine> magazines = magazineRepository.findAll();
         List<MagazineListRes> magazineList = new ArrayList<>();
 
-        //랜덤 3개
-        Set<Integer> randomNum = new HashSet<>();
-        while (randomNum.size() < 3) {
-            randomNum.add((int) (Math.random() * magazineList.size()));
-        }
-        Iterator<Integer> iter = randomNum.iterator();
-        while (iter.hasNext()) {
-            int num = iter.next();
-            MagazineListRes magazineListRes = MagazineListRes.builder()
-                    .id(magazines.get(num).getId())
-                    .title(magazines.get(num).getTitle())
-                    .editor(magazines.get(num).getEditor())
-                    .build();
-            magazineList.add(magazineListRes);
+        // 매거진 리스트가 3개 미만인 경우 모든 매거진을 반환
+        if (magazines.size() <= 3) {
+            for (Magazine magazine : magazines) {
+                MagazineListRes magazineListRes = MagazineListRes.builder()
+                        .id(magazine.getId())
+                        .title(magazine.getTitle())
+                        .editor(magazine.getEditor())
+                        .build();
+                magazineList.add(magazineListRes);
+            }
+        } else {
+            // 랜덤하게 3개의 매거진 선택
+            Set<Integer> randomNums = new HashSet<>();
+            while (randomNums.size() < 3) {
+                randomNums.add((int) (Math.random() * magazines.size()));
+            }
+            for (int num : randomNums) {
+                MagazineListRes magazineListRes = MagazineListRes.builder()
+                        .id(magazines.get(num).getId())
+                        .title(magazines.get(num).getTitle())
+                        .editor(magazines.get(num).getEditor())
+                        .build();
+                magazineList.add(magazineListRes);
+            }
         }
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -134,6 +144,5 @@ public class MagazineService {
                 .information(magazineList)
                 .build();
         return ResponseEntity.ok(apiResponse);
-
     }
 }
