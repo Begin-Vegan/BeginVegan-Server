@@ -23,22 +23,21 @@ public class Magazine extends BaseEntity {
 
     private String editor;
 
-    private String source;
+    private String thumbnail;
 
-    @Enumerated(EnumType.STRING)
-    private MagazineType magazineType;
+    private String videoUrl;
 
     @OneToMany(mappedBy = "magazine")
     private List<Block> magazineBlocks = new ArrayList<>();
 
     @Builder
-    public Magazine(Long id, String title, String editor, String source, MagazineType magazineType, List<Block> magazineBlocks) {
+
+    public Magazine(Long id, String title, String editor, String thumbnail, String videoUrl, List<Block> magazineBlocks) {
         this.id = id;
         this.title = title;
         this.editor = editor;
-        this.source = source;
-        this.magazineType = magazineType;
+        this.thumbnail = thumbnail;
+        this.videoUrl = videoUrl;
         this.magazineBlocks = magazineBlocks;
     }
-
 }

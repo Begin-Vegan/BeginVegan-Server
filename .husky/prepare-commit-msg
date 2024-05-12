@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo '*************************************************'
+echo '*********                               *********'
+echo '*********   Begin Vegan Project Husky   *********'
+echo '*********       ISSUE Tracking...       *********'
+echo '*********     Wait for Husky Edit       *********'
+echo '*********                               *********'
+echo '*************************************************'
+
+BRANCH_NAME=$(git symbolic-ref -q HEAD)
+BRANCH_NAME=${BRANCH_NAME##*/} # Remove everything before the last /
+ISSUE_TICKET=$(echo "$BRANCH_NAME" | sed -n 's/^\([A-Za-z0-9]*-[0-9]*\)-.*$/\1/p')
+
+# Check if ISSUE_TICKET is not empty
+if [ -n "$ISSUE_TICKET" ]; then
+  # Output extracted Jira 이슈 티켓 번호
+  echo "==================>>  Begin, Vegan Extracted Jira 이슈 티켓 번호: $ISSUE_TICKET <<=================="
+
+  # Read the commit message from the temporary file
+  COMMIT_MSG_FILE=$1
+  COMMIT_MSG=$(cat $COMMIT_MSG_FILE)
+
+  # 이슈 티켓 번호 + 커밋 
+  echo "[$ISSUE_TICKET] $COMMIT_MSG" > $COMMIT_MSG_FILE
+fi

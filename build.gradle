@@ -8,6 +8,11 @@ group = 'com'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
+// plain.jar - false
+jar {
+	enabled = false
+}
+
 repositories {
 	mavenCentral()
 }
@@ -18,6 +23,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// AWS S3
+	implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
 
 	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.1.0'
 	testImplementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-api', version: '2.1.0'
@@ -30,7 +38,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
-	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+	runtimeOnly 'com.mysql:mysql-connector-j'
 	runtimeOnly 'com.h2database:h2'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

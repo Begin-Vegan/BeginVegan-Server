@@ -9,8 +9,11 @@ import com.beginvegan.domain.food.dto.request.FoodDetailReq;
 import com.beginvegan.domain.food.dto.response.FoodDetailRes;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.food.exception.FoodNotFoundException;
+import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,7 +84,6 @@ public class FoodService {
                 .id(food.getId())
                 .name(food.getName())
                 .veganType(food.getVeganType())
-                .source(food.getSource())
                 .ingredients(ingredientDtos)
                 .blocks(blockDtos)
                 .build();
@@ -113,7 +115,6 @@ public class FoodService {
                     .id(foods.get(num).getId())
                     .name(foods.get(num).getName())
                     .veganType(foods.get(num).getVeganType())
-                    .description(foods.get(num).getDescription())
                     .build();
             foodList.add(foodListRes);
         }
@@ -126,4 +127,31 @@ public class FoodService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    public Food validateFoodById(Long foodId) {
+        Optional<Food> findFood = foodRepository.findById(foodId);
+        DefaultAssert.isTrue(findFood.isPresent(), "잘못된 레시피 아이디입니다.");
+        return findFood.get();
+    }
+
+    public ResponseEntity<?> findAllFoods(Integer page) {
+        Pageable pageable = PageRequest.of(page, 10);
+        List<Food> foods = foodRepository.findAll(pageable).getContent();
+        List<FoodListRes> foodList = new ArrayList<>();
+
+        for (Food food : foods) {
+            FoodListRes foodListRes = FoodListRes.builder()
+                    .id(food.getId())
+                    .name(food.getName())
+                    .veganType(food.getVeganType())
+                    .build();
+            foodList.add(foodListRes);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(foodList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 }

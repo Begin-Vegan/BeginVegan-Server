@@ -21,8 +21,6 @@ public class Restaurant extends BaseEntity {
 
     private String name;
 
-    private String businessHours;
-
     private String contactNumber;
 
     @Enumerated(EnumType.STRING)
@@ -37,26 +35,30 @@ public class Restaurant extends BaseEntity {
 
     private String kakaoMapUrl;
 
-    private String imageUrl;
+    private String thumbnail;
 
-    private String imageSource;
+    private Double rate;
 
     @OneToMany(mappedBy = "restaurant")
     List<Menu> menus = new ArrayList<>();
 
+    @OneToMany(mappedBy = "restaurant")
+    List<Review> reviews = new ArrayList<>();
+
     @Builder
-    public Restaurant(Long id, String name, String businessHours, String contactNumber, RestaurantType restaurantType, Address address, String latitude, String longitude, String kakaoMapUrl, String imageUrl, String imageSource) {
+    public Restaurant(Long id, String name, String contactNumber, RestaurantType restaurantType, Address address, String latitude, String longitude, String kakaoMapUrl, String thumbnail, Double rate, List<Menu> menus) {
         this.id = id;
         this.name = name;
-        this.businessHours = businessHours;
         this.contactNumber = contactNumber;
         this.restaurantType = restaurantType;
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
         this.kakaoMapUrl = kakaoMapUrl;
-        this.imageUrl = imageUrl;
-        this.imageSource = imageSource;
+        this.thumbnail = thumbnail;
+        this.rate = rate;
+        this.menus = menus;
     }
 
+    public void updateRate(Double rate) { this.rate = rate; }
 }

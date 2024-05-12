@@ -11,10 +11,7 @@ import com.beginvegan.global.payload.Message;
 import com.beginvegan.domain.auth.application.AuthService;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Authorization", description = "Authorization API")
 @RequiredArgsConstructor
@@ -34,16 +32,19 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "유저 회원가입", description = "유저 회원가입을 수행합니다.")
+    @Operation(summary = "유저 회원가입", description = "유저 회원가입 이후 추가 정보를 수행합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "회원가입 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = AuthRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "회원가입 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @PostMapping(value="/sign-up")
     public ResponseEntity<?> signUp(
-            @Parameter(description = "SignUpReq Schema를 확인해주세요.", required = true) @RequestBody SignUpReq signUpReq
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "SignUpReq Schema를 확인해주세요.", required = true) @Valid @RequestPart SignUpReq signUpReq,
+            @Parameter(description = "프로필 등록 시 기본 이미지 여부를 입력해주세요.", required = true) @RequestPart Boolean isDefaultImage,
+            @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile file
     ) {
-        return authService.signUp(signUpReq);
+        return authService.signUp(userPrincipal, signUpReq, isDefaultImage, file);
     }
 
     @Operation(summary = "유저 로그인", description = "유저 로그인을 수행합니다.")
