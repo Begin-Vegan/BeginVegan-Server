@@ -25,19 +25,17 @@ public class Magazine extends BaseEntity {
 
     private String thumbnail;
 
-    private String videoUrl;
 
     @OneToMany(mappedBy = "magazine")
     private List<Block> magazineBlocks = new ArrayList<>();
 
     @Builder
 
-    public Magazine(Long id, String title, String editor, String thumbnail, String videoUrl, List<Block> magazineBlocks) {
+    public Magazine(Long id, String title, String editor, String thumbnail, List<Block> magazineBlocks) {
         this.id = id;
         this.title = title;
         this.editor = editor;
         this.thumbnail = thumbnail;
-        this.videoUrl = videoUrl;
         this.magazineBlocks = magazineBlocks;
     }
 }

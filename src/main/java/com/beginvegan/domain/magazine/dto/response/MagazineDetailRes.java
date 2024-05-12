@@ -21,17 +21,17 @@ public class MagazineDetailRes {
 
     private String source;
 
-    private MagazineType magazineType;
+    private String thumbnail;
 
     private List<BlockDto> magazineContents; // magazineBlocks
 
     @Builder
-    public MagazineDetailRes(Long id, String title, String editor, String source, MagazineType magazineType, List<BlockDto> magazineContents) {
+    public MagazineDetailRes(Long id, String title, String editor, String source, String thumbnail, List<BlockDto> magazineContents) {
         this.id = id;
         this.title = title;
         this.editor = editor;
         this.source = source;
-        this.magazineType = magazineType;
+        this.thumbnail = thumbnail;
         this.magazineContents = magazineContents;
     }
 }
