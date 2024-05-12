@@ -35,7 +35,6 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    // TODO : 나의 리뷰 조회 - 수정 필요
     @Operation(summary = "유저의 리뷰 조희", description = "유저의 리뷰들을 최신순으로 가져옵니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "유저 리뷰 목록 조회 성공", content = {@Content(mediaType = "application/json", array = @ArraySchema( schema = @Schema(implementation = MyReviewRes.class))) } ),

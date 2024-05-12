@@ -1,5 +1,9 @@
 package com.beginvegan.domain.user.application;
 
+import com.beginvegan.domain.auth.domain.Token;
+import com.beginvegan.domain.auth.domain.repository.TokenRepository;
+import com.beginvegan.domain.auth.exception.InvalidTokenException;
+import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.VeganType;
@@ -18,6 +22,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,7 +35,10 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final S3Uploader s3Uploader;
+
+    private static final int SALT_LENGTH = 16;
 
     public ResponseEntity<?> findUserByToken(UserPrincipal userPrincipal) {
         User user = validateUserById(userPrincipal.getId());
@@ -209,7 +220,6 @@ public class UserService {
     }
 
     // Description : 마이페이지 회원 정보 조회
-    // TODO : Point
     public ResponseEntity<?> getMyPageUserInfo(UserPrincipal userPrincipal) {
         User user = validateUserById(userPrincipal.getId());
 
@@ -218,6 +228,7 @@ public class UserService {
                 .imageUrl(user.getImageUrl())
                 .nickname(user.getNickname())
                 .userLevel(countUserLevel(user.getPoint()))
+                .point(user.getPoint())
                 .veganType(user.getVeganType())
                 .point(user.getPoint())
                 .build();
@@ -227,6 +238,72 @@ public class UserService {
                 .information(myPageUserInfoRes)
                 .build();
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // Description : 회원 탈퇴
+    @Transactional
+    public ResponseEntity<?> deleteUser(UserPrincipal userPrincipal) {
+        User user = validateUserById(userPrincipal.getId());
+
+        if (user.getImageUrl().contains("amazonaws.com/")) {
+            // 기존 프로필 이미지 삭제
+            String originalFile = user.getImageUrl().split("amazonaws.com/")[1];
+            s3Uploader.deleteFile(originalFile);
+        }
+        // 유저 정보 변경
+        user.updateNickname("알 수 없음");
+        user.updateImageUrl("/profile.png");
+        user.updateStatus(Status.DELETE);
+
+        // 토큰 삭제
+        Token token = tokenRepository.findByUserEmail(user.getEmail())
+                .orElseThrow(InvalidTokenException::new);
+
+        tokenRepository.delete(token);
+
+        // 개인정보 해시함수로 암호화
+        hashingUser(user);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("탈퇴가 완료되었습니다.").build())
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    private void hashingUser(User user) {
+        byte[] salt = generateSalt();
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            byte[] hashEmailBytes = digest.digest(concatenate(user.getEmail().getBytes(), salt));
+            byte[] hashPasswordBytes = digest.digest(concatenate(user.getPassword().getBytes(), salt));
+            byte[] hashProviderIdBytes = digest.digest(concatenate(user.getProviderId().getBytes(), salt));
+
+            // 해시된 바이트 배열을 Base64 문자열로 변환
+            String hashedEmail = Base64.getEncoder().encodeToString(hashEmailBytes);
+            String hashedPassword = Base64.getEncoder().encodeToString(hashPasswordBytes);
+            String hashedProviderId = Base64.getEncoder().encodeToString(hashProviderIdBytes);
+
+            user.softDeleteUser(hashedEmail + "@email.com", hashedPassword, hashedProviderId);
+        } catch (NoSuchAlgorithmException e) {
+            throw new DefaultException(ErrorCode.INVALID_CHECK, "해시 함수를 찾을 수 없습니다.");
+        }
+    }
+
+    private byte[] generateSalt() {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[SALT_LENGTH];
+        random.nextBytes(salt);
+        return salt;
+    }
+
+    private byte[] concatenate(byte[] a, byte[] b) {
+        byte[] result = new byte[a.length + b.length];
+        System.arraycopy(a, 0, result, 0, a.length);
+        System.arraycopy(b, 0, result, a.length, b.length);
+        return result;
     }
 
     // Description : 유효성 검증 함수
