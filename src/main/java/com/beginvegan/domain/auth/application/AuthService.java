@@ -179,9 +179,14 @@ public class AuthService {
                 .refreshToken(token.getRefreshToken())
                 .build();
 
+        SignInRes signInRes = SignInRes.builder()
+                .signUpCompleted(user.getSignUpCompleted())
+                .authRes(authResponse)
+                .build();
+
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(authResponse).build();
+                .information(signInRes).build();
 
         return ResponseEntity.ok(apiResponse);
     }
