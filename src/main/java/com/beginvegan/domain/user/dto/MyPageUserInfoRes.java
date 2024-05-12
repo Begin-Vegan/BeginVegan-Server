@@ -24,12 +24,16 @@ public class MyPageUserInfoRes {
     @Schema(type = "string", example = "UNKNOWN, VEGAN, LACTO_VEGETARIAN, OVO_VEGETARIAN, LACTO_OVO_VEGETARIAN, POLLOTARIAN, PASCATARIAN, FLEXITARIAN", description = "유저의 비건 타입을 변경합니다.")
     private VeganType veganType;
 
+    @Schema(type = "Integer", example = "0", description = "유저의 관심도 수치입니다.")
+    private Integer point;
+
     @Builder
-    public MyPageUserInfoRes(Long id, String imageUrl, String nickname, String userLevel, VeganType veganType) {
+    public MyPageUserInfoRes(Long id, String imageUrl, String nickname, String userLevel, VeganType veganType, Integer point) {
         this.id = id;
         this.imageUrl = imageUrl;
         this.nickname = nickname;
         this.userLevel = userLevel;
         this.veganType = veganType;
+        this.point = point;
     }
 }

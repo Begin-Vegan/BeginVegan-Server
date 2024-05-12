@@ -176,19 +176,6 @@ public class UserService {
         }
     }
 
-    // 프로필 수정 시 기존 프로필 이미지 조회
-    // public ResponseEntity<?> getMyProfileImage(UserPrincipal userPrincipal) {
-    //     User user = userRepository.findById(userPrincipal.getId())
-    //             .orElseThrow(InvalidUserException::new);
-
-    //     ApiResponse apiResponse = ApiResponse.builder()
-    //             .check(true)
-    //             .information(user.getImageUrl())
-    //             .build();
-
-    //     return ResponseEntity.ok(apiResponse);
-    // }
-
     // 닉네임, 등급별 이미지 출력
     public ResponseEntity<?> getHomeUserInfo(UserPrincipal userPrincipal) {
         User user = validateUserById(userPrincipal.getId());
@@ -232,6 +219,7 @@ public class UserService {
                 .nickname(user.getNickname())
                 .userLevel(countUserLevel(user.getPoint()))
                 .veganType(user.getVeganType())
+                .point(user.getPoint())
                 .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
