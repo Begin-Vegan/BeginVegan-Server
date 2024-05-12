@@ -50,6 +50,9 @@ public class User extends BaseEntity {
 
     private Boolean customProfileCompleted = false;
 
+    // 추가정보 입력 여부
+    private Boolean signUpCompleted = false;
+
     @Builder
     public User(Long id, String imageUrl, String nickname, String email, String password, VeganType veganType, Provider provider, Role role, String providerId, Integer point, Boolean alarmSetting, String userCode, Boolean veganTestCompleted, Boolean customProfileCompleted) {
         this.id = id;
@@ -69,17 +72,17 @@ public class User extends BaseEntity {
     }
 
     // Description : 회원가입 시에만 사용할 것
-    public void updateUser(String imageUrl, String nickname, String userCode, String password, VeganType veganType, Provider provider) {
+    public void updateUser(String imageUrl, String nickname, String userCode, VeganType veganType, Provider provider) {
         this.imageUrl = imageUrl;
         this.nickname = nickname;
         this.userCode = userCode;
-        this.password = password;
         this.veganType = veganType;
         this.provider = provider;
         this.point = 0;
         this.alarmSetting = true;
         this.veganTestCompleted = false;
         this.customProfileCompleted = false;
+        this.signUpCompleted = false;
     }
 
     public void updateNickname(String nickname){
@@ -92,6 +95,10 @@ public class User extends BaseEntity {
 
     public void updateImageUrl(String imageUrl){
         this.imageUrl = imageUrl;
+    }
+
+    public void updateSignUpCompleted(Boolean signUpCompleted){
+        this.signUpCompleted = signUpCompleted;
     }
 
     public void updateVeganType(VeganType veganType) {

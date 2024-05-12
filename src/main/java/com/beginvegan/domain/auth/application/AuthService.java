@@ -104,9 +104,9 @@ public class AuthService {
 
         String userCode = generateUserCode(signUpReq.getNickname());
         String imageUrl = registerImage(isDefaultImage, file);
-        String password = passwordEncoder.encode(user.getProviderId());
-        user.updateUser(imageUrl, signUpReq.getNickname(), userCode, password, signUpReq.getVeganType(), Provider.kakao);
-
+        user.updateUser(imageUrl, signUpReq.getNickname(), userCode, signUpReq.getVeganType(), Provider.kakao);
+        // 추가정보 입력 여부 변경
+        user.updateSignUpCompleted(true);
         // 프로필 설정 여부 확인하고 포인트 지급
         rewardInitialProfileImage(user, isDefaultImage);
 
@@ -154,13 +154,10 @@ public class AuthService {
     }
 
     public ResponseEntity<?> signIn(SignInReq signInReq) {
-        // Description : 회원가입 절차가 완료되지 않은 경우
         User user = userRepository.findByEmail(signInReq.getEmail())
                 .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
-        // 닉네임 입력 화면으로 리다이렉트?
-        DefaultAssert.isTrue(!(user.getNickname() ==null), "회원가입이 완료되지 않았습니다.");
+        // DefaultAssert.isTrue(!(user.getNickname() ==null), "회원가입이 완료되지 않았습니다.");
 
-        // Description : 로그인 진행
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         signInReq.getEmail(),
