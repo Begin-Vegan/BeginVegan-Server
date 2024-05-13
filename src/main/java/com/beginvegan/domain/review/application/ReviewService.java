@@ -117,7 +117,12 @@ public class ReviewService {
                 .build();
         reviewRepository.save(review);
 
-        if (hasImages) { uploadReviewImages(images.get(), review); }
+        if (hasImages) {
+            uploadReviewImages(images.get(), review);
+            // 리워드 지급 자동화
+            user.updatePoint(3);
+            review.updateInspection(Inspection.COMPLETE_REWARD);
+        }
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -167,9 +172,11 @@ public class ReviewService {
         // recommendation 테이블 soft delete
         if (recommendationRepository.existsByUserAndReview(user, review)) {
             Recommendation recommendation = recommendationRepository.findByUserAndReview(user, review);
-            if (recommendation.getStatus() == Status.DELETE) {          // 재추천
+            // 재추천
+            if (recommendation.getStatus() == Status.DELETE) {
                 recommendation.updateStatus(Status.ACTIVE);
-            } else {      // 추천 취소
+            // 추천 취소
+            } else {
                 recommendation.updateStatus(Status.DELETE);
                 isRecommend = false;
             }
@@ -198,7 +205,8 @@ public class ReviewService {
     }
 
     // 리뷰 수정
-    // Description : 수정 시 무조건 이미지 삭제(사용자가 이미지를 삭제했는지, 변경사항이 없는지 구분이 불가함. 따라서 리뷰 수정 시 이미지는 무조건 삭제 후 다시 저장하는 방향으로)
+    // Description : 수정 시 무조건 이미지 삭제
+    // 추가할 이미지, 삭제할 이미지 나눠서 받기?
     @Transactional
     public ResponseEntity<?> updateReview(UserPrincipal userPrincipal, Long reviewId, UpdateReviewReq updateReviewReq, Optional<MultipartFile[]> images) {
         User user = userService.validateUserById(userPrincipal.getId());
