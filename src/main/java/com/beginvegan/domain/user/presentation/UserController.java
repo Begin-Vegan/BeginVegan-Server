@@ -72,25 +72,13 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "유저 비건 타입 변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "유저 비건 타입 변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PatchMapping("/vegan-type")
+    @PatchMapping("/vegan-type/{type}")
     public ResponseEntity<?> updateVeganType(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "UpdateVeganTypeReq Schema를 확인해주세요", required = true) @RequestBody UpdateVeganTypeReq updateVeganTypeReq
+            @Parameter(description = "UpdateVeganTypeReq Schema를 확인해주세요", required = true) @RequestBody UpdateVeganTypeReq updateVeganTypeReq,
+            @Parameter(description = "어느 페이지의 채식 성향 변경인지에 따라 type으로 입력합니다. TEST(채식 성향 테스트일 경우), MYPAGE(마이페이지일 경우)", required = true) @PathVariable String type
             ) {
-        return userService.updateVeganType(userPrincipal, updateVeganTypeReq);
-    }
-
-    @Operation(summary = "비건 테스트 결과 조회", description = "비건 테스트 결과를 조회합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "비건 테스트 결과 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = VeganTestResultRes.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "비건 테스트 결과 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
-    })
-    @GetMapping("/vegan-test/{veganType}")
-    public ResponseEntity<?> getVeganTestResult(
-            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "veganType을 입력해주세요.", required = true) @PathVariable VeganType veganType
-    ) {
-        return userService.getVeganTestResult(userPrincipal, veganType);
+        return userService.updateVeganType(userPrincipal, updateVeganTypeReq, type);
     }
 
     @Operation(summary = "유저 프로필 변경", description = "유저의 프로필을 변경합니다.")
