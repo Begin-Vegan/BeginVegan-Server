@@ -54,32 +54,15 @@ public class UserService {
         return ResponseEntity.ok(userDetailRes);
     }
 
-    // Description : 비건테스트 결과 조회
+    // Description : 비건 타입 변경
     @Transactional
-    public ResponseEntity<?> getVeganTestResult(UserPrincipal userPrincipal, VeganType veganType) {
+    public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq, String type) {
         User user = validateUserById(userPrincipal.getId());
-
-        user.updateVeganType(veganType);
-        // 최초 1회인지 확인하여 포인트 부여
-        rewardInitialVeganTest(user);
-
-        VeganTestResultRes veganTestResultRes = VeganTestResultRes.builder()
-                .nickname(user.getNickname())
-                .veganType(user.getVeganType())
-                .build();
-
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information(veganTestResultRes).build();
-        return  ResponseEntity.ok(apiResponse);
-    }
-
-    // Description : [마이페이지] 비건 타입 변경
-    @Transactional
-    public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq) {
-        User user = validateUserById(userPrincipal.getId());
-
         user.updateVeganType(updateVeganTypeReq.getVeganType());
+        if (Objects.equals(type, "TEST")) {
+            // 최초 1회인지 확인하여 포인트 부여
+            rewardInitialVeganTest(user);
+        }
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)

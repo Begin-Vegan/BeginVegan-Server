@@ -37,6 +37,8 @@ public class Restaurant extends BaseEntity {
 
     private String thumbnail;
 
+    private String thumbnail_source;
+
     private Double rate;
 
     @OneToMany(mappedBy = "restaurant")
@@ -46,7 +48,7 @@ public class Restaurant extends BaseEntity {
     List<Review> reviews = new ArrayList<>();
 
     @Builder
-    public Restaurant(Long id, String name, String contactNumber, RestaurantType restaurantType, Address address, String latitude, String longitude, String kakaoMapUrl, String thumbnail, Double rate, List<Menu> menus) {
+    public Restaurant(Long id, String name, String contactNumber, RestaurantType restaurantType, Address address, String latitude, String longitude, String kakaoMapUrl, String thumbnail, String thumbnail_source, Double rate, List<Menu> menus, List<Review> reviews) {
         this.id = id;
         this.name = name;
         this.contactNumber = contactNumber;
@@ -56,8 +58,10 @@ public class Restaurant extends BaseEntity {
         this.longitude = longitude;
         this.kakaoMapUrl = kakaoMapUrl;
         this.thumbnail = thumbnail;
+        this.thumbnail_source = thumbnail_source;
         this.rate = rate;
         this.menus = menus;
+        this.reviews = reviews;
     }
 
     public void updateRate(Double rate) { this.rate = rate; }
