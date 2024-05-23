@@ -9,9 +9,14 @@ import com.beginvegan.domain.food.dto.request.FoodDetailReq;
 import com.beginvegan.domain.food.dto.response.FoodDetailRes;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.food.exception.FoodNotFoundException;
+import com.beginvegan.domain.user.domain.User;
+import com.beginvegan.domain.user.domain.VeganType;
+import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.global.DefaultAssert;
+import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +26,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.beginvegan.domain.user.domain.VeganType.VEGAN;
+
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
 public class FoodService {
 
     private final FoodRepository foodRepository;
+    private final UserRepository userRepository;
 
     // 레시피 전체 조회 : 재료 포함 :: 하단 바 레시피 클릭 시 화면
     public ResponseEntity<?> findAllFoodsWithIngredients() {
@@ -146,6 +154,29 @@ public class FoodService {
                     .build();
             foodList.add(foodListRes);
         }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(foodList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    public ResponseEntity<?> findMyFoods(UserPrincipal userPrincipal, Integer page) {
+        Pageable pageable = PageRequest.of(page, 10);
+        User user=userRepository.findById(userPrincipal.getId()).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        VeganType myVeganType = user.getVeganType();
+
+        Page<Food> foodPage = foodRepository.findAllByVeganType(myVeganType, pageable);
+
+        List<FoodListRes> foodList = foodPage.stream()
+                .map(food -> FoodListRes.builder()
+                        .id(food.getId())
+                        .name(food.getName())
+                        .veganType(food.getVeganType())
+                        .build())
+                .collect(Collectors.toList());
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
