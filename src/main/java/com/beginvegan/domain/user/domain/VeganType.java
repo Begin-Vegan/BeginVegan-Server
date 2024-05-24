@@ -2,7 +2,7 @@ package com.beginvegan.domain.user.domain;
 
 
 public enum VeganType {
-    UNKNOWN(0),
+    UNKNOWN(8),
     VEGAN(1),
     LACTO_VEGETARIAN(2),
     OVO_VEGETARIAN(3),
