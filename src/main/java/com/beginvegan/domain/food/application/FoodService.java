@@ -9,9 +9,14 @@ import com.beginvegan.domain.food.dto.request.FoodDetailReq;
 import com.beginvegan.domain.food.dto.response.FoodDetailRes;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.food.exception.FoodNotFoundException;
+import com.beginvegan.domain.user.domain.User;
+import com.beginvegan.domain.user.domain.VeganType;
+import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.global.DefaultAssert;
+import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +26,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.beginvegan.domain.user.domain.VeganType.VEGAN;
+
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
 public class FoodService {
 
     private final FoodRepository foodRepository;
+    private final UserRepository userRepository;
 
     // 레시피 전체 조회 : 재료 포함 :: 하단 바 레시피 클릭 시 화면
     public ResponseEntity<?> findAllFoodsWithIngredients() {
@@ -153,5 +161,52 @@ public class FoodService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> findMyFoods(Integer page, UserPrincipal userPrincipal) {
+        Pageable pageable = PageRequest.of(page, 10);
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        VeganType myVeganType = user.getVeganType();
+        //VeganType myVeganType = VeganType.OVO_VEGETARIAN;
+
+        // 사용자의 채식 성향보다 덜 엄격한 모든 채식 성향을 가져옵니다.
+        List<VeganType> veganTypes = getVeganTypes(myVeganType);
+
+        // 해당 채식 성향 리스트에 맞는 모든 음식을 가져옵니다.
+        Page<Food> foodPage = foodRepository.findAllByVeganTypeIn(veganTypes, pageable);
+
+        // 추가 필터링: LactoVegetarian인 경우 OvoVegetarian 음식을 제외, OvoVegetarian인 경우 LactoVegetarian 음식을 제외
+        List<Food> filteredFoods = foodPage.stream()
+                .filter(food -> !((myVeganType == VeganType.LACTO_VEGETARIAN && food.getVeganType() == VeganType.OVO_VEGETARIAN) ||
+                        (myVeganType == VeganType.OVO_VEGETARIAN && food.getVeganType() == VeganType.LACTO_VEGETARIAN)))
+                .collect(Collectors.toList());
+
+        List<FoodListRes> foodList = filteredFoods.stream()
+                .map(food -> FoodListRes.builder()
+                        .id(food.getId())
+                        .name(food.getName())
+                        .veganType(food.getVeganType())
+                        .build())
+                .collect(Collectors.toList());
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(foodList)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    // 사용자의 채식 성향보다 덜 엄격한 모든 채식 성향을 반환하는 헬퍼 메소드
+    private List<VeganType> getVeganTypes(VeganType myVeganType) {
+        List<VeganType> veganTypes = new ArrayList<>();
+        for (VeganType type : VeganType.values()) {
+            if (type.getOrder() >= myVeganType.getOrder()) {
+                veganTypes.add(type);
+            }
+        }
+        return veganTypes;
     }
 }
