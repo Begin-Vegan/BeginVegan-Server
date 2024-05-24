@@ -71,7 +71,7 @@ public class FoodController {
             @Parameter(description = "나의 비건 타입에 맞는 레시피 리스트를 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page,
             @CurrentUser UserPrincipal userPrincipal
     ) {
-        return foodService.findMyFoods(userPrincipal, page);
+        return foodService.findMyFoods(page, userPrincipal);
     }
 
   

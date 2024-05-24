@@ -163,14 +163,27 @@ public class FoodService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    public ResponseEntity<?> findMyFoods(UserPrincipal userPrincipal, Integer page) {
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> findMyFoods(Integer page, UserPrincipal userPrincipal) {
         Pageable pageable = PageRequest.of(page, 10);
-        User user=userRepository.findById(userPrincipal.getId()).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         VeganType myVeganType = user.getVeganType();
+        //VeganType myVeganType = VeganType.OVO_VEGETARIAN;
 
-        Page<Food> foodPage = foodRepository.findAllByVeganType(myVeganType, pageable);
+        // 사용자의 채식 성향보다 덜 엄격한 모든 채식 성향을 가져옵니다.
+        List<VeganType> veganTypes = getVeganTypes(myVeganType);
 
-        List<FoodListRes> foodList = foodPage.stream()
+        // 해당 채식 성향 리스트에 맞는 모든 음식을 가져옵니다.
+        Page<Food> foodPage = foodRepository.findAllByVeganTypeIn(veganTypes, pageable);
+
+        // 추가 필터링: LactoVegetarian인 경우 OvoVegetarian 음식을 제외, OvoVegetarian인 경우 LactoVegetarian 음식을 제외
+        List<Food> filteredFoods = foodPage.stream()
+                .filter(food -> !((myVeganType == VeganType.LACTO_VEGETARIAN && food.getVeganType() == VeganType.OVO_VEGETARIAN) ||
+                        (myVeganType == VeganType.OVO_VEGETARIAN && food.getVeganType() == VeganType.LACTO_VEGETARIAN)))
+                .collect(Collectors.toList());
+
+        List<FoodListRes> foodList = filteredFoods.stream()
                 .map(food -> FoodListRes.builder()
                         .id(food.getId())
                         .name(food.getName())
@@ -184,5 +197,16 @@ public class FoodService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // 사용자의 채식 성향보다 덜 엄격한 모든 채식 성향을 반환하는 헬퍼 메소드
+    private List<VeganType> getVeganTypes(VeganType myVeganType) {
+        List<VeganType> veganTypes = new ArrayList<>();
+        for (VeganType type : VeganType.values()) {
+            if (type.getOrder() >= myVeganType.getOrder()) {
+                veganTypes.add(type);
+            }
+        }
+        return veganTypes;
     }
 }

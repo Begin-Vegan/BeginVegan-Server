@@ -6,8 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 
 public interface FoodRepository extends JpaRepository<Food, Long> {
-    Page<Food> findAllByVeganType(VeganType veganType, Pageable pageable);
+    Page<Food> findAllByVeganTypeIn(List<VeganType> veganTypes, Pageable pageable);
 
 }
