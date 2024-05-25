@@ -3,7 +3,6 @@ package com.beginvegan.domain.auth.application;
 import java.util.Optional;
 
 import com.beginvegan.domain.auth.dto.*;
-import com.beginvegan.domain.auth.exception.AlreadyExistEmailException;
 import com.beginvegan.domain.auth.exception.InvalidTokenException;
 import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.Provider;
@@ -97,14 +96,40 @@ public class AuthService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    // 회원가입
     @Transactional
-    public ResponseEntity<?> signUp(UserPrincipal userPrincipal, SignUpReq signUpReq, Boolean isDefaultImage, MultipartFile file) {
+    public ResponseEntity<?> signUp(UserPrincipal userPrincipal, SignUpReq signUpReq) {
+        DefaultAssert.isTrue(!userRepository.existsByEmail(signUpReq.getEmail()), "이미 가입된 이메일이 존재합니다.");
+
+        User newUser = User.builder()
+                .providerId(signUpReq.getProviderId())
+                .provider(Provider.kakao)
+                .email(signUpReq.getEmail())
+                .password(passwordEncoder.encode(signUpReq.getProviderId()))
+                .role(Role.USER)
+                .build();
+
+        userRepository.save(newUser);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("회원 가입이 완료되었습니다.").build())
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+
+
+    // 추가 정보 입력
+    @Transactional
+    public ResponseEntity<?> addSignUpUserInfo(UserPrincipal userPrincipal, AddUserInfoReq addUserInfoReq, Boolean isDefaultImage, MultipartFile file) {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
 
-        String userCode = generateUserCode(signUpReq.getNickname());
+        String userCode = generateUserCode(addUserInfoReq.getNickname());
         String imageUrl = registerImage(isDefaultImage, file);
-        user.updateUser(imageUrl, signUpReq.getNickname(), userCode, signUpReq.getVeganType(), Provider.kakao);
+        user.updateUser(imageUrl, addUserInfoReq.getNickname(), userCode, addUserInfoReq.getVeganType());
         // 추가정보 입력 여부 변경
         user.updateSignUpCompleted(true);
         // 프로필 설정 여부 확인하고 포인트 지급
@@ -112,7 +137,7 @@ public class AuthService {
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(Message.builder().message("회원 가입이 완료되었습니다.").build())
+                .information(Message.builder().message("추가 정보 등록이 완료되었습니다.").build())
                 .build();
 
         return ResponseEntity.ok(apiResponse);
@@ -157,7 +182,6 @@ public class AuthService {
     public ResponseEntity<?> signIn(SignInReq signInReq) {
         User user = userRepository.findByEmail(signInReq.getEmail())
                 .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
-        // DefaultAssert.isTrue(!(user.getNickname() ==null), "회원가입이 완료되지 않았습니다.");
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
