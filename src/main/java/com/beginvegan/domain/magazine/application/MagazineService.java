@@ -68,6 +68,7 @@ public class MagazineService {
         MagazineDetailRes magazineDetailRes = MagazineDetailRes.builder()
                 .id(magazine.getId())
                 .title(magazine.getTitle())
+                .thumbnail(magazine.getThumbnail())
                 .editor(magazine.getEditor())
                 .magazineContents(blockDtos) // magazineBlocks
                 .build();

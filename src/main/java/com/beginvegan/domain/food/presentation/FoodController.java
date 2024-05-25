@@ -5,6 +5,8 @@ import com.beginvegan.domain.food.dto.response.FoodRecipeListRes;
 import com.beginvegan.domain.food.dto.request.FoodDetailReq;
 import com.beginvegan.domain.food.dto.response.FoodDetailRes;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
+import com.beginvegan.global.config.security.token.CurrentUser;
+import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -58,5 +60,19 @@ public class FoodController {
     public ResponseEntity<?> findThreeFoods(){
         return foodService.findThreeFoods();
     }
+
+    @Operation(summary = "나를 위한 레시피 조회", description = "나의 비건 타입에 맞는 레시피 목록 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "나를 위한 레시피 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = FoodRecipeListRes.class)) } ),
+            @ApiResponse(responseCode = "400", description = "나를 위한 레시피 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = FoodRecipeListRes.class) ) } ),
+    })
+    @GetMapping("/my")
+    public ResponseEntity<?> findMyFoods(
+            @Parameter(description = "나의 비건 타입에 맞는 레시피 리스트를 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page,
+            @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return foodService.findMyFoods(page, userPrincipal);
+    }
+
   
 }
