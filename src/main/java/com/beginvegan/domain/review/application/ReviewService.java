@@ -1,6 +1,10 @@
 package com.beginvegan.domain.review.application;
 
+import com.beginvegan.domain.alarm.domain.Alarm;
+import com.beginvegan.domain.alarm.domain.AlarmType;
 import com.beginvegan.domain.common.Status;
+import com.beginvegan.domain.fcm.application.FcmService;
+import com.beginvegan.domain.fcm.dto.FcmSendDto;
 import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
 import com.beginvegan.domain.recommendation.domain.Recommendation;
@@ -37,6 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -54,6 +59,7 @@ public class ReviewService {
     private final RecommendationRepository recommendationRepository;
 
     private final UserService userService;
+    private final FcmService fcmService;
     private final S3Uploader s3Uploader;
 
     // 리뷰 작성 시 식당 정보 조회
@@ -163,7 +169,7 @@ public class ReviewService {
 
     // 리뷰 추천
     @Transactional
-    public ResponseEntity<?> recommendReviews(UserPrincipal userPrincipal, Long reviewId) {
+    public ResponseEntity<?> recommendReviews(UserPrincipal userPrincipal, Long reviewId) throws IOException {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
 
@@ -187,6 +193,10 @@ public class ReviewService {
             recommendationRepository.save(recommendation);
             // 리뷰 작성자에게 포인트 부여
             review.getUser().updatePoint(2);
+
+            // 푸시알림
+            String msg = "'" + user.getNickname() + "'" + "님의 리뷰가 추천을 받았어요.";
+            sendFcmMessage(review.getUser(), AlarmType.MAP, reviewId, msg);
         }
 
         int count = recommendationRepository.countByReviewAndStatus(review, Status.ACTIVE);
@@ -271,7 +281,7 @@ public class ReviewService {
 
     // 리뷰 신고
     @Transactional
-    public ResponseEntity<?> reportReview(UserPrincipal userPrincipal, Long reviewId, ReportContentReq reportContentReq) {
+    public ResponseEntity<?> reportReview(UserPrincipal userPrincipal, Long reviewId, ReportContentReq reportContentReq) throws IOException {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
 
@@ -283,11 +293,26 @@ public class ReviewService {
                 .build();
         reportRepository.save(report);
 
+        String msg = "리뷰 신고가 정상적으로 접수되었어요. 운영자의 검토 후 조치를 취할 예정이에요.";
+        sendFcmMessage(user, AlarmType.MAP, reviewId, msg);
+
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(Message.builder().message("신고가 접수되었습니다.").build())
                 .build();
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // 푸시알림 메세지 생성
+    private void sendFcmMessage(User user, AlarmType alarmType, Long itemId, String body) throws IOException {
+        FcmSendDto fcmSendDto = FcmSendDto.builder()
+                .token(user.getFcmToken())
+                .alarmType(alarmType)
+                .itemId(itemId)
+                .title("비긴, 비건")   // TODO: title 수정 필요할수도
+                .body(body)
+                .build();
+        fcmService.sendMessageTo(fcmSendDto);
     }
 
 

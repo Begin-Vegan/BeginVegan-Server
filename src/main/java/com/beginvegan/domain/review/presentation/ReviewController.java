@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Tag(name = "Reviews", description = "Reviews API")
@@ -110,7 +111,7 @@ public class ReviewController {
     public ResponseEntity<?> recommendReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
-    ) {
+    ) throws IOException {
         return reviewService.recommendReviews(userPrincipal, reviewId);
     }
 
