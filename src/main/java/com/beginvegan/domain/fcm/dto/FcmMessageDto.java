@@ -12,6 +12,7 @@ import lombok.Getter;
  * @since : 2/21/24
  */
 @Getter
+@AllArgsConstructor
 @Builder
 public class FcmMessageDto {
     private boolean validateOnly;
@@ -31,7 +32,7 @@ public class FcmMessageDto {
     public static class Notification {
         private String title;
         private String body;
-        // private String image;
+        private String image;
         // type?
     }
 }

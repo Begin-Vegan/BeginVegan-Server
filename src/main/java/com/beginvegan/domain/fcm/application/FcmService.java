@@ -3,19 +3,27 @@ package com.beginvegan.domain.fcm.application;
 import com.beginvegan.domain.fcm.dto.FcmMessageDto;
 import com.beginvegan.domain.fcm.dto.FcmSendDto;
 import com.beginvegan.global.payload.ApiResponse;
+import com.beginvegan.global.payload.Message;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
+import lombok.RequiredArgsConstructor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class FcmService {
 
     @Value("${firebase.key-path}")
@@ -24,57 +32,56 @@ public class FcmService {
     @Value("${firebase.project-id}")
     private String projectId;
 
-    public ResponseEntity<?> sendMessageTo(FcmSendDto fcmSendDto) throws IOException {
+    private final String API_URL = "https://fcm.googleapis.com/v1/projects/" + projectId + "/messages:send";
+    private final ObjectMapper objectMapper;
 
-        String message = makeMessage(fcmSendDto);
-        RestTemplate restTemplate = new RestTemplate();
+    public ResponseEntity<?> sendMessageTo(FcmSendDto messageReq) throws IOException {
+        String message = makeMessage(messageReq.getToken(), messageReq.getTitle(), messageReq.getBody());
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Bearer " + getAccessToken());
+        OkHttpClient client = new OkHttpClient();
+        RequestBody requestBody = RequestBody.create(message,
+                MediaType.get("application/json; charset=utf-8"));
+        Request request = new Request.Builder()
+                .url(API_URL)
+                .post(requestBody)
+                .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken())
+                .addHeader(HttpHeaders.CONTENT_TYPE, "application/json; UTF-8")
+                .build();
 
-        HttpEntity entity = new HttpEntity<>(message, headers);
+        Response response = client.newCall(request).execute();
 
-        String API_URL = "<https://fcm.googleapis.com/v1/projects/" + projectId + "/messages:send>";
-        ResponseEntity response = restTemplate.exchange(API_URL, HttpMethod.POST, entity, String.class);
+        System.out.println(response.body().string());
 
-        System.out.println(response.getStatusCode());
-
-        int result = response.getStatusCode() == HttpStatus.OK ? 1 : 0;
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(result)
+                .information(Message.builder().message("메세지 전송이 완료되었습니다.").build())
                 .build();
+
         return ResponseEntity.ok(apiResponse);
     }
 
-    private String getAccessToken() throws IOException {
-        GoogleCredentials googleCredentials = GoogleCredentials
-                .fromStream(new ClassPathResource(firebaseConfigPath).getInputStream())
-                .createScoped(List.of("<https://www.googleapis.com/auth/cloud-platform>"));
-
-        googleCredentials.refreshIfExpired();
-        return googleCredentials.getAccessToken().getTokenValue();
-    }
-
-    /**
-     * FCM 전송 정보를 기반으로 메시지를 구성합니다. (Object -> String)
-     *
-     * @param fcmSendDto FcmSendDto
-     * @return String
-     */
-    private String makeMessage(FcmSendDto fcmSendDto) throws JsonProcessingException {
-
-        ObjectMapper om = new ObjectMapper();
-        FcmMessageDto fcmMessageDto = FcmMessageDto.builder()
+    private String makeMessage(String targetToken, String title, String body) throws JsonParseException, JsonProcessingException {
+        FcmMessageDto fcmMessage = FcmMessageDto.builder()
                 .message(FcmMessageDto.Message.builder()
-                        .token(fcmSendDto.getToken())
+                        .token(targetToken)
                         .notification(FcmMessageDto.Notification.builder()
-                                .title(fcmSendDto.getTitle())
-                                .body(fcmSendDto.getBody())
+                                .title(title)
+                                .body(body)
+                                .image(null)
                                 .build()
                         ).build()).validateOnly(false).build();
 
-        return om.writeValueAsString(fcmMessageDto);
+        return objectMapper.writeValueAsString(fcmMessage);
+    }
+
+    //AccessToken 발급 받기. -> Header에 포함하여 푸시 알림 요청
+    private String getAccessToken() throws IOException {
+
+        GoogleCredentials googleCredentials = GoogleCredentials
+                .fromStream(new ClassPathResource("firebase/" + firebaseConfigPath).getInputStream())
+                .createScoped(List.of("https://www.googleapis.com/auth/cloud-platform"));
+
+        googleCredentials.refreshIfExpired();
+        return googleCredentials.getAccessToken().getTokenValue();
     }
 }

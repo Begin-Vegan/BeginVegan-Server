@@ -17,8 +17,9 @@ public class FcmSendDto {
     private String token;
     private String title;
     private String body;
+    // type?
 
-    @Builder(toBuilder = true)
+    @Builder
     public FcmSendDto(String token, String title, String body) {
         this.token = token;
         this.title = title;

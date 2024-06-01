@@ -26,7 +26,7 @@ dependencies {
 
 	// FCM
 	implementation 'com.google.firebase:firebase-admin:9.2.0'
-	// implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.2.2'
+	implementation 'com.squareup.okhttp3:okhttp:4.9.3'
 
 	// AWS S3
 	implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
