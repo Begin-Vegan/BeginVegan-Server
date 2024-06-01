@@ -12,6 +12,7 @@ import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
+import com.beginvegan.global.payload.Message;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,21 @@ public class AlarmService {
     }
 
     // 확인 상태 변경
+    // TODO: 미확인 알림 전부 확인 처리
+    @Transactional
+    public ResponseEntity<?> updateIsRead(UserPrincipal userPrincipal) {
+        User user = userService.validateUserById(userPrincipal.getId());
+        List<Alarm> unreadAlarms = alarmRepository.findByUserAndIsRead(user, false);
+
+        unreadAlarms.forEach(alarm -> alarm.updateIsRead(true));
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("알림을 모두 확인했습니다.").build())
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 
     // 알림 내역 조회
     public ResponseEntity<?> getAlarmHistory(UserPrincipal userPrincipal) {
