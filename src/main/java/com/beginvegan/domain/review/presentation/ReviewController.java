@@ -121,7 +121,7 @@ public class ReviewController {
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
             @Parameter(description = "리뷰 신고 사유입니다.", required = true) @Valid @RequestBody ReportContentReq reportContentReq
-            ) {
+            ) throws IOException {
         return reviewService.reportReview(userPrincipal, reviewId, reportContentReq);
     }
 
