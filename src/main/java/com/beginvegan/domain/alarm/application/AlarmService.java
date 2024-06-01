@@ -15,9 +15,12 @@ import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.Message;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -107,6 +110,15 @@ public class AlarmService {
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    // 알림 삭제(30일)
+    @Scheduled(cron = "0 0 0 * * ?")
+    @Transactional
+    public void deleteOldAlarms() {
+        LocalDateTime date = LocalDate.now().minusDays(31).atStartOfDay();
+        alarmRepository.deleteByCreatedDateBefore(date);
+    }
+
 
     public User validByToken(String token) {
         Optional<User> user = userRepository.findByFcmToken(token);
