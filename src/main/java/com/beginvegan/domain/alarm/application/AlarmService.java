@@ -47,6 +47,51 @@ public class AlarmService {
 
     // 확인 상태 변경
 
+    // 알림 내역 조회
+    public ResponseEntity<?> getAlarmHistory(UserPrincipal userPrincipal) {
+        User user = userService.validateUserById(userPrincipal.getId());
+
+        List<Alarm> alarms = alarmRepository.findByUser(user);
+        // 미확인 알람
+        List<UnreadAlarmRes> unreadAlarms = alarms.stream()
+                .filter(alarm -> !alarm.getIsRead())
+                .map(alarm -> UnreadAlarmRes.builder()
+                        .alarmId(alarm.getId())
+                        .createdDate(alarm.getCreatedDate())
+                        .alarmType(alarm.getAlarmType())
+                        .itemId(alarm.getItemId())
+                        .content(alarm.getContent())
+                        .isRead(alarm.getIsRead())
+                        .build())
+                .sorted(Comparator.comparing(UnreadAlarmRes::getCreatedDate))
+                .collect(Collectors.toList());
+        // 확인 알람
+        List<ReadAlarmRes> readAlarms = alarms.stream()
+                .filter(alarm -> alarm.getIsRead())
+                .map(alarm -> ReadAlarmRes.builder()
+                        .alarmId(alarm.getId())
+                        .createdDate(alarm.getCreatedDate())
+                        .alarmType(alarm.getAlarmType())
+                        .itemId(alarm.getItemId())
+                        .content(alarm.getContent())
+                        .isRead(alarm.getIsRead())
+                        .build())
+                .sorted(Comparator.comparing(ReadAlarmRes::getCreatedDate))
+                .collect(Collectors.toList());
+
+        AlarmHistoryRes alarmHistoryRes = AlarmHistoryRes.builder()
+                .unreadAlarmResList(unreadAlarms)
+                .readAlarmResList(readAlarms)
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(alarmHistoryRes)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     public User validByToken(String token) {
         Optional<User> user = userRepository.findByFcmToken(token);
         DefaultAssert.isTrue(user.isPresent(), "유저 정보가 올바르지 않습니다.");
