@@ -132,4 +132,17 @@ public class UserController {
         return userService.deleteUser(userPrincipal);
     }
 
+    @Operation(summary = "Fcm Token 변경", description = "Fcm Token을 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "변경 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "변경 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PatchMapping("/fcm/token")
+    public ResponseEntity<?> updateFcmToken(
+            @Parameter(description = "Access Token을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "UpdateFcmToken 을 확인해주세요", required = true) @RequestBody UpdateFcmTokenReq fcmToken
+    ) {
+        return userService.updateFcmToken(userPrincipal, fcmToken);
+    }
+
 }

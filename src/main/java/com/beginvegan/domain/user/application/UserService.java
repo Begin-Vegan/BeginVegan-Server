@@ -54,6 +54,19 @@ public class UserService {
         return ResponseEntity.ok(userDetailRes);
     }
 
+    @Transactional
+    public ResponseEntity<?> updateFcmToken(UserPrincipal userPrincipal, UpdateFcmTokenReq updateFcmTokenReq) {
+        User user = validateUserById(userPrincipal.getId());
+        user.updateFcmToken(updateFcmTokenReq.getFcmToken());
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("FCM 토큰이 업데이트되었습니다.").build())
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     // Description : 비건 타입 변경
     @Transactional
     public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq, String type) {

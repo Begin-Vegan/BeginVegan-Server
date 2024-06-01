@@ -1,5 +1,6 @@
 package com.beginvegan.domain.user.domain;
 
+import com.google.firebase.database.annotations.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 
@@ -45,6 +46,8 @@ public class User extends BaseEntity {
 
     private String userCode;
 
+    @Nullable
+    private String fcmToken;
 
     private Boolean veganTestCompleted = false;
 
@@ -54,12 +57,13 @@ public class User extends BaseEntity {
     private Boolean signUpCompleted = false;
 
     @Builder
-    public User(Long id, String imageUrl, String nickname, String email, String password, VeganType veganType, Provider provider, Role role, String providerId, String userCode) {
+    public User(Long id, String imageUrl, String nickname, String email, String password, String fcmToken, VeganType veganType, Provider provider, Role role, String providerId, String userCode) {
         this.id = id;
         this.imageUrl = imageUrl;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
+        this.fcmToken = fcmToken;
         this.veganType = veganType;
         this.provider = provider;
         this.role = role;
@@ -107,6 +111,8 @@ public class User extends BaseEntity {
     public void updateVeganTestCompleted(Boolean veganTestCompleted) { this.veganTestCompleted = veganTestCompleted; }
 
     public void updateCustomProfileCompleted(Boolean customProfileCompleted) { this.customProfileCompleted = customProfileCompleted; }
+
+    public void updateFcmToken(String fcmToken) { this.fcmToken = fcmToken; }
 
     // Description : 해당 함수 호출 시 더해야 하는 포인트 값만 요청
     public void updatePoint(Integer additionalPoint) { this.point += additionalPoint; }
