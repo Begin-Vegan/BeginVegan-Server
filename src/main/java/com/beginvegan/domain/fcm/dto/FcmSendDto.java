@@ -16,11 +16,20 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FcmSendDto {
 
+    @Schema(type = "String", example = "BJsVBMM0tWkqZY656FX3kDqhkCXfgKBhcPPSPDgaoa0tYTVKYh5Dt7...", description = "유저의 FCM 토큰입니다.")
     private String token;
+
+    @Schema(type = "String", example = "비긴, 비건", description = "알림의 제목입니다.")
     private String title;
+
+    @Schema(type = "String", example = "나만의 식물이 성장했어요. mypage에서 확인해 보세요!", description = "알림의 내용입니다.")
     private String body;
-    private AlarmType alarmType; // 필요시 전달
-    private Long itemId; // 필요시 전달, ex. magazine id
+
+    @Schema(type = "String", example = "MAP, TIPS, MYPAGE, INFORMATION", description = "알림의 종류입니다.")
+    public AlarmType alarmType;
+
+    @Schema(type = "Long", example = "1", description = "alarmType에 따른 itemId입니다. MAP: 매거진 또는 레시피의 id, MYPAGE: 리뷰 id")
+    public Long itemId;
 
     @Builder
     public FcmSendDto(String token, String title, String body, AlarmType alarmType, Long itemId) {
