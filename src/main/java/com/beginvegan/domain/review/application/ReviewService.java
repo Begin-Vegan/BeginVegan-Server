@@ -107,7 +107,7 @@ public class ReviewService {
 
     // 리뷰 등록
     @Transactional
-    public ResponseEntity<?> postReview(UserPrincipal userPrincipal, PostReviewReq postReviewReq, Optional<MultipartFile[]> images) {
+    public ResponseEntity<?> postReview(UserPrincipal userPrincipal, PostReviewReq postReviewReq, Optional<MultipartFile[]> images) throws IOException {
         User user = userService.validateUserById(userPrincipal.getId());
         Restaurant restaurant = validateRestaurantById(postReviewReq.getRestaurantId());
 
@@ -128,6 +128,8 @@ public class ReviewService {
             // 리워드 지급 자동화
             user.updatePoint(3);
             review.updateInspection(Inspection.COMPLETE_REWARD);
+            // 사용자레벨 검증
+            userService.checkUserLevel(user);
         }
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -192,11 +194,16 @@ public class ReviewService {
                     .user(user).build();
             recommendationRepository.save(recommendation);
             // 리뷰 작성자에게 포인트 부여
-            review.getUser().updatePoint(2);
-
-            // 푸시알림
-            String msg = "'" + user.getNickname() + "'" + "님의 리뷰가 추천을 받았어요.";
-            sendFcmMessage(review.getUser(), AlarmType.MAP, reviewId, msg);
+            User writer = review.getUser();
+            // Description: 탈퇴한 유저의 알림 저장 방지
+            if (writer.getStatus() == Status.ACTIVE) {
+                writer.updatePoint(2);
+                userService.checkUserLevel(user);
+                // 푸시알림
+                String msg = "'" + user.getNickname() + "'" + "님의 리뷰가 추천을 받았어요.";
+                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(review.getUser(), AlarmType.MAP, reviewId, msg);
+                fcmService.sendMessageTo(fcmSendDto);
+            }
         }
 
         int count = recommendationRepository.countByReviewAndStatus(review, Status.ACTIVE);
@@ -218,7 +225,7 @@ public class ReviewService {
     // Description : 수정 시 무조건 이미지 삭제
     // 추가할 이미지, 삭제할 이미지 나눠서 받기?
     @Transactional
-    public ResponseEntity<?> updateReview(UserPrincipal userPrincipal, Long reviewId, UpdateReviewReq updateReviewReq, Optional<MultipartFile[]> images) {
+    public ResponseEntity<?> updateReview(UserPrincipal userPrincipal, Long reviewId, UpdateReviewReq updateReviewReq, Optional<MultipartFile[]> images) throws IOException {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
 
@@ -235,7 +242,10 @@ public class ReviewService {
             review.updateInspection(Inspection.INCOMPLETE);
         } else {
             // 검증된 리뷰 수정 시 사진 삭제하면 포인트 차감
-            if (review.getReviewType() == ReviewType.PHOTO && review.getInspection() == Inspection.COMPLETE_REWARD) { user.subPoint(3);}
+            if (review.getReviewType() == ReviewType.PHOTO && review.getInspection() == Inspection.COMPLETE_REWARD) {
+                user.subPoint(3);
+                userService.checkUserLevel(user);
+            }
             review.updateReviewType(ReviewType.NORMAL);
         }
 
@@ -248,13 +258,14 @@ public class ReviewService {
 
     // 리뷰 삭제 - 검증된 리뷰 삭제시 리워드 회수
     @Transactional
-    public ResponseEntity<?> deleteReview(UserPrincipal userPrincipal, Long reviewId) {
+    public ResponseEntity<?> deleteReview(UserPrincipal userPrincipal, Long reviewId) throws IOException {
             User user = userService.validateUserById(userPrincipal.getId());
             Review review = validateReviewById(reviewId);
 
             DefaultAssert.isTrue(review.getUser() == user, "리뷰 삭제 권한이 없습니다.");
             if (review.getInspection() == Inspection.COMPLETE_REWARD) {
                 user.subPoint(3);
+                userService.checkUserLevel(user);
             }
             // 이미지 삭제
             deleteReviewImages(review);
@@ -293,26 +304,16 @@ public class ReviewService {
                 .build();
         reportRepository.save(report);
 
+        // 푸시알림 생성
         String msg = "리뷰 신고가 정상적으로 접수되었어요. 운영자의 검토 후 조치를 취할 예정이에요.";
-        sendFcmMessage(user, AlarmType.MAP, reviewId, msg);
+        FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.MAP, reviewId, msg);
+        fcmService.sendMessageTo(fcmSendDto);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(Message.builder().message("신고가 접수되었습니다.").build())
                 .build();
         return ResponseEntity.ok(apiResponse);
-    }
-
-    // 푸시알림 메세지 생성
-    private void sendFcmMessage(User user, AlarmType alarmType, Long itemId, String body) throws IOException {
-        FcmSendDto fcmSendDto = FcmSendDto.builder()
-                .token(user.getFcmToken())
-                .alarmType(alarmType)
-                .itemId(itemId)
-                .title("비긴, 비건")   // TODO: title 수정 필요할수도
-                .body(body)
-                .build();
-        fcmService.sendMessageTo(fcmSendDto);
     }
 
 

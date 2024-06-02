@@ -60,7 +60,7 @@ public class ReviewController {
             @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @Valid @RequestPart PostReviewReq postReviewReq,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
 
-    ) {
+    ) throws IOException {
         return reviewService.postReview(userPrincipal, postReviewReq, files);
     }
 
@@ -91,7 +91,7 @@ public class ReviewController {
     public ResponseEntity<?> deleteReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
-    ) {
+    ) throws IOException {
         return reviewService.deleteReview(userPrincipal, reviewId);
     }
 
@@ -102,7 +102,7 @@ public class ReviewController {
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
             @Parameter(description = "UpdateReviewReq Schema를 확인해주세요.", required = true) @Valid @RequestPart UpdateReviewReq updateReviewReq,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
-    ) {
+    ) throws IOException {
         return reviewService.updateReview(userPrincipal, reviewId, updateReviewReq, files);
     }
 

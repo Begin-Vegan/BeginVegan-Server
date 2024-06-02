@@ -1,12 +1,16 @@
 package com.beginvegan.domain.fcm.application;
 
-import com.beginvegan.domain.alarm.application.AlarmService;
+import com.beginvegan.domain.alarm.domain.Alarm;
+import com.beginvegan.domain.alarm.domain.AlarmType;
+import com.beginvegan.domain.alarm.domain.repository.AlarmRepository;
+import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.fcm.dto.FcmMessageDto;
 import com.beginvegan.domain.fcm.dto.FcmSendDto;
 import com.beginvegan.domain.user.domain.User;
+import com.beginvegan.domain.user.domain.repository.UserRepository;
+import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.Message;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -24,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,18 +42,23 @@ public class FcmService {
 
     private final String API_URL = "https://fcm.googleapis.com/v1/projects/" + projectId + "/messages:send";
     private final ObjectMapper objectMapper;
-    private final AlarmService alarmService;
+
+    private final UserRepository userRepository;
+    private final AlarmRepository alarmRepository;
+
 
     @Transactional
-    public ResponseEntity<?> sendMessageTo(FcmSendDto messageReq) throws IOException {
+    public ResponseEntity<?> sendMessageTo(FcmSendDto fcmSendDto) throws IOException {
         // TODO 알림 설정 여부 확인해서 비허용이면 저장만
-        User user = alarmService.validByToken(messageReq.getToken());
-        boolean isAlarmSetting = alarmService.checkAlarmSetting(user);
+        Optional<User> findUser = userRepository.findByFcmToken(fcmSendDto.getToken());
+        DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
+        User user = findUser.get();
 
         String msg = "알림이 저장되었습니다.";
+        boolean isAlarmSetting = user.getAlarmSetting();
         // 수신 허용이면 푸시알림 전송
         if (isAlarmSetting) {
-            String message = makeMessage(messageReq.getToken(), messageReq.getTitle(), messageReq.getBody());
+            String message = makeMessage(fcmSendDto.getToken(), fcmSendDto.getTitle(), fcmSendDto.getBody());
 
             OkHttpClient client = new OkHttpClient();
             RequestBody requestBody = RequestBody.create(message,
@@ -67,8 +77,8 @@ public class FcmService {
         }
 
         // alarmType이 존재할 경우에만 알림 내역에 저장
-        if (messageReq.getAlarmType() != null) {
-            alarmService.savaAlarmHistory(messageReq);
+        if (fcmSendDto.getAlarmType() != null) {
+            savaAlarmHistory(fcmSendDto);
         }
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -79,7 +89,7 @@ public class FcmService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    private String makeMessage(String targetToken, String title, String body) throws JsonParseException, JsonProcessingException {
+    private String makeMessage(String targetToken, String title, String body) throws JsonProcessingException {
         FcmMessageDto fcmMessage = FcmMessageDto.builder()
                 .message(FcmMessageDto.Message.builder()
                         .token(targetToken)
@@ -102,5 +112,31 @@ public class FcmService {
 
         googleCredentials.refreshIfExpired();
         return googleCredentials.getAccessToken().getTokenValue();
+    }
+
+    public FcmSendDto makeFcmSendDto(User user, AlarmType alarmType, Long itemId, String body) {
+         return FcmSendDto.builder()
+                .token(user.getFcmToken())
+                .alarmType(alarmType)
+                .itemId(itemId)
+                .title("비긴, 비건")   // TODO: title 수정 필요할수도
+                .body(body)
+                .build();
+    }
+
+    @Transactional
+    public void savaAlarmHistory(FcmSendDto fcmSendDto) {
+        Optional<User> findUser = userRepository.findByFcmToken(fcmSendDto.getToken());
+        DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
+        User user = findUser.get();
+
+        Alarm alarm = Alarm.builder()
+                .alarmType(fcmSendDto.getAlarmType())
+                .itemId(fcmSendDto.getItemId())
+                .content(fcmSendDto.getBody())
+                .user(user)
+                .build();
+
+        alarmRepository.save(alarm);
     }
 }
