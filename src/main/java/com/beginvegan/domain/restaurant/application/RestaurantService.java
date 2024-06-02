@@ -159,7 +159,7 @@ public class RestaurantService {
                     .imageUrl(reviewUser.getImageUrl())
                     .nickname(reviewUser.getNickname())
                     .userCode(reviewUser.getUserCode())
-                    .level(userService.countUserLevel(reviewUser.getPoint()))
+                    .level((reviewUser.getUserLevel().toString()))
                     .build();
 
             // 최종 응답

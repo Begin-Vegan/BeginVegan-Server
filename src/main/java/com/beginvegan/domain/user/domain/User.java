@@ -40,6 +40,9 @@ public class User extends BaseEntity {
 
     private String providerId;
 
+    @Enumerated(EnumType.STRING)
+    private UserLevel userLevel;
+
     private Integer point;
 
     private Boolean alarmSetting = true;
@@ -68,6 +71,7 @@ public class User extends BaseEntity {
         this.provider = provider;
         this.role = role;
         this.providerId = providerId;
+        this.userLevel = UserLevel.SEED;
         this.point = 0;
         this.alarmSetting = true;
         this.userCode = userCode;
@@ -86,6 +90,10 @@ public class User extends BaseEntity {
 
     public void updateNickname(String nickname){
         this.nickname = nickname;
+    }
+
+    public void updateUserLevel(UserLevel userLevel){
+        this.userLevel = userLevel;
     }
 
     public void updateUserCode(String userCode){
@@ -119,9 +127,11 @@ public class User extends BaseEntity {
 
     public void subPoint(Integer point) { this.point -= point; }
 
-    public void softDeleteUser(String email, String password, String providerId) {
+    public void softDeleteUser(String email, String password, String providerId, String fcmToken) {
         this.email = email;
         this.password = password;
         this.providerId = providerId;
+        this.fcmToken = fcmToken;
+        this.alarmSetting = false;
     }
 }
