@@ -1,11 +1,15 @@
 package com.beginvegan.domain.user.application;
 
+import com.beginvegan.domain.alarm.domain.AlarmType;
 import com.beginvegan.domain.auth.domain.Token;
 import com.beginvegan.domain.auth.domain.repository.TokenRepository;
 import com.beginvegan.domain.auth.exception.InvalidTokenException;
 import com.beginvegan.domain.common.Status;
+import com.beginvegan.domain.fcm.application.FcmService;
+import com.beginvegan.domain.fcm.dto.FcmSendDto;
 import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.User;
+import com.beginvegan.domain.user.domain.UserLevel;
 import com.beginvegan.domain.user.domain.VeganType;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.domain.user.dto.*;
@@ -22,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -37,6 +42,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final S3Uploader s3Uploader;
+    private final FcmService fcmService;
 
     private static final int SALT_LENGTH = 16;
 
@@ -54,9 +60,22 @@ public class UserService {
         return ResponseEntity.ok(userDetailRes);
     }
 
+    @Transactional
+    public ResponseEntity<?> updateFcmToken(UserPrincipal userPrincipal, UpdateFcmTokenReq updateFcmTokenReq) {
+        User user = validateUserById(userPrincipal.getId());
+        user.updateFcmToken(updateFcmTokenReq.getFcmToken());
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("FCM 토큰이 업데이트되었습니다.").build())
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     // Description : 비건 타입 변경
     @Transactional
-    public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq, String type) {
+    public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq, String type) throws IOException {
         User user = validateUserById(userPrincipal.getId());
         user.updateVeganType(updateVeganTypeReq.getVeganType());
         if (Objects.equals(type, "TEST")) {
@@ -112,7 +131,10 @@ public class UserService {
             user.updateNickname(newNickname);
         }
         // 이미지 수정
-        file.ifPresent(multipartFile -> updateProfileImage(user, isDefaultImage, multipartFile));
+        file.ifPresent(multipartFile -> {
+            try { updateProfileImage(user, isDefaultImage, multipartFile);
+            } catch (IOException e) { throw new RuntimeException(e); }
+        });
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -129,7 +151,7 @@ public class UserService {
         return String.format("%04d", count + 1);
     }
 
-    private void updateProfileImage(User user, Boolean isDefaultImage, MultipartFile file) {
+    private void updateProfileImage(User user, Boolean isDefaultImage, MultipartFile file) throws IOException {
         if (user.getImageUrl().contains("amazonaws.com/")) {
             // 기존 프로필 이미지 삭제
             String originalFile = user.getImageUrl().split("amazonaws.com/")[1];
@@ -152,7 +174,7 @@ public class UserService {
     }
 
     // Description : 프로필 최초 설정 시 포인트 지급
-    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) {
+    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) throws IOException {
         // 프로필 이미지 설정 여부 확인
         if (!user.getCustomProfileCompleted()) {
             if (!isDefaultImage) {
@@ -160,21 +182,25 @@ public class UserService {
                 user.updateCustomProfileCompleted(true);
             }
         }
+        // 사용자 레벨 검증
+        checkUserLevel(user);
     }
 
     // Description : 비건테스트 최초 수행 시 포인트 지급
-    private void rewardInitialVeganTest(User user) {
+    private void rewardInitialVeganTest(User user) throws IOException {
         if (!user.getVeganTestCompleted()) {
             user.updatePoint(1);
             user.updateVeganTestCompleted(true);
         }
+        // 사용자 레벨 검증
+        checkUserLevel(user);
     }
 
     // 닉네임, 등급별 이미지 출력
     public ResponseEntity<?> getHomeUserInfo(UserPrincipal userPrincipal) {
         User user = validateUserById(userPrincipal.getId());
 
-        String userLevel = countUserLevel(user.getPoint());
+        String userLevel = user.getUserLevel().toString();
         HomeUserInfoRes homeUserInfoRes = HomeUserInfoRes.builder()
                 .nickname(user.getNickname())
                 .userLevel(userLevel)
@@ -187,19 +213,36 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    public String countUserLevel(Integer point) {
-        String userLevel;
+    // userLevel 검증
+    // Description: 포인트 변경 시 마다 호출
+    private UserLevel countUserLevel(Integer point) {
+        UserLevel userLevel;
 
-        if (point < 2) { userLevel = "SEED";}
-        else if (point < 5) { userLevel = "ROOT";}
-        else if (point < 10) { userLevel = "SPROUT";}
-        else if (point < 20) { userLevel = "STEM";}
-        else if (point < 30) { userLevel = "LEAF";}
-        else if (point < 50) { userLevel = "TREE";}
-        else if (point < 100) { userLevel = "FLOWER";}
-        else { userLevel = "FRUIT"; }
+        if (point < 2) { userLevel = UserLevel.SEED; }
+        else if (point < 5) { userLevel = UserLevel.ROOT; }
+        else if (point < 10) { userLevel = UserLevel.SPROUT; }
+        else if (point < 20) { userLevel = UserLevel.STEM; }
+        else if (point < 30) { userLevel = UserLevel.LEAF; }
+        else if (point < 50) { userLevel = UserLevel.TREE; }
+        else if (point < 100) { userLevel = UserLevel.FLOWER; }
+        else { userLevel = UserLevel.FRUIT; }
 
         return userLevel;
+    }
+
+    // userLevel 변경 확인 후 푸시 알림
+    @Transactional
+    public void checkUserLevel(User user) throws IOException {
+        UserLevel originalLevel = user.getUserLevel();
+        UserLevel newLevel = countUserLevel(user.getPoint());
+        if (originalLevel != newLevel) {
+            if (newLevel.getOrder() > originalLevel.getOrder()) {
+                String msg = "나만의 식물이 성장했어요. mypage에서 확인해 보세요!";
+                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.MYPAGE, null, msg);
+                fcmService.sendMessageTo(fcmSendDto);
+            }
+            user.updateUserLevel(newLevel);
+        }
     }
 
     // Description : 마이페이지 회원 정보 조회
@@ -210,7 +253,7 @@ public class UserService {
                 .id(user.getId())
                 .imageUrl(user.getImageUrl())
                 .nickname(user.getNickname())
-                .userLevel(countUserLevel(user.getPoint()))
+                .userLevel(user.getUserLevel().toString())
                 .point(user.getPoint())
                 .veganType(user.getVeganType())
                 .point(user.getPoint())
@@ -263,13 +306,15 @@ public class UserService {
             byte[] hashEmailBytes = digest.digest(concatenate(user.getEmail().getBytes(), salt));
             byte[] hashPasswordBytes = digest.digest(concatenate(user.getPassword().getBytes(), salt));
             byte[] hashProviderIdBytes = digest.digest(concatenate(user.getProviderId().getBytes(), salt));
+            byte[] hashFcmTokenBytes = digest.digest(concatenate(user.getFcmToken().getBytes(), salt));
 
             // 해시된 바이트 배열을 Base64 문자열로 변환
             String hashedEmail = Base64.getEncoder().encodeToString(hashEmailBytes);
             String hashedPassword = Base64.getEncoder().encodeToString(hashPasswordBytes);
             String hashedProviderId = Base64.getEncoder().encodeToString(hashProviderIdBytes);
+            String hashedFcmToken = Base64.getEncoder().encodeToString(hashFcmTokenBytes);
 
-            user.softDeleteUser(hashedEmail + "@email.com", hashedPassword, hashedProviderId);
+            user.softDeleteUser(hashedEmail + "@email.com", hashedPassword, hashedProviderId, hashedFcmToken);
         } catch (NoSuchAlgorithmException e) {
             throw new DefaultException(ErrorCode.INVALID_CHECK, "해시 함수를 찾을 수 없습니다.");
         }

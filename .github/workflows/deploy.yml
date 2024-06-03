@@ -45,6 +45,13 @@ jobs:
           mkdir ./src/main/resources/s3
           touch ./src/main/resources/s3/application-s3.yml
           echo "${{ secrets.S3_YML }}" | base64 --decode > src/main/resources/s3/application-s3.yml
+          
+          mkdir ./src/main/resources/firebase
+          touch ./src/main/resources/firebase/application-firebase.yml
+          echo "${{ secrets.FIREBASE_YML }}" | base64 --decode > src/main/resources/firebase/application-firebase.yml
+          
+          touch ./src/main/resources/firebase/services-account.json
+          echo "${{ secrets.SERVICES_ACCOUNT_JSON }}" | base64 --decode > src/main/resources/firebase/services-account.json
 
       # 추가
       - name: Make Gradle Wrapper script executable

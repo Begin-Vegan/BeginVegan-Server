@@ -24,6 +24,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 @Tag(name = "Authorization", description = "Authorization API")
 @RequiredArgsConstructor
 @RestController
@@ -56,7 +58,7 @@ public class AuthController {
             @Parameter(description = "AddUserInfoReq Schema를 확인해주세요.", required = true) @Valid @RequestPart AddUserInfoReq addUserInfoReq,
             @Parameter(description = "프로필 등록 시 기본 이미지 여부를 입력해주세요.", required = true) @RequestPart Boolean isDefaultImage,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile file
-    ) {
+    ) throws IOException {
         return authService.addSignUpUserInfo(userPrincipal, addUserInfoReq, isDefaultImage, file);
     }
 

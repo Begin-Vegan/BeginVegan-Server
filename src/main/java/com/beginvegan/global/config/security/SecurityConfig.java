@@ -81,6 +81,8 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/blog/**")
                         .permitAll()
+                        .requestMatchers("/api/v1/fcm/**")
+                        .permitAll()
                         .requestMatchers("/api/v1/foods/**", "/api/v1/magazines/**")
                         .permitAll()
                         .anyRequest()

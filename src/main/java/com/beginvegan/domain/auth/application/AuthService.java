@@ -1,10 +1,12 @@
 package com.beginvegan.domain.auth.application;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import com.beginvegan.domain.auth.dto.*;
 import com.beginvegan.domain.auth.exception.InvalidTokenException;
 import com.beginvegan.domain.s3.application.S3Uploader;
+import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.Provider;
 import com.beginvegan.domain.user.domain.Role;
 import com.beginvegan.domain.user.domain.User;
@@ -44,6 +46,8 @@ public class AuthService {
 
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
+
 
     @Transactional
     public ResponseEntity<?> refresh(RefreshTokenReq tokenRefreshRequest){
@@ -123,7 +127,7 @@ public class AuthService {
 
     // 추가 정보 입력
     @Transactional
-    public ResponseEntity<?> addSignUpUserInfo(UserPrincipal userPrincipal, AddUserInfoReq addUserInfoReq, Boolean isDefaultImage, MultipartFile file) {
+    public ResponseEntity<?> addSignUpUserInfo(UserPrincipal userPrincipal, AddUserInfoReq addUserInfoReq, Boolean isDefaultImage, MultipartFile file) throws IOException {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
 
@@ -216,9 +220,10 @@ public class AuthService {
     }
 
     // Description : [회원 가입] 프로필 최초 설정 시 포인트 지급
-    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) {
+    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) throws IOException {
         if (!isDefaultImage) {
             user.updatePoint(1);
+            userService.checkUserLevel(user);
             // 프로필 이미지 최초 설정하여 값 변경
             user.updateCustomProfileCompleted(true);
         }
