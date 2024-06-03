@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Tag(name = "Users", description = "Users API")
@@ -77,7 +78,7 @@ public class UserController {
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "UpdateVeganTypeReq Schema를 확인해주세요", required = true) @RequestBody UpdateVeganTypeReq updateVeganTypeReq,
             @Parameter(description = "어느 페이지의 채식 성향 변경인지에 따라 type으로 입력합니다. TEST(채식 성향 테스트일 경우), MYPAGE(마이페이지일 경우)", required = true) @PathVariable String type
-            ) {
+            ) throws IOException {
         return userService.updateVeganType(userPrincipal, updateVeganTypeReq, type);
     }
 
@@ -130,6 +131,19 @@ public class UserController {
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
     ) {
         return userService.deleteUser(userPrincipal);
+    }
+
+    @Operation(summary = "Fcm Token 변경", description = "Fcm Token을 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "변경 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "변경 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PatchMapping("/fcm/token")
+    public ResponseEntity<?> updateFcmToken(
+            @Parameter(description = "Access Token을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "UpdateFcmToken 을 확인해주세요", required = true) @RequestBody UpdateFcmTokenReq fcmToken
+    ) {
+        return userService.updateFcmToken(userPrincipal, fcmToken);
     }
 
 }

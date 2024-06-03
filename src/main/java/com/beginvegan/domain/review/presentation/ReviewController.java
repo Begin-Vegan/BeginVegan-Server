@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Tag(name = "Reviews", description = "Reviews API")
@@ -59,7 +60,7 @@ public class ReviewController {
             @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @Valid @RequestPart PostReviewReq postReviewReq,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
 
-    ) {
+    ) throws IOException {
         return reviewService.postReview(userPrincipal, postReviewReq, files);
     }
 
@@ -90,7 +91,7 @@ public class ReviewController {
     public ResponseEntity<?> deleteReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
-    ) {
+    ) throws IOException {
         return reviewService.deleteReview(userPrincipal, reviewId);
     }
 
@@ -101,7 +102,7 @@ public class ReviewController {
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
             @Parameter(description = "UpdateReviewReq Schema를 확인해주세요.", required = true) @Valid @RequestPart UpdateReviewReq updateReviewReq,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
-    ) {
+    ) throws IOException {
         return reviewService.updateReview(userPrincipal, reviewId, updateReviewReq, files);
     }
 
@@ -110,7 +111,7 @@ public class ReviewController {
     public ResponseEntity<?> recommendReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
-    ) {
+    ) throws IOException {
         return reviewService.recommendReviews(userPrincipal, reviewId);
     }
 
@@ -120,7 +121,7 @@ public class ReviewController {
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
             @Parameter(description = "리뷰 신고 사유입니다.", required = true) @Valid @RequestBody ReportContentReq reportContentReq
-            ) {
+            ) throws IOException {
         return reviewService.reportReview(userPrincipal, reviewId, reportContentReq);
     }
 

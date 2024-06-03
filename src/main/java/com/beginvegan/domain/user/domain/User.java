@@ -1,5 +1,6 @@
 package com.beginvegan.domain.user.domain;
 
+import com.google.firebase.database.annotations.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 
@@ -39,12 +40,17 @@ public class User extends BaseEntity {
 
     private String providerId;
 
+    @Enumerated(EnumType.STRING)
+    private UserLevel userLevel;
+
     private Integer point;
 
     private Boolean alarmSetting = true;
 
     private String userCode;
 
+    @Nullable
+    private String fcmToken;
 
     private Boolean veganTestCompleted = false;
 
@@ -54,16 +60,18 @@ public class User extends BaseEntity {
     private Boolean signUpCompleted = false;
 
     @Builder
-    public User(Long id, String imageUrl, String nickname, String email, String password, VeganType veganType, Provider provider, Role role, String providerId, String userCode) {
+    public User(Long id, String imageUrl, String nickname, String email, String password, String fcmToken, VeganType veganType, Provider provider, Role role, String providerId, String userCode) {
         this.id = id;
         this.imageUrl = imageUrl;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
+        this.fcmToken = fcmToken;
         this.veganType = veganType;
         this.provider = provider;
         this.role = role;
         this.providerId = providerId;
+        this.userLevel = UserLevel.SEED;
         this.point = 0;
         this.alarmSetting = true;
         this.userCode = userCode;
@@ -82,6 +90,10 @@ public class User extends BaseEntity {
 
     public void updateNickname(String nickname){
         this.nickname = nickname;
+    }
+
+    public void updateUserLevel(UserLevel userLevel){
+        this.userLevel = userLevel;
     }
 
     public void updateUserCode(String userCode){
@@ -108,14 +120,18 @@ public class User extends BaseEntity {
 
     public void updateCustomProfileCompleted(Boolean customProfileCompleted) { this.customProfileCompleted = customProfileCompleted; }
 
+    public void updateFcmToken(String fcmToken) { this.fcmToken = fcmToken; }
+
     // Description : 해당 함수 호출 시 더해야 하는 포인트 값만 요청
     public void updatePoint(Integer additionalPoint) { this.point += additionalPoint; }
 
     public void subPoint(Integer point) { this.point -= point; }
 
-    public void softDeleteUser(String email, String password, String providerId) {
+    public void softDeleteUser(String email, String password, String providerId, String fcmToken) {
         this.email = email;
         this.password = password;
         this.providerId = providerId;
+        this.fcmToken = fcmToken;
+        this.alarmSetting = false;
     }
 }

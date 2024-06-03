@@ -41,6 +41,13 @@ jobs:
           mkdir ./src/main/resources/oauth2
           touch ./src/main/resources/oauth2/application-oauth2.yml
           echo "${{ secrets.OAUTH2_YML }}" | base64 --decode > src/main/resources/oauth2/application-oauth2.yml
+          
+          mkdir ./src/main/resources/firebase
+          touch ./src/main/resources/firebase/application-firebase.yml
+          echo "${{ secrets.FIREBASE_YML }}" | base64 --decode > src/main/resources/firebase/application-firebase.yml
+          
+          touch ./src/main/resources/firebase/services-account.json
+          echo "${{ secrets.SERVICES_ACCOUNT_JSON }}" | base64 --decode > src/main/resources/firebase/services-account.json
 
       # 추가
       - name: Make Gradle Wrapper script executable
