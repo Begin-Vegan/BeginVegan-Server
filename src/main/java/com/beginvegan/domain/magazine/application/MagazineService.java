@@ -1,6 +1,9 @@
 package com.beginvegan.domain.magazine.application;
 
 import com.beginvegan.domain.block.dto.BlockDto;
+import com.beginvegan.domain.bookmark.domain.Bookmark;
+import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
+import com.beginvegan.domain.bookmark.domain.repository.ContentType;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.magazine.domain.Magazine;
 import com.beginvegan.domain.magazine.domain.MagazineType;
@@ -9,12 +12,16 @@ import com.beginvegan.domain.magazine.dto.request.MagazineDetailReq;
 import com.beginvegan.domain.magazine.dto.response.MagazineDetailRes;
 import com.beginvegan.domain.magazine.dto.response.MagazineListRes;
 import com.beginvegan.domain.magazine.exception.MagazineNotFoundException;
+import com.beginvegan.domain.user.application.UserService;
+import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.global.DefaultAssert;
+import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +35,8 @@ import java.util.stream.Collectors;
 public class MagazineService {
 
     private final MagazineRepository magazineRepository;
+    private final UserService userService;
+    private final BookmarkRepository bookmarkRepository;
 
     // 2가지 매거진 조회 : 메인 페이지
     public ResponseEntity<?> findTwoMagazines() {
@@ -53,7 +62,7 @@ public class MagazineService {
     }
 
     // 매거진 상세 조회 : id를 통해 조회
-    public ResponseEntity<?> findMagazineDetail(MagazineDetailReq magazineDetailReq) {
+    public ResponseEntity<?> findMagazineDetail(UserPrincipal userPrincipal, MagazineDetailReq magazineDetailReq) {
         Optional<Magazine> magazineOptional = magazineRepository.findMagazineById(magazineDetailReq.getId());
         Magazine magazine = magazineOptional.orElseThrow(() -> new MagazineNotFoundException("해당 아이디를 가진 매거진을 찾을 수 없습니다. ID: " + magazineDetailReq.getId()));
 
@@ -70,7 +79,9 @@ public class MagazineService {
                 .title(magazine.getTitle())
                 .thumbnail(magazine.getThumbnail())
                 .editor(magazine.getEditor())
+                .createdDate(magazine.getCreatedDate())
                 .magazineContents(blockDtos) // magazineBlocks
+                .isBookmarked(isBookMarked(userPrincipal, magazine.getId()))
                 .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -88,7 +99,8 @@ public class MagazineService {
         return findMagazine.get();
     }
 
-    public ResponseEntity<?> findAllMagazines(Integer page) {
+
+    public ResponseEntity<?> findAllMagazines(UserPrincipal userPrincipal, Integer page) {
         Pageable pageable = PageRequest.of(page, 10);
         List<Magazine> magazines = magazineRepository.findAll(pageable).getContent();
         List<MagazineListRes> magazineList = new ArrayList<>();
@@ -97,7 +109,10 @@ public class MagazineService {
             MagazineListRes magazineListRes = MagazineListRes.builder()
                     .id(magazine.getId())
                     .title(magazine.getTitle())
+                    .thumbnail(magazine.getThumbnail())
                     .editor(magazine.getEditor())
+                    .createdDate(magazine.getCreatedDate())
+                    .isBookmarked(isBookMarked(userPrincipal, magazine.getId()))
                     .build();
             magazineList.add(magazineListRes);
         }
@@ -110,7 +125,7 @@ public class MagazineService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    public ResponseEntity<?> findThreeMagazines() {
+    public ResponseEntity<?> findThreeMagazines(UserPrincipal userPrincipal) {
         List<Magazine> magazines = magazineRepository.findAll();
         List<MagazineListRes> magazineList = new ArrayList<>();
 
@@ -120,7 +135,10 @@ public class MagazineService {
                 MagazineListRes magazineListRes = MagazineListRes.builder()
                         .id(magazine.getId())
                         .title(magazine.getTitle())
+                        .thumbnail(magazine.getThumbnail())
                         .editor(magazine.getEditor())
+                        .createdDate(magazine.getCreatedDate())
+                        .isBookmarked(isBookMarked(userPrincipal, magazine.getId()))
                         .build();
                 magazineList.add(magazineListRes);
             }
@@ -134,7 +152,10 @@ public class MagazineService {
                 MagazineListRes magazineListRes = MagazineListRes.builder()
                         .id(magazines.get(num).getId())
                         .title(magazines.get(num).getTitle())
+                        .thumbnail(magazines.get(num).getThumbnail())
                         .editor(magazines.get(num).getEditor())
+                        .createdDate(magazines.get(num).getCreatedDate())
+                        .isBookmarked(isBookMarked(userPrincipal, magazines.get(num).getId()))
                         .build();
                 magazineList.add(magazineListRes);
             }
@@ -146,4 +167,14 @@ public class MagazineService {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
+
+    private Boolean isBookMarked(UserPrincipal userPrincipal, Long magazineId) {
+        User user = userService.validateUserById(userPrincipal.getId());
+        Boolean isBookmarked = bookmarkRepository.existsByUserAndContentIdAndContentType(user, magazineId, ContentType.MAGAZINE);
+        if(isBookmarked == null) {
+            isBookmarked = false;
+        }
+        return isBookmarked;
+    }
+
 }
