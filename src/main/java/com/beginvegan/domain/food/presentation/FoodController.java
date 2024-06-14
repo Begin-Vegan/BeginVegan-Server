@@ -34,10 +34,10 @@ public class FoodController {
     })
     @GetMapping("")
     public ResponseEntity<?> findAllFoods(
-            @Parameter(description = "레시피 리스트를 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
-
+            @Parameter(description = "레시피 리스트를 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page,
+            @CurrentUser UserPrincipal userPrincipal
     ) {
-        return foodService.findAllFoods(page);
+        return foodService.findAllFoods(userPrincipal, page);
     }
     // 레시피 상세 정보 조회
     @Operation(summary = "레시피 상세 정보 조회", description = "food_id를 통한 레시피 상세 정보를 조회합니다.")
@@ -47,8 +47,10 @@ public class FoodController {
     })
 
     @GetMapping("/detail")
-    public ResponseEntity<?> findFoodDetail(@RequestBody FoodDetailReq foodDetailReq) {
-        return foodService.findFoodDetail(foodDetailReq);
+    public ResponseEntity<?> findFoodDetail(
+            @CurrentUser UserPrincipal userPrincipal,
+            @RequestBody FoodDetailReq foodDetailReq) {
+        return foodService.findFoodDetail(userPrincipal, foodDetailReq);
     }
     // 랜덤 음식 3가지 조회
     @Operation(summary = "3가지 음식 목록 조회", description = "3가지 음식 목록 조회")
@@ -57,8 +59,8 @@ public class FoodController {
             @ApiResponse(responseCode = "400", description = "3가지 음식 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("home/recipe")
-    public ResponseEntity<?> findThreeFoods(){
-        return foodService.findThreeFoods();
+    public ResponseEntity<?> findThreeFoods(@CurrentUser UserPrincipal userPrincipal){
+        return foodService.findThreeFoods(userPrincipal);
     }
 
     @Operation(summary = "나를 위한 레시피 조회", description = "나의 비건 타입에 맞는 레시피 목록 조회")

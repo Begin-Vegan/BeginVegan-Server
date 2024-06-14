@@ -1,6 +1,8 @@
 package com.beginvegan.domain.food.application;
 
 import com.beginvegan.domain.block.dto.BlockDto;
+import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
+import com.beginvegan.domain.bookmark.domain.repository.ContentType;
 import com.beginvegan.domain.food.domain.Food;
 import com.beginvegan.domain.food.domain.repository.FoodRepository;
 import com.beginvegan.domain.food.dto.FoodIngredientDto;
@@ -9,6 +11,7 @@ import com.beginvegan.domain.food.dto.request.FoodDetailReq;
 import com.beginvegan.domain.food.dto.response.FoodDetailRes;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.food.exception.FoodNotFoundException;
+import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.VeganType;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
@@ -26,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.beginvegan.domain.user.domain.VeganType.VEGAN;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -35,6 +37,8 @@ public class FoodService {
 
     private final FoodRepository foodRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
+    private final BookmarkRepository bookmarkRepository;
 
     // 레시피 전체 조회 : 재료 포함 :: 하단 바 레시피 클릭 시 화면
     public ResponseEntity<?> findAllFoodsWithIngredients() {
@@ -68,7 +72,7 @@ public class FoodService {
     }
 
     // food_id를 통한 레시피 검색
-    public ResponseEntity<?> findFoodDetail(FoodDetailReq foodDetailReq) {
+    public ResponseEntity<?> findFoodDetail(UserPrincipal userPrincipal, FoodDetailReq foodDetailReq) {
         Optional<Food> foodOptional = foodRepository.findById(foodDetailReq.getId());
         Food food = foodOptional.orElseThrow(() -> new FoodNotFoundException("해당 아이디를 가진 음식을 찾을 수 없습니다. ID: " + foodDetailReq.getId()));
 
@@ -94,6 +98,7 @@ public class FoodService {
                 .veganType(food.getVeganType())
                 .ingredients(ingredientDtos)
                 .blocks(blockDtos)
+                .isBookmarked(isBookMarked(userPrincipal, food.getId()))
                 .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -106,7 +111,7 @@ public class FoodService {
     }
 
     // 3가지 음식 랜덤 조회 : 메인 페이지
-    public ResponseEntity<?> findThreeFoods() {
+    public ResponseEntity<?> findThreeFoods(UserPrincipal userPrincipal) {
         List<Food> foods = foodRepository.findAll();
         List<FoodListRes> foodList = new ArrayList<>();
 
@@ -123,6 +128,7 @@ public class FoodService {
                     .id(foods.get(num).getId())
                     .name(foods.get(num).getName())
                     .veganType(foods.get(num).getVeganType())
+                    .isBookmarked(isBookMarked(userPrincipal, foods.get(num).getId()))
                     .build();
             foodList.add(foodListRes);
         }
@@ -141,7 +147,7 @@ public class FoodService {
         return findFood.get();
     }
 
-    public ResponseEntity<?> findAllFoods(Integer page) {
+    public ResponseEntity<?> findAllFoods(UserPrincipal userPrincipal, Integer page) {
         Pageable pageable = PageRequest.of(page, 10);
         List<Food> foods = foodRepository.findAll(pageable).getContent();
         List<FoodListRes> foodList = new ArrayList<>();
@@ -151,6 +157,7 @@ public class FoodService {
                     .id(food.getId())
                     .name(food.getName())
                     .veganType(food.getVeganType())
+                    .isBookmarked(isBookMarked(userPrincipal, food.getId()))
                     .build();
             foodList.add(foodListRes);
         }
@@ -169,7 +176,8 @@ public class FoodService {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         VeganType myVeganType = user.getVeganType();
-        //VeganType myVeganType = VeganType.OVO_VEGETARIAN;
+
+        //VeganType myVeganType = VeganType.UNKNOWN;
 
         // 사용자의 채식 성향보다 덜 엄격한 모든 채식 성향을 가져옵니다.
         List<VeganType> veganTypes = getVeganTypes(myVeganType);
@@ -188,6 +196,7 @@ public class FoodService {
                         .id(food.getId())
                         .name(food.getName())
                         .veganType(food.getVeganType())
+                        .isBookmarked(isBookMarked(userPrincipal, food.getId()))
                         .build())
                 .collect(Collectors.toList());
 
@@ -209,4 +218,15 @@ public class FoodService {
         }
         return veganTypes;
     }
+
+    private Boolean isBookMarked(UserPrincipal userPrincipal, Long magazineId) {
+        User user = userService.validateUserById(userPrincipal.getId());
+        Boolean isBookmarked = bookmarkRepository.existsByUserAndContentIdAndContentType(user, magazineId, ContentType.RECIPE);
+        if(isBookmarked == null) {
+            isBookmarked = false;
+        }
+        return isBookmarked;
+    }
+
+
 }

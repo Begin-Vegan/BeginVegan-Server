@@ -4,6 +4,8 @@ import com.beginvegan.domain.magazine.application.MagazineService;
 import com.beginvegan.domain.magazine.dto.request.MagazineDetailReq;
 import com.beginvegan.domain.magazine.dto.response.MagazineDetailRes;
 import com.beginvegan.domain.magazine.dto.response.MagazineListRes;
+import com.beginvegan.global.config.security.token.CurrentUser;
+import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,9 +44,12 @@ public class MagazineController {
             @ApiResponse(responseCode = "400", description = "매거진 상세 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("/detail")
-    public ResponseEntity<?> findMagazineDetail(@RequestBody MagazineDetailReq magazineDetailReq) {
-        return magazineService.findMagazineDetail(magazineDetailReq);
+    public ResponseEntity<?> findMagazineDetail(
+            @CurrentUser UserPrincipal userPrincipal,
+            @RequestBody MagazineDetailReq magazineDetailReq) {
+        return magazineService.findMagazineDetail(userPrincipal, magazineDetailReq);
     }
+
     //매거진 전체 목록 조회
     @Operation(summary = "전체 매거진 목록 조회", description = "전체 매거진 목록 조회")
     @ApiResponses(value = {
@@ -54,8 +59,9 @@ public class MagazineController {
     @GetMapping("")
     public ResponseEntity<?> findAllMagazines(
             @Parameter(description = "레시피 리스트를 조회합니다. **Page는 0부터 시작합니다!**", required = true)
+            @CurrentUser UserPrincipal userPrincipal,
             @RequestParam(value = "page") Integer page){
-        return magazineService.findAllMagazines(page);
+        return magazineService.findAllMagazines(userPrincipal,page);
     }
 
     //매거진 랜덤 3가지 조회
@@ -65,7 +71,7 @@ public class MagazineController {
             @ApiResponse(responseCode = "400", description = "3가지 매거진 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("home/magazine")
-    public ResponseEntity<?> findThreeMagazines(){
-        return magazineService.findThreeMagazines();
+    public ResponseEntity<?> findThreeMagazines(@CurrentUser UserPrincipal userPrincipal){
+        return magazineService.findThreeMagazines(userPrincipal);
     }
 }
