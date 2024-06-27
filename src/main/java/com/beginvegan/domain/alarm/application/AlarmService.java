@@ -79,6 +79,9 @@ public class AlarmService {
                 .sorted(Comparator.comparing(ReadAlarmRes::getCreatedDate))
                 .collect(Collectors.toList());
 
+        // 알림 읽음처리
+        updateIsRead(userPrincipal);
+
         AlarmHistoryRes alarmHistoryRes = AlarmHistoryRes.builder()
                 .unreadAlarmResList(unreadAlarms)
                 .readAlarmResList(readAlarms)
