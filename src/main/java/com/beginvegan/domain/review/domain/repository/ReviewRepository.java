@@ -45,4 +45,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     BigDecimal findAverageRateByRestaurant(Restaurant restaurant);
 
     Page<Review> findReviewsByUserAndVisible(User user, PageRequest pageable, boolean b);
+
+    Restaurant findRestaurantById(Long reviewId);
 }
