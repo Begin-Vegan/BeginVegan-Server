@@ -78,7 +78,7 @@ public class FcmService {
 
         // alarmType이 존재할 경우에만 알림 내역에 저장
         if (fcmSendDto.getAlarmType() != null) {
-            savaAlarmHistory(fcmSendDto);
+            saveAlarmHistory(fcmSendDto);
         }
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -125,7 +125,7 @@ public class FcmService {
     }
 
     @Transactional
-    public void savaAlarmHistory(FcmSendDto fcmSendDto) {
+    public void saveAlarmHistory(FcmSendDto fcmSendDto) {
         Optional<User> findUser = userRepository.findByFcmToken(fcmSendDto.getToken());
         DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
         User user = findUser.get();

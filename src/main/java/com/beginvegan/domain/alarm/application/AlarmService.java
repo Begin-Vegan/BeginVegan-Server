@@ -1,10 +1,15 @@
 package com.beginvegan.domain.alarm.application;
 
 import com.beginvegan.domain.alarm.domain.Alarm;
+import com.beginvegan.domain.alarm.domain.AlarmType;
 import com.beginvegan.domain.alarm.domain.repository.AlarmRepository;
 import com.beginvegan.domain.alarm.dto.AlarmHistoryRes;
 import com.beginvegan.domain.alarm.dto.ReadAlarmRes;
 import com.beginvegan.domain.alarm.dto.UnreadAlarmRes;
+import com.beginvegan.domain.restaurant.domain.Restaurant;
+import com.beginvegan.domain.review.application.ReviewService;
+import com.beginvegan.domain.review.domain.Review;
+import com.beginvegan.domain.review.domain.repository.ReviewRepository;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.global.config.security.token.UserPrincipal;
@@ -28,6 +33,7 @@ import java.util.stream.Collectors;
 public class AlarmService {
 
     private final AlarmRepository alarmRepository;
+    private final ReviewService reviewService;
     private final UserService userService;
 
     // 확인 상태 변경
@@ -48,6 +54,7 @@ public class AlarmService {
     }
 
     // 알림 내역 조회
+    @Transactional
     public ResponseEntity<?> getAlarmHistory(UserPrincipal userPrincipal) {
         User user = userService.validateUserById(userPrincipal.getId());
 
@@ -55,29 +62,51 @@ public class AlarmService {
         // 미확인 알람
         List<UnreadAlarmRes> unreadAlarms = alarms.stream()
                 .filter(alarm -> !alarm.getIsRead())
-                .map(alarm -> UnreadAlarmRes.builder()
-                        .alarmId(alarm.getId())
-                        .createdDate(alarm.getCreatedDate())
-                        .alarmType(alarm.getAlarmType())
-                        .itemId(alarm.getItemId())
-                        .content(alarm.getContent())
-                        .isRead(alarm.getIsRead())
-                        .build())
-                .sorted(Comparator.comparing(UnreadAlarmRes::getCreatedDate))
+                .map(alarm -> {
+                    Long restaurantId = null;
+                    if (alarm.getAlarmType() == AlarmType.MAP) {
+                        Long reviewId = alarm.getItemId();
+                        Review review = reviewService.validateReviewById(reviewId);
+                        restaurantId = review.getRestaurant().getId();
+                    }
+                    return UnreadAlarmRes.builder()
+                            .alarmId(alarm.getId())
+                            .createdDate(alarm.getCreatedDate())
+                            .alarmType(alarm.getAlarmType())
+                            .itemId(alarm.getItemId())
+                            .restaurantId(restaurantId)
+                            .content(alarm.getContent())
+                            .isRead(alarm.getIsRead())
+                            .build();
+                })
+                .sorted(Comparator.comparing(UnreadAlarmRes::getCreatedDate).reversed())
                 .collect(Collectors.toList());
+
         // 확인 알람
         List<ReadAlarmRes> readAlarms = alarms.stream()
                 .filter(alarm -> alarm.getIsRead())
-                .map(alarm -> ReadAlarmRes.builder()
-                        .alarmId(alarm.getId())
-                        .createdDate(alarm.getCreatedDate())
-                        .alarmType(alarm.getAlarmType())
-                        .itemId(alarm.getItemId())
-                        .content(alarm.getContent())
-                        .isRead(alarm.getIsRead())
-                        .build())
-                .sorted(Comparator.comparing(ReadAlarmRes::getCreatedDate))
+                .map(alarm -> {
+                    Long restaurantId = null;
+                    if (alarm.getAlarmType() == AlarmType.MAP) {
+                        Long reviewId = alarm.getItemId();
+                        Review review = reviewService.validateReviewById(reviewId);
+                        restaurantId = review.getRestaurant().getId();
+                    }
+                    return ReadAlarmRes.builder()
+                            .alarmId(alarm.getId())
+                            .createdDate(alarm.getCreatedDate())
+                            .alarmType(alarm.getAlarmType())
+                            .restaurantId(restaurantId)
+                            .itemId(alarm.getItemId())
+                            .content(alarm.getContent())
+                            .isRead(alarm.getIsRead())
+                            .build();
+                })
+                .sorted(Comparator.comparing(ReadAlarmRes::getCreatedDate).reversed())
                 .collect(Collectors.toList());
+
+        // 알림 읽음처리
+        updateIsRead(userPrincipal);
 
         AlarmHistoryRes alarmHistoryRes = AlarmHistoryRes.builder()
                 .unreadAlarmResList(unreadAlarms)
