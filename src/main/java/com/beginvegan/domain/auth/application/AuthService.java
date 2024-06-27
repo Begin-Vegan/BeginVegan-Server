@@ -3,8 +3,11 @@ package com.beginvegan.domain.auth.application;
 import java.io.IOException;
 import java.util.Optional;
 
+import com.beginvegan.domain.alarm.domain.AlarmType;
 import com.beginvegan.domain.auth.dto.*;
 import com.beginvegan.domain.auth.exception.InvalidTokenException;
+import com.beginvegan.domain.fcm.application.FcmService;
+import com.beginvegan.domain.fcm.dto.FcmSendDto;
 import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.Provider;
@@ -47,6 +50,7 @@ public class AuthService {
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final FcmService fcmService;
 
 
     @Transactional
@@ -143,6 +147,11 @@ public class AuthService {
                 .check(true)
                 .information(Message.builder().message("추가 정보 등록이 완료되었습니다.").build())
                 .build();
+
+        // 웰컴 메세지 전송
+        String msg = "비긴, 비건에 오신 것을 환영해요. 비거너의 여정으로 함께 떠나요!";
+        FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.INFORMATION, null, msg);
+        fcmService.sendMessageTo(fcmSendDto);
 
         return ResponseEntity.ok(apiResponse);
     }

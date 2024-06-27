@@ -20,7 +20,10 @@ public class ReadAlarmRes {
     @Schema(type = "String", example = "나만의 식물이 성장했어요. mypage에서 확인해 보세요!", description = "알림의 내용입니다.")
     public String content;
 
-    @Schema(type = "Long", example = "1", description = "alarmType에 따른 itemId입니다. MAP: 매거진 또는 레시피의 id, MYPAGE: 리뷰 id")
+    @Schema(type = "Long", example = "1", description = "alarmType이 MAP인 경우에만 restaurantId를 전달합니다.")
+    public Long restaurantId;
+
+    @Schema(type = "Long", example = "1", description = "alarmType에 따른 itemId입니다. TIPS: 매거진 또는 레시피의 id, MAP: 리뷰 id")
     public Long itemId;
 
     @Schema(type = "LocalDateTime", example = "2024-06-02 06:28:45.966434", description = "알림의 생성 일시입니다.")
