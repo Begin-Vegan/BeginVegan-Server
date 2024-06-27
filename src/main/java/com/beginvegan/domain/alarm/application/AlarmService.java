@@ -79,7 +79,7 @@ public class AlarmService {
                             .isRead(alarm.getIsRead())
                             .build();
                 })
-                .sorted(Comparator.comparing(UnreadAlarmRes::getCreatedDate))
+                .sorted(Comparator.comparing(UnreadAlarmRes::getCreatedDate).reversed())
                 .collect(Collectors.toList());
 
         // 확인 알람
@@ -102,7 +102,7 @@ public class AlarmService {
                             .isRead(alarm.getIsRead())
                             .build();
                 })
-                .sorted(Comparator.comparing(ReadAlarmRes::getCreatedDate))
+                .sorted(Comparator.comparing(ReadAlarmRes::getCreatedDate).reversed())
                 .collect(Collectors.toList());
 
         // 알림 읽음처리
