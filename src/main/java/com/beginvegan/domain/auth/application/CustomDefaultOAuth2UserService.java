@@ -52,7 +52,7 @@ public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService{
             DefaultAssert.isAuthentication(user.getProvider().equals(Provider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId())));
             // user = updateExistingUser(user, oAuth2UserInfo);
             // 추가 정보 입력하지 않았을 시 예외처리
-            DefaultAssert.isTrue(!user.getSignUpCompleted(), "회원가입 절차가 완료되지 않았습니다.");
+            DefaultAssert.isTrue(user.getSignUpCompleted(), "회원가입 절차가 완료되지 않았습니다.");
         } else {
             user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
         }
