@@ -196,6 +196,8 @@ public class AuthService {
         User user = userRepository.findByEmail(signInReq.getEmail())
                 .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
 
+        DefaultAssert.isTrue(!user.getSignUpCompleted(), "회원가입 절차가 완료되지 않았습니다.");
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         signInReq.getEmail(),
