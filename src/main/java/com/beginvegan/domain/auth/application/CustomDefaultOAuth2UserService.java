@@ -11,6 +11,8 @@ import com.beginvegan.domain.user.domain.Role;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 
+import com.beginvegan.global.error.DefaultException;
+import com.beginvegan.global.payload.ErrorCode;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,7 +51,8 @@ public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService{
             user = userOptional.get();
             DefaultAssert.isAuthentication(user.getProvider().equals(Provider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId())));
             // user = updateExistingUser(user, oAuth2UserInfo);
-
+            // 추가 정보 입력하지 않았을 시 예외처리
+            DefaultAssert.isTrue(!user.getSignUpCompleted(), "회원가입 절차가 완료되지 않았습니다.");
         } else {
             user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
         }
@@ -62,11 +65,22 @@ public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService{
                     .provider(Provider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()))
                     .providerId(oAuth2UserInfo.getId())
                     .email(oAuth2UserInfo.getEmail())
-                    //.password(encodePassword(oAuth2UserInfo.getId()))
+                    .password(encodePassword(oAuth2UserInfo.getId()))
                     .role(Role.USER)
                     .build();
         
         return userRepository.save(user);
+    }
+
+    private String encodePassword(String password) {
+        // PasswordEncoder를 사용하여 비밀번호 인코딩
+        return customPasswordEncoder().encode(password);
+    }
+
+    // PasswordEncoder를 Bean으로 등록하여 사용할 수 있도록 설정
+    @Bean
+    public PasswordEncoder customPasswordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     }
