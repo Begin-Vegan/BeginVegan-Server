@@ -49,36 +49,40 @@ public class FcmService {
 
     @Transactional
     public ResponseEntity<?> sendMessageTo(FcmSendDto fcmSendDto) throws IOException {
-        // TODO 알림 설정 여부 확인해서 비허용이면 저장만
-        Optional<User> findUser = userRepository.findByFcmToken(fcmSendDto.getToken());
-        DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
-        User user = findUser.get();
+        String msg = "메세지 전송에 실패했습니다(FCM 토큰이 존재하지 않음)";
 
-        String msg = "알림이 저장되었습니다.";
-        boolean isAlarmSetting = user.getAlarmSetting();
-        // 수신 허용이면 푸시알림 전송
-        if (isAlarmSetting) {
-            String message = makeMessage(fcmSendDto.getToken(), fcmSendDto.getTitle(), fcmSendDto.getBody());
+        if (fcmSendDto.getToken() != null) {
+            // TODO 알림 설정 여부 확인해서 비허용이면 저장만
+            Optional<User> findUser = userRepository.findByFcmToken(fcmSendDto.getToken());
+            DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
+            User user = findUser.get();
 
-            OkHttpClient client = new OkHttpClient();
-            RequestBody requestBody = RequestBody.create(message,
-                    MediaType.get("application/json; charset=utf-8"));
-            Request request = new Request.Builder()
-                    .url(API_URL)
-                    .post(requestBody)
-                    .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken())
-                    .addHeader(HttpHeaders.CONTENT_TYPE, "application/json; UTF-8")
-                    .build();
+            msg = "알림이 저장되었습니다.";
+            boolean isAlarmSetting = user.getAlarmSetting();
+            // 수신 허용이면 푸시알림 전송
+            if (isAlarmSetting) {
+                String message = makeMessage(fcmSendDto.getToken(), fcmSendDto.getTitle(), fcmSendDto.getBody());
 
-            Response response = client.newCall(request).execute();
+                OkHttpClient client = new OkHttpClient();
+                RequestBody requestBody = RequestBody.create(message,
+                        MediaType.get("application/json; charset=utf-8"));
+                Request request = new Request.Builder()
+                        .url(API_URL)
+                        .post(requestBody)
+                        .addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken())
+                        .addHeader(HttpHeaders.CONTENT_TYPE, "application/json; UTF-8")
+                        .build();
 
-            System.out.println(response.body().string());
-            msg = "메세지 전송이 완료되었습니다.";
-        }
+                Response response = client.newCall(request).execute();
 
-        // alarmType이 존재할 경우에만 알림 내역에 저장
-        if (fcmSendDto.getAlarmType() != null) {
-            saveAlarmHistory(fcmSendDto);
+                System.out.println(response.body().string());
+                msg = "메세지 전송이 완료되었습니다.";
+            }
+
+            // alarmType이 존재할 경우에만 알림 내역에 저장
+            if (fcmSendDto.getAlarmType() != null) {
+                saveAlarmHistory(fcmSendDto);
+            }
         }
 
         ApiResponse apiResponse = ApiResponse.builder()

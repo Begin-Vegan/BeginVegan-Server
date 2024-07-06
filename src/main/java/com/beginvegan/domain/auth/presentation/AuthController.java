@@ -34,18 +34,18 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "유저 회원가입", description = "회원가입을 수행합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "회원가입 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "회원가입 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
-    })
-    @PostMapping(value="/sign-up")
-    public ResponseEntity<?> signUp(
-            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "SignUpReq Schema를 확인해주세요.", required = true) @Valid @RequestBody SignUpReq signUpReq
-    ) {
-        return authService.signUp(userPrincipal, signUpReq);
-    }
+    //@Operation(summary = "유저 회원가입", description = "회원가입을 수행합니다.")
+    //@ApiResponses(value = {
+    //        @ApiResponse(responseCode = "200", description = "회원가입 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+    //        @ApiResponse(responseCode = "400", description = "회원가입 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    //})
+    //@PostMapping(value="/sign-up")
+    //public ResponseEntity<?> signUp(
+    //        @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+    //        @Parameter(description = "SignUpReq Schema를 확인해주세요.", required = true) @Valid @RequestBody SignUpReq signUpReq
+    //) {
+    //    return authService.signUp(userPrincipal, signUpReq);
+    //}
 
     @Operation(summary = "유저 추가 정보 입력", description = "유저 회원가입 이후 추가 정보를 수행합니다.")
     @ApiResponses(value = {
