@@ -1,7 +1,6 @@
 package com.beginvegan.domain.magazine.presentation;
 
 import com.beginvegan.domain.magazine.application.MagazineService;
-import com.beginvegan.domain.magazine.dto.request.MagazineDetailReq;
 import com.beginvegan.domain.magazine.dto.response.MagazineDetailRes;
 import com.beginvegan.domain.magazine.dto.response.MagazineListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
@@ -43,11 +42,11 @@ public class MagazineController {
             @ApiResponse(responseCode = "200", description = "매거진 상세 정보 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MagazineDetailRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "매거진 상세 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/detail")
+    @GetMapping("/")
     public ResponseEntity<?> findMagazineDetail(
             @CurrentUser UserPrincipal userPrincipal,
-            @RequestBody MagazineDetailReq magazineDetailReq) {
-        return magazineService.findMagazineDetail(userPrincipal, magazineDetailReq);
+            @RequestParam Long id) {
+        return magazineService.findMagazineDetail(userPrincipal, id);
     }
 
     //매거진 전체 목록 조회

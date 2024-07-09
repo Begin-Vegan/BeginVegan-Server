@@ -2,7 +2,6 @@ package com.beginvegan.domain.food.presentation;
 
 import com.beginvegan.domain.food.application.FoodService;
 import com.beginvegan.domain.food.dto.response.FoodRecipeListRes;
-import com.beginvegan.domain.food.dto.request.FoodDetailReq;
 import com.beginvegan.domain.food.dto.response.FoodDetailRes;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
@@ -46,11 +45,11 @@ public class FoodController {
             @ApiResponse(responseCode = "400", description = "레시피 상세 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
 
-    @GetMapping("/detail")
+    @GetMapping("/")
     public ResponseEntity<?> findFoodDetail(
             @CurrentUser UserPrincipal userPrincipal,
-            @RequestBody FoodDetailReq foodDetailReq) {
-        return foodService.findFoodDetail(userPrincipal, foodDetailReq);
+            @RequestParam Long id) {
+        return foodService.findFoodDetail(userPrincipal, id);
     }
     // 랜덤 음식 3가지 조회
     @Operation(summary = "3가지 음식 목록 조회", description = "3가지 음식 목록 조회")
