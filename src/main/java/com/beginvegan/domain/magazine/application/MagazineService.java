@@ -1,14 +1,10 @@
 package com.beginvegan.domain.magazine.application;
 
 import com.beginvegan.domain.block.dto.BlockDto;
-import com.beginvegan.domain.bookmark.domain.Bookmark;
 import com.beginvegan.domain.bookmark.domain.repository.BookmarkRepository;
 import com.beginvegan.domain.bookmark.domain.repository.ContentType;
-import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.magazine.domain.Magazine;
-import com.beginvegan.domain.magazine.domain.MagazineType;
 import com.beginvegan.domain.magazine.domain.repository.MagazineRepository;
-import com.beginvegan.domain.magazine.dto.request.MagazineDetailReq;
 import com.beginvegan.domain.magazine.dto.response.MagazineDetailRes;
 import com.beginvegan.domain.magazine.dto.response.MagazineListRes;
 import com.beginvegan.domain.magazine.exception.MagazineNotFoundException;
@@ -18,10 +14,8 @@ import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,14 +56,15 @@ public class MagazineService {
     }
 
     // 매거진 상세 조회 : id를 통해 조회
-    public ResponseEntity<?> findMagazineDetail(UserPrincipal userPrincipal, MagazineDetailReq magazineDetailReq) {
-        Optional<Magazine> magazineOptional = magazineRepository.findMagazineById(magazineDetailReq.getId());
-        Magazine magazine = magazineOptional.orElseThrow(() -> new MagazineNotFoundException("해당 아이디를 가진 매거진을 찾을 수 없습니다. ID: " + magazineDetailReq.getId()));
+    public ResponseEntity<?> findMagazineDetail(UserPrincipal userPrincipal, Long magazineId) {
+        Optional<Magazine> magazineOptional = magazineRepository.findMagazineById(magazineId);
+        Magazine magazine = magazineOptional.orElseThrow(() -> new MagazineNotFoundException("해당 아이디를 가진 매거진을 찾을 수 없습니다. ID: " + magazineId));
 
         List<BlockDto> blockDtos = magazine.getMagazineBlocks().stream()
                 .map(block -> BlockDto.builder()
                         .content(block.getContent())
                         .sequence(block.getSequence())
+                        .isBold(block.getIsBold())
                         .build())
                 .sorted(Comparator.comparing(BlockDto::getSequence))
                 .collect(Collectors.toList());
