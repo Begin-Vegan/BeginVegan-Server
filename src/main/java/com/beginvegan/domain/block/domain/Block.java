@@ -21,6 +21,8 @@ public class Block extends BaseEntity {
 
     private Integer sequence;
 
+    private Boolean isBold;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "magazine_id")
     private Magazine magazine;
@@ -30,10 +32,11 @@ public class Block extends BaseEntity {
     private Food food;
 
     @Builder
-    public Block(Long id, String content, Integer sequence, Magazine magazine, Food food) {
+    public Block(Long id, String content, Integer sequence, Boolean isBold, Magazine magazine, Food food) {
         this.id = id;
         this.content = content;
         this.sequence = sequence;
+        this.isBold = isBold;
         this.magazine = magazine;
         this.food = food;
     }

@@ -104,31 +104,6 @@ public class AuthService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    // 회원가입
-    @Transactional
-    public ResponseEntity<?> signUp(UserPrincipal userPrincipal, SignUpReq signUpReq) {
-        DefaultAssert.isTrue(!userRepository.existsByEmail(signUpReq.getEmail()), "이미 가입된 이메일이 존재합니다.");
-
-        User newUser = User.builder()
-                .providerId(signUpReq.getProviderId())
-                .provider(Provider.kakao)
-                .email(signUpReq.getEmail())
-                .password(passwordEncoder.encode(signUpReq.getProviderId()))
-                .role(Role.USER)
-                .build();
-
-        userRepository.save(newUser);
-
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information(Message.builder().message("회원 가입이 완료되었습니다.").build())
-                .build();
-
-        return ResponseEntity.ok(apiResponse);
-    }
-
-
-
     // 추가 정보 입력
     @Transactional
     public ResponseEntity<?> addSignUpUserInfo(UserPrincipal userPrincipal, AddUserInfoReq addUserInfoReq, Boolean isDefaultImage, MultipartFile file) throws IOException {
@@ -137,10 +112,9 @@ public class AuthService {
 
         String userCode = generateUserCode(addUserInfoReq.getNickname());
         String imageUrl = registerImage(isDefaultImage, file);
+
         user.updateUser(imageUrl, addUserInfoReq.getNickname(), userCode, addUserInfoReq.getVeganType());
-        // 추가정보 입력 여부 변경
         user.updateSignUpCompleted(true);
-        // 프로필 설정 여부 확인하고 포인트 지급
         rewardInitialProfileImage(user, isDefaultImage);
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -191,13 +165,36 @@ public class AuthService {
         return true;
     }
 
+    // 회원가입
+    public void signUp(String email, String providerId) {
+        DefaultAssert.isTrue(!userRepository.existsByEmail(email), "이미 가입된 이메일이 존재합니다.");
+
+        User newUser = User.builder()
+                .providerId(providerId)
+                .provider(Provider.kakao)
+                .email(email)
+                .password(passwordEncoder.encode(providerId))
+                .role(Role.USER)
+                .build();
+
+        userRepository.save(newUser);
+    }
+
+    // 비회원: 회원가입 후 로그인
+    // 회원: 로그인
     @Transactional
     public ResponseEntity<?> signIn(SignInReq signInReq) {
-        User user = userRepository.findByEmail(signInReq.getEmail())
-                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
+        Optional<User> userOptional = userRepository.findByEmail(signInReq.getEmail());
+        // 비회원
+        if (userOptional.isEmpty()) {
+            signUp(signInReq.getEmail(), signInReq.getProviderId());
+            userOptional = userRepository.findByEmail(signInReq.getEmail());
+        }
 
-        DefaultAssert.isTrue(user.getSignUpCompleted(), "회원가입 절차가 완료되지 않았습니다.");
+        //        .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
+        //        DefaultAssert.isTrue(user.getSignUpCompleted(), "회원가입 절차가 완료되지 않았습니다.");
 
+        User user = userOptional.get();
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         signInReq.getEmail(),
@@ -225,7 +222,8 @@ public class AuthService {
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(signInRes).build();
+                .information(signInRes)
+                .build();
 
         return ResponseEntity.ok(apiResponse);
     }
