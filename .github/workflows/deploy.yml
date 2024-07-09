@@ -3,13 +3,16 @@ name: Deploy to Amazon EC2
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feature/new-aws" ]
 
 env:
   AWS_REGION: ap-northeast-2
-  S3_BUCKET_NAME: begin-vegan-github-actions-s3-bucket
-  CODE_DEPLOY_APPLICATION_NAME: begin-vegan-codedeploy-application
-  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: begin-vegan-codedeploy-deployment-group
+#  S3_BUCKET_NAME: begin-vegan-github-actions-s3-bucket
+#  CODE_DEPLOY_APPLICATION_NAME: begin-vegan-codedeploy-application
+#  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: begin-vegan-codedeploy-deployment-group
+  S3_BUCKET_NAME: new-begin-vegan-github-actions-s3-bucket
+  CODE_DEPLOY_APPLICATION_NAME: vegan-codedeploy-app
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: vegan-codedeploy-deployment-group
 
 permissions:
   contents: read
@@ -67,8 +70,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.NEW_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.NEW_AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       # 빌드 결과물 버킷 업로드
