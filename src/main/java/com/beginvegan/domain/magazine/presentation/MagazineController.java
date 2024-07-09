@@ -30,10 +30,10 @@ public class MagazineController {
             @ApiResponse(responseCode = "200", description = "매거진 상세 정보 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MagazineDetailRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "매거진 상세 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("")
+    @GetMapping("{id}")
     public ResponseEntity<?> findMagazineDetail(
             @CurrentUser UserPrincipal userPrincipal,
-            @RequestParam Long id) {
+            @PathVariable Long id) {
         return magazineService.findMagazineDetail(userPrincipal, id);
     }
 
