@@ -39,7 +39,7 @@ jobs:
         run: |
           mkdir ./src/main/resources/database
           touch ./src/main/resources/database/application-database.yml
-          echo "${{ secrets.DATABASE_YML }}" | base64 --decode > src/main/resources/database/application-database.yml
+          echo "${{ secrets.NEW_DATABASE_YML }}" | base64 --decode > src/main/resources/database/application-database.yml
           
           mkdir ./src/main/resources/oauth2
           touch ./src/main/resources/oauth2/application-oauth2.yml
@@ -47,7 +47,7 @@ jobs:
           
           mkdir ./src/main/resources/s3
           touch ./src/main/resources/s3/application-s3.yml
-          echo "${{ secrets.S3_YML }}" | base64 --decode > src/main/resources/s3/application-s3.yml
+          echo "${{ secrets.NEW_S3_YML }}" | base64 --decode > src/main/resources/s3/application-s3.yml
           
           mkdir ./src/main/resources/firebase
           touch ./src/main/resources/firebase/application-firebase.yml
