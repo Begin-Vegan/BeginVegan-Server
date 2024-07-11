@@ -211,7 +211,7 @@ public class FoodService {
     private List<VeganType> getVeganTypes(VeganType myVeganType) {
         List<VeganType> veganTypes = new ArrayList<>();
         for (VeganType type : VeganType.values()) {
-            if (type.getOrder() >= myVeganType.getOrder()) {
+            if (type.getOrder() <= myVeganType.getOrder()) {
                 veganTypes.add(type);
             }
         }
