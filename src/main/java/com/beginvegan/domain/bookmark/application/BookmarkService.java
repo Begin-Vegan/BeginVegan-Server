@@ -166,6 +166,7 @@ public class BookmarkService {
 
             BookmarkMagazineRes bookmarkMagazineRes = BookmarkMagazineRes.builder()
                     .magazineId(magazineId)
+                    .thumbnail(magazine.getThumbnail())
                     .title(magazine.getTitle())
                     .writeTime(magazine.getCreatedDate().toLocalDate())
                     .editor(magazine.getEditor())

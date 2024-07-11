@@ -12,6 +12,8 @@ public class BookmarkMagazineRes {
 
     private Long magazineId;
 
+    private String thumbnail;
+
     private String title;
 
     private LocalDate writeTime;
@@ -19,8 +21,9 @@ public class BookmarkMagazineRes {
     private String editor;
 
     @Builder
-    public BookmarkMagazineRes(Long magazineId, String title, LocalDate writeTime, String editor) {
+    public BookmarkMagazineRes(Long magazineId, String thumbnail, String title, LocalDate writeTime, String editor) {
         this.magazineId = magazineId;
+        this.thumbnail = thumbnail;
         this.title = title;
         this.writeTime = writeTime;
         this.editor = editor;
