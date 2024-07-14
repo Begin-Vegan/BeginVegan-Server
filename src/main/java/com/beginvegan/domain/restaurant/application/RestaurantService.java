@@ -489,7 +489,7 @@ public class RestaurantService {
     }
 
     // Description : 유저 - 식당 거리 계산 함수
-    private double calculateDistance(double userLatitude, double userLongitude, double restaurantLatitude, double restaurantLongitude) {
+    public double calculateDistance(double userLatitude, double userLongitude, double restaurantLatitude, double restaurantLongitude) {
         double dLatitude = Math.toRadians(restaurantLatitude - userLatitude);
         double dLongitude = Math.toRadians(restaurantLongitude - userLongitude);
 

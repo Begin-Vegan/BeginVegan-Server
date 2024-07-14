@@ -8,8 +8,6 @@ import lombok.Data;
 @Data
 public class BookmarkRestaurantRes {
 
-    // 썸네일, 식당 이름, 카테고리명(RestaurantType), 도로명 주소
-
     private Long restaurantId;
 
     private String thumbnail;
@@ -18,14 +16,17 @@ public class BookmarkRestaurantRes {
 
     private RestaurantType restaurantType;
 
-    private Address address;
+    private Double rate;
+
+    private Double distance;
 
     @Builder
-    public BookmarkRestaurantRes(Long restaurantId, String thumbnail, String name, RestaurantType restaurantType, Address address) {
+    public BookmarkRestaurantRes(Long restaurantId, String thumbnail, String name, RestaurantType restaurantType, Double rate, Double distance) {
         this.restaurantId = restaurantId;
         this.thumbnail = thumbnail;
         this.name = name;
         this.restaurantType = restaurantType;
-        this.address = address;
+        this.rate = rate;
+        this.distance = distance;
     }
 }
