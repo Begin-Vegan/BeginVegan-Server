@@ -12,6 +12,7 @@ import com.beginvegan.domain.magazine.domain.Magazine;
 import com.beginvegan.domain.magazine.dto.response.BookmarkMagazineRes;
 import com.beginvegan.domain.restaurant.application.RestaurantService;
 import com.beginvegan.domain.restaurant.domain.Restaurant;
+import com.beginvegan.domain.restaurant.dto.request.LocationReq;
 import com.beginvegan.domain.restaurant.dto.response.BookmarkRestaurantRes;
 import com.beginvegan.domain.user.application.UserService;
 import com.beginvegan.domain.user.domain.User;
@@ -88,7 +89,7 @@ public class BookmarkService {
     }
 
     // Description : 북마크한 식당 목록 조회
-    public ResponseEntity<?> findBookmarkRestaurant(UserPrincipal userPrincipal, Integer page) {
+    public ResponseEntity<?> findBookmarkRestaurant(UserPrincipal userPrincipal, Integer page, LocationReq locationReq) {
 
         User user = userService.validateUserById(userPrincipal.getId());
 
@@ -96,17 +97,25 @@ public class BookmarkService {
         Page<Bookmark> bookmarkPage = bookmarkRepository.findBookmarksByContentTypeAndUser(ContentType.RESTAURANT, user, pageRequest);
 
         List<BookmarkRestaurantRes> bookmarkRestaurantResList = new ArrayList<>();
+        double userLatitude = Double.parseDouble(locationReq.getLatitude());
+        double userLongitude = Double.parseDouble(locationReq.getLongitude());
 
         for (Bookmark bookmark : bookmarkPage) {
             Long restaurantId = bookmark.getContentId();
             Restaurant restaurant = restaurantService.validateRestaurantById(restaurantId);
+
+            double restaurantLatitude = Double.parseDouble(restaurant.getLatitude());
+            double restaurantLongitude = Double.parseDouble(restaurant.getLongitude());
+
+            double distance = restaurantService.calculateDistance(userLatitude, userLongitude, restaurantLatitude, restaurantLongitude);
 
             BookmarkRestaurantRes bookmarkRestaurantRes = BookmarkRestaurantRes.builder()
                     .restaurantId(bookmark.getContentId())
                     .thumbnail(restaurant.getThumbnail())
                     .name(restaurant.getName())
                     .restaurantType(restaurant.getRestaurantType())
-                    .address(restaurant.getAddress())
+                    .rate(restaurant.getRate())
+                    .distance(distance)
                     .build();
             bookmarkRestaurantResList.add(bookmarkRestaurantRes);
         }
