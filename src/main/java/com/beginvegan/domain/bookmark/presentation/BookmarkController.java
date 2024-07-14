@@ -5,6 +5,7 @@ import com.beginvegan.domain.bookmark.dto.request.BookmarkReq;
 import com.beginvegan.domain.bookmark.dto.response.BookmarkListRes;
 import com.beginvegan.domain.food.dto.response.BookmarkFoodRes;
 import com.beginvegan.domain.magazine.dto.response.BookmarkMagazineRes;
+import com.beginvegan.domain.restaurant.dto.request.LocationReq;
 import com.beginvegan.domain.restaurant.dto.response.BookmarkRestaurantRes;
 import com.beginvegan.domain.restaurant.dto.response.RandomRestaurantRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
@@ -67,9 +68,10 @@ public class BookmarkController {
     @GetMapping("/restaurant")
     public ResponseEntity<?> findBookmarkRestaurant(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "식당 검색 결과를 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
+            @Parameter(description = "식당 검색 결과를 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page,
+            @Parameter(description = "LocationReq를 참고해주세요.", required = true) @RequestBody LocationReq locationReq
     ) {
-        return bookmarkService.findBookmarkRestaurant(userPrincipal, page);
+        return bookmarkService.findBookmarkRestaurant(userPrincipal, page, locationReq);
     }
 
     // Description : 레시피
