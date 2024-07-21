@@ -89,7 +89,7 @@ public class BookmarkService {
     }
 
     // Description : 북마크한 식당 목록 조회
-    public ResponseEntity<?> findBookmarkRestaurant(UserPrincipal userPrincipal, Integer page, LocationReq locationReq) {
+    public ResponseEntity<?> findBookmarkRestaurant(UserPrincipal userPrincipal, Integer page, String latitude, String longitude) {
 
         User user = userService.validateUserById(userPrincipal.getId());
 
@@ -97,8 +97,8 @@ public class BookmarkService {
         Page<Bookmark> bookmarkPage = bookmarkRepository.findBookmarksByContentTypeAndUser(ContentType.RESTAURANT, user, pageRequest);
 
         List<BookmarkRestaurantRes> bookmarkRestaurantResList = new ArrayList<>();
-        double userLatitude = Double.parseDouble(locationReq.getLatitude());
-        double userLongitude = Double.parseDouble(locationReq.getLongitude());
+        double userLatitude = Double.parseDouble(latitude);
+        double userLongitude = Double.parseDouble(longitude);
 
         for (Bookmark bookmark : bookmarkPage) {
             Long restaurantId = bookmark.getContentId();
