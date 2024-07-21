@@ -59,7 +59,7 @@ public class RestaurantService {
     // 지구의 반지름
     private static final int EARTH_RADIUS = 6371;
 
-    public ResponseEntity<?> findRestaurantById(UserPrincipal userPrincipal, Long restaurantId, LocationReq locationReq) {
+    public ResponseEntity<?> findRestaurantById(UserPrincipal userPrincipal, Long restaurantId, String latitude, String longitude) {
 
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
@@ -70,8 +70,8 @@ public class RestaurantService {
         Optional<Bookmark> findBookmark = bookmarkRepository.findByContentIdAndContentTypeAndUser(restaurant.getId(), ContentType.RESTAURANT, user);
 
 
-        double userLatitude = Double.parseDouble(locationReq.getLatitude());
-        double userLongitude = Double.parseDouble(locationReq.getLongitude());
+        double userLatitude = Double.parseDouble(latitude);
+        double userLongitude = Double.parseDouble(longitude);
 
         double restaurantLatitude = Double.parseDouble(restaurant.getLatitude());
         double restaurantLongitude = Double.parseDouble(restaurant.getLongitude());
@@ -331,7 +331,7 @@ public class RestaurantService {
     }
 
     // home - 권한 동의 o, 10km 이내 랜덤 식당 3개 조회
-    public ResponseEntity<?> findRandomRestaurantWithPermission(UserPrincipal userPrincipal, Long count, LocationReq locationReq) {
+    public ResponseEntity<?> findRandomRestaurantWithPermission(UserPrincipal userPrincipal, Long count, String latitude, String longitude) {
 
         // 지구의 반지름
         final int EARTH_RADIUS = 6371;
@@ -339,8 +339,8 @@ public class RestaurantService {
         User user = userService.validateUserById(userPrincipal.getId());
         List<Restaurant> restaurants = restaurantRepository.findAll();
 
-        double userLatitude = Double.parseDouble(locationReq.getLatitude());
-        double userLongitude = Double.parseDouble(locationReq.getLongitude());
+        double userLatitude = Double.parseDouble(latitude);
+        double userLongitude = Double.parseDouble(longitude);
 
         List<RandomRestaurantRes> restaurantResList = new ArrayList<>(); // 근처 식당 모음
         List<RandomRestaurantRes> randomRestaurantResList = new ArrayList<>(); // 랜덤 3개 응답
@@ -389,13 +389,13 @@ public class RestaurantService {
     }
 
     // Map 1depth - 식당 리스트 조회 : 가까운 순
-    public ResponseEntity<?> findAroundRestaurantList(LocationReq locationReq, Integer page) {
+    public ResponseEntity<?> findAroundRestaurantList(Integer page, String latitude, String longitude) {
 
         // 식당 id, 식당 이름, 식당 카테고리(한식, 양식 등), 내 위치로부터의 거리 (m 단위), 별점, 썸네일 이미지
         Pageable pageable = PageRequest.of(page, 10);
 
-        double userLatitude = Double.parseDouble(locationReq.getLatitude());
-        double userLongitude = Double.parseDouble(locationReq.getLongitude());
+        double userLatitude = Double.parseDouble(latitude);
+        double userLongitude = Double.parseDouble(longitude);
 
         Page<Restaurant> restaurantPage = restaurantRepository.findRestaurantsNearUser(userLatitude, userLongitude, pageable);
         List<Restaurant> restaurantList = restaurantPage.getContent();
@@ -425,15 +425,15 @@ public class RestaurantService {
     }
 
     // Description : 식당 검색 + 정렬 (리뷰 많은 순 / 스크랩 많은 순 / 가까운 순)
-    public ResponseEntity<?> searchRestaurantsWithFilter(SearchRestaurantReq searchRestaurantReq, Integer page) {
+    public ResponseEntity<?> searchRestaurantsWithFilter(Integer page, String latitude, String longitude, String searchWord, String filter) {
 
         Pageable pageable = PageRequest.of(page, 10);
         Page<Restaurant> restaurantPage;
 
-        double userLatitude = Double.parseDouble(searchRestaurantReq.getLatitude());
-        double userLongitude = Double.parseDouble(searchRestaurantReq.getLongitude());
+        double userLatitude = Double.parseDouble(latitude);
+        double userLongitude = Double.parseDouble(longitude);
 
-        String searchWord = searchRestaurantReq.getSearchWord();
+//        String searchWord = searchRestaurantReq.getSearchWord();
 
         System.out.println(searchWord);
 
@@ -452,11 +452,11 @@ public class RestaurantService {
 
         System.out.println(searchWord);
 
-        if (searchRestaurantReq.getFilter().equals("SCRAP")) {
+        if (filter.equals("SCRAP")) {
             // 스크랩 많은 순 정렬
             restaurantPage = restaurantRepository.searchWithPriorityAndBookmarkOrder(searchWord, pageable);
 
-        } else if (searchRestaurantReq.getFilter().equals("DISTANCE")) {
+        } else if (filter.equals("DISTANCE")) {
             // 가까운 순 정렬
             restaurantPage = restaurantRepository.searchWithPriorityAndDistanceNative(searchWord, userLatitude, userLongitude, pageable);
         } else {

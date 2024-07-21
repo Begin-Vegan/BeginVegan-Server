@@ -40,9 +40,10 @@ public class RestaurantController {
     public ResponseEntity<?> findRestaurantById(
             @Parameter(description = "AccessToken을 입력해주세요") @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "식당/카페를 ID로 조회합니다.", required = true) @PathVariable(value = "restaurant-id") Long restaurantId,
-            @Parameter(description = "LocationReq를 참고해주세요.", required = true) @RequestBody LocationReq locationReq
+            @Parameter(description = "사용자의 위도입니다.", required = true) @RequestParam(value = "latitude") String latitude,
+            @Parameter(description = "사용자의 경도입니다.", required = true) @RequestParam(value = "longitude") String longitude
     ) {
-        return restaurantService.findRestaurantById(userPrincipal, restaurantId, locationReq);
+        return restaurantService.findRestaurantById(userPrincipal, restaurantId, latitude, longitude);
     }
 
     @Operation(summary = "식당/카페 리뷰 조희", description = "식당/카페 리뷰를 조희합니다.")
@@ -122,9 +123,10 @@ public class RestaurantController {
     public ResponseEntity<?> findRandomRestaurantWithPermission(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal, // 스크랩 여부 확인 필요
             @Parameter(description = "랜덤 조회할 개수를 입력해주세요. (기본 3개)", required = true) @PathVariable(value = "count") Long count,
-            @Parameter(description = "LocationReq를 참고해주세요.", required = true) @RequestBody LocationReq locationReq
+            @Parameter(description = "사용자의 위도입니다.", required = true) @RequestParam(value = "latitude") String latitude,
+            @Parameter(description = "사용자의 경도입니다.", required = true) @RequestParam(value = "longitude") String longitude
     ) {
-        return restaurantService.findRandomRestaurantWithPermission(userPrincipal, count, locationReq);
+        return restaurantService.findRandomRestaurantWithPermission(userPrincipal, count, latitude, longitude);
     }
 
     // Map 1depth - 식당 리스트 조회 : 가까운 순
@@ -135,11 +137,12 @@ public class RestaurantController {
     })
     @GetMapping("/around")
     public ResponseEntity<?> findAroundRestaurantList(
-            @Parameter(description = "LocationReq를 참고해주세요.", required = true) @RequestBody LocationReq locationReq,
-            @Parameter(description = "식당 리스트를 페이지별로 가까운 순 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
+            @Parameter(description = "식당 리스트를 페이지별로 가까운 순 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page,
+            @Parameter(description = "사용자의 위도입니다.", required = true) @RequestParam(value = "latitude") String latitude,
+            @Parameter(description = "사용자의 경도입니다.", required = true) @RequestParam(value = "longitude") String longitude
 
     ) {
-        return restaurantService.findAroundRestaurantList(locationReq, page);
+        return restaurantService.findAroundRestaurantList(page, latitude, longitude);
     }
 
     // 4.3 Map 검색 결과 화면
@@ -150,9 +153,12 @@ public class RestaurantController {
     })
     @GetMapping("/search")
     public ResponseEntity<?> searchRestaurantsWithFilter(
-            @Parameter(description = "SearchRestaurantReq를 참고해주세요.", required = true) @RequestBody SearchRestaurantReq searchRestaurantReq,
-            @Parameter(description = "식당 검색 결과를 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
+            @Parameter(description = "식당 검색 결과를 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page,
+            @Parameter(description = "사용자의 위도입니다.", required = true) @RequestParam(value = "latitude") String latitude,
+            @Parameter(description = "사용자의 경도입니다.", required = true) @RequestParam(value = "longitude") String longitude,
+            @Parameter(description = "검색어입니다.", required = true) @RequestParam(value = "latitude") String searchWord,
+            @Parameter(description = "정렬 기준입니다. 리뷰, 스크랩, 거리", required = true) @RequestParam(value = "longitude") String filter
     ) {
-        return restaurantService.searchRestaurantsWithFilter(searchRestaurantReq, page);
+        return restaurantService.searchRestaurantsWithFilter(page, latitude, longitude, searchWord, filter);
     }
 }
