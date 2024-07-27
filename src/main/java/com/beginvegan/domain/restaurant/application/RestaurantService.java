@@ -317,6 +317,8 @@ public class RestaurantService {
                     .thumbnail(restaurant.getThumbnail())
                     .name(restaurant.getName())
                     .isBookmark(findBookmark.isPresent())
+                    .latitude(restaurant.getLatitude())
+                    .longitude(restaurant.getLongitude())
                     .build();
             restaurantResList.add(randomRestaurantRes);
         }
@@ -361,6 +363,8 @@ public class RestaurantService {
                             .name(restaurant.getName())
                             .thumbnail(restaurant.getThumbnail())
                             .isBookmark(findBookmark.isPresent())
+                            .latitude(restaurant.getLatitude())
+                            .longitude(restaurant.getLongitude())
                             .build();
                     restaurantResList.add(randomRestaurantRes);
                 }
@@ -411,6 +415,8 @@ public class RestaurantService {
                     .distance(distance)
                     .rate(restaurant.getRate())
                     .thumbnail(restaurant.getThumbnail())
+                    .latitude(restaurant.getLatitude())
+                    .longitude(restaurant.getLongitude())
                     .build();
             restaurantBannerResList.add(restaurantBannerRes);
         }
@@ -476,6 +482,8 @@ public class RestaurantService {
                     .restaurantType(restaurant.getRestaurantType())
                     .distance(distance)
                     .rate(restaurant.getRate())
+                    .latitude(restaurant.getLatitude())
+                    .longitude(restaurant.getLongitude())
                     .build();
             searchRestaurantWithSortResList.add(searchRestaurantWithSortRes);
         }
