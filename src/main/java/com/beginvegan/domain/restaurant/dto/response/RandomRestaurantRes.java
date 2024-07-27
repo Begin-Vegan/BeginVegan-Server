@@ -14,11 +14,17 @@ public class RandomRestaurantRes {
 
     private boolean isBookmark;
 
+    private String latitude;
+
+    private String longitude;
+
     @Builder
-    public RandomRestaurantRes(Long restaurantId, String thumbnail, String name, boolean isBookmark) {
+    public RandomRestaurantRes(Long restaurantId, String thumbnail, String name, boolean isBookmark, String latitude, String longitude) {
         this.restaurantId = restaurantId;
         this.thumbnail = thumbnail;
         this.name = name;
         this.isBookmark = isBookmark;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 }
