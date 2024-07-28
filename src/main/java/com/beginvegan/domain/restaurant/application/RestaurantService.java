@@ -371,6 +371,11 @@ public class RestaurantService {
             }
         }
         if (!restaurantResList.isEmpty()) {
+            if (count - restaurantResList.size() >= 0) { // 10km 내 식당 3개 미만
+                randomRestaurantResList.addAll(restaurantResList);
+                count -= restaurantResList.size();
+            }
+
             // 랜덤 수 count개(3개) 추리기
             Set<Integer> randomNum = new HashSet<>();
             while(randomNum.size() < count){
