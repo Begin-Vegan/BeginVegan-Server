@@ -27,9 +27,9 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             "sin(radians(:userLatitude)) * sin(radians(latitude))" +
             ")" +
             ") AS distance " +
-            "FROM Restaurant " +
+            "FROM restaurant " +
             "ORDER BY distance ASC",
-            countQuery = "SELECT count(*) FROM Restaurant",
+            countQuery = "SELECT count(*) FROM restaurant",
             nativeQuery = true)
     Page<Restaurant> findRestaurantsNearUser(@Param("userLatitude") double userLatitude,
                                              @Param("userLongitude") double userLongitude,
@@ -55,13 +55,13 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     Page<Restaurant> searchWithPriorityAndReviewOrder(@Param("keyword") String keyword, Pageable pageable);
 
     // 가까운 순 정렬 + 검색어 포함 페이징
-    @Query(value = "SELECT r.* FROM Restaurant r " +
+    @Query(value = "SELECT r.* FROM restaurant r " +
             "WHERE " +
             "(:keyword IS NULL OR " +
             "    (LOWER(r.province) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "     LOWER(r.city) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "     LOWER(r.restaurant_type) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "     EXISTS (SELECT m.id FROM Menu m WHERE m.restaurant_id = r.id AND LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%'))))) " +
+            "     EXISTS (SELECT m.id FROM menu m WHERE m.restaurant_id = r.id AND LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%'))))) " +
             "ORDER BY " +
             "   (6371 * acos(cos(radians(:userLatitude)) * cos(radians(r.latitude)) *" +
             "   cos(radians(r.longitude) - radians(:userLongitude)) + sin(radians(:userLatitude)) *" +
