@@ -10,9 +10,12 @@ public class BlockDto {
 
     private Integer sequence;
 
+    private Boolean isBold;
+
     @Builder
-    public BlockDto(Long id, String content, Integer sequence) {
+    public BlockDto(Long id, String content, Integer sequence, Boolean isBold) {
         this.content = content;
         this.sequence = sequence;
+        this.isBold = isBold;
     }
 }

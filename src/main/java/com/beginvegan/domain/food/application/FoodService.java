@@ -7,7 +7,6 @@ import com.beginvegan.domain.food.domain.Food;
 import com.beginvegan.domain.food.domain.repository.FoodRepository;
 import com.beginvegan.domain.food.dto.FoodIngredientDto;
 import com.beginvegan.domain.food.dto.response.FoodRecipeListRes;
-import com.beginvegan.domain.food.dto.request.FoodDetailReq;
 import com.beginvegan.domain.food.dto.response.FoodDetailRes;
 import com.beginvegan.domain.food.dto.response.FoodListRes;
 import com.beginvegan.domain.food.exception.FoodNotFoundException;
@@ -72,9 +71,9 @@ public class FoodService {
     }
 
     // food_id를 통한 레시피 검색
-    public ResponseEntity<?> findFoodDetail(UserPrincipal userPrincipal, FoodDetailReq foodDetailReq) {
-        Optional<Food> foodOptional = foodRepository.findById(foodDetailReq.getId());
-        Food food = foodOptional.orElseThrow(() -> new FoodNotFoundException("해당 아이디를 가진 음식을 찾을 수 없습니다. ID: " + foodDetailReq.getId()));
+    public ResponseEntity<?> findFoodDetail(UserPrincipal userPrincipal, Long foodId) {
+        Optional<Food> foodOptional = foodRepository.findById(foodId);
+        Food food = foodOptional.orElseThrow(() -> new FoodNotFoundException("해당 아이디를 가진 음식을 찾을 수 없습니다. ID: " + foodId));
 
         List<FoodIngredientDto> ingredientDtos = food.getIngredients().stream()
                 .map(ingredient -> FoodIngredientDto.builder()
@@ -212,7 +211,7 @@ public class FoodService {
     private List<VeganType> getVeganTypes(VeganType myVeganType) {
         List<VeganType> veganTypes = new ArrayList<>();
         for (VeganType type : VeganType.values()) {
-            if (type.getOrder() >= myVeganType.getOrder()) {
+            if (type.getOrder() <= myVeganType.getOrder()) {
                 veganTypes.add(type);
             }
         }
