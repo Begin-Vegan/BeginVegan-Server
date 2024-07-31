@@ -31,12 +31,16 @@ public class FcmSendDto {
     @Schema(type = "Long", example = "1", description = "alarmType에 따른 itemId입니다. MAP: 매거진 또는 레시피의 id, MYPAGE: 리뷰 id")
     public Long itemId;
 
+    @Schema(type = "Boolean", example = "true", description = "pushType이 Notification/Data인지 여부를 구분합니다.")
+    public Boolean isNotification = true;
+
     @Builder
-    public FcmSendDto(String token, String title, String body, AlarmType alarmType, Long itemId) {
+    public FcmSendDto(String token, String title, String body, AlarmType alarmType, Long itemId, Boolean isNotification) {
         this.token = token;
         this.title = title;
         this.body = body;
         this.alarmType = alarmType;
         this.itemId = itemId;
+        this.isNotification = isNotification;
     }
 }

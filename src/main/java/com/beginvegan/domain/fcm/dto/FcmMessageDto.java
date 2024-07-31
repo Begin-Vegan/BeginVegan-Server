@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.Map;
+
 /**
  * FCM 전송 Format DTO
  *
@@ -24,6 +26,7 @@ public class FcmMessageDto {
     public static class Message {
         private FcmMessageDto.Notification notification;
         private String token;
+        private Map<String, String> data; // 데이터 메시지를 위한 data 필드 추가
     }
 
     @Builder
