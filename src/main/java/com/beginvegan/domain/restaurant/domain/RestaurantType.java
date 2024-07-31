@@ -11,7 +11,7 @@ public enum RestaurantType {
     WESTERN("양식"),
     CHINESE("중식"), 
     BAKERY("베이커리"),
-    KOREAN("한식"),
+    KOR("한식"),
     JAPANESE("일식"),
     ETC("기타");
 
