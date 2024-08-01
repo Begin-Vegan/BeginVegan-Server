@@ -238,7 +238,7 @@ public class UserService {
         if (originalLevel != newLevel) {
             if (newLevel.getOrder() > originalLevel.getOrder()) {
                 String msg = "나만의 식물이 성장했어요. mypage에서 확인해 보세요!";
-                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.MYPAGE, null, msg);
+                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.MYPAGE, null, msg, false);
                 fcmService.sendMessageTo(fcmSendDto);
             }
             user.updateUserLevel(newLevel);
