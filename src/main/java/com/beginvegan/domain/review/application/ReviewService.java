@@ -4,6 +4,7 @@ import com.beginvegan.domain.alarm.domain.Alarm;
 import com.beginvegan.domain.alarm.domain.AlarmType;
 import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.fcm.application.FcmService;
+import com.beginvegan.domain.fcm.domain.MessageType;
 import com.beginvegan.domain.fcm.dto.FcmSendDto;
 import com.beginvegan.domain.image.domain.Image;
 import com.beginvegan.domain.image.domain.repository.ImageRepository;
@@ -201,7 +202,7 @@ public class ReviewService {
                 userService.checkUserLevel(user);
                 // 푸시알림
                 String msg = "'" + user.getNickname() + "'" + "님의 리뷰가 추천을 받았어요.";
-                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(review.getUser(), AlarmType.MAP, reviewId, msg, true);
+                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(review.getUser(), AlarmType.MAP, reviewId, msg, MessageType.REVIEW_RECOMMEND, null);
                 fcmService.sendMessageTo(fcmSendDto);
             }
         }
@@ -306,7 +307,7 @@ public class ReviewService {
 
         // 푸시알림 생성
         String msg = "리뷰 신고가 정상적으로 접수되었어요. 운영자의 검토 후 조치를 취할 예정이에요.";
-        FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.MAP, reviewId, msg, true);
+        FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.MAP, reviewId, msg, MessageType.REVIEW_REPORT, null);
         fcmService.sendMessageTo(fcmSendDto);
 
         ApiResponse apiResponse = ApiResponse.builder()

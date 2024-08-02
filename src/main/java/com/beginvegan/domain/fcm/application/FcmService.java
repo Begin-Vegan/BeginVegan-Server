@@ -4,9 +4,11 @@ import com.beginvegan.domain.alarm.domain.Alarm;
 import com.beginvegan.domain.alarm.domain.AlarmType;
 import com.beginvegan.domain.alarm.domain.repository.AlarmRepository;
 import com.beginvegan.domain.common.Status;
+import com.beginvegan.domain.fcm.domain.MessageType;
 import com.beginvegan.domain.fcm.dto.FcmMessageDto;
 import com.beginvegan.domain.fcm.dto.FcmSendDto;
 import com.beginvegan.domain.user.domain.User;
+import com.beginvegan.domain.user.domain.UserLevel;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.payload.ApiResponse;
@@ -27,10 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -58,30 +57,29 @@ public class FcmService {
             DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
             User user = findUser.get();
 
-            msg = "알림이 저장되었습니다.";
-            // 알림 메시지인지 데이터 메시지인지 구분
-            if (user.getAlarmSetting() && fcmSendDto.getIsNotification()) {
-                msg = sendNotificationMessage(fcmSendDto);
-            } else if (!fcmSendDto.getIsNotification()) {
-                msg = sendDataMessage(fcmSendDto);
+            if (user.getAlarmSetting()) {
+                sendCombinedMessage(fcmSendDto);
+            } else {
+                sendDataMessage(fcmSendDto);
             }
 
             // alarmType이 존재할 경우에만 알림 내역에 저장
             if (fcmSendDto.getAlarmType() != null) {
                 saveAlarmHistory(fcmSendDto);
             }
+            msg = "알림이 전송되었습니다.";
         }
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(Message.builder().message(msg).build())
+                .information(msg)
                 .build();
 
         return ResponseEntity.ok(apiResponse);
     }
 
-    private String sendNotificationMessage(FcmSendDto fcmSendDto) throws IOException {
-        String message = makeNotificationMessage(fcmSendDto.getToken(), fcmSendDto.getTitle(), fcmSendDto.getBody());
+    private void sendCombinedMessage(FcmSendDto fcmSendDto) throws IOException {
+        String message = makeFcmMessage(fcmSendDto);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = RequestBody.create(message,
@@ -96,15 +94,39 @@ public class FcmService {
         Response response = client.newCall(request).execute();
 
         System.out.println(response.body().string());
-        return "메세지 전송이 완료되었습니다.";
     }
 
-    private String sendDataMessage(FcmSendDto fcmSendDto) throws IOException {
-        Map<String, String> data = new HashMap<>();
-        //data.put("type", fcmSendDto.getAlarmType().toString());
-        //data.put("itemId", fcmSendDto.getItemId().toString());
-        data.put("body", fcmSendDto.getBody());
+    private String makeFcmMessage(FcmSendDto fcmSendDto) throws JsonProcessingException {
+        FcmMessageDto fcmMessage = FcmMessageDto.builder()
+                .validateOnly(false)
+                .message(FcmMessageDto.Message.builder()
+                        .token(fcmSendDto.getToken())
+                        .notification(FcmMessageDto.Notification.builder()
+                                .title(fcmSendDto.getTitle())
+                                .body(fcmSendDto.getBody())
+                                .image(null)
+                                .build())
+                        .data(createDataMassage(fcmSendDto))
+                        .build())
+                .build();
 
+        return objectMapper.writeValueAsString(fcmMessage);
+    }
+
+    private Map<String, String> createDataMassage(FcmSendDto fcmSendDto) {
+        Map<String, String> data = new HashMap<>();
+        data.put("body", fcmSendDto.getBody());
+        data.put("itemId", fcmSendDto.getItemId() != null ? fcmSendDto.getItemId().toString() : "");
+        data.put("alarmType", fcmSendDto.getAlarmType() != null ? fcmSendDto.getAlarmType().toString() : "");
+        data.put("messageType", fcmSendDto.getMessageType() != null ? fcmSendDto.getMessageType().toString() : "");
+        if (fcmSendDto.getMessageType() == MessageType.LEVEL_UP) {
+            data.put("userLevel", fcmSendDto.getUserLevel().toString());
+        }
+        return data;
+    }
+
+    private void sendDataMessage(FcmSendDto fcmSendDto) throws IOException {
+        Map<String, String> data = createDataMassage(fcmSendDto);
         String message = makeDataMessage(fcmSendDto.getToken(), data);
 
         OkHttpClient client = new OkHttpClient();
@@ -120,7 +142,6 @@ public class FcmService {
         Response response = client.newCall(request).execute();
 
         System.out.println(response.body().string());
-        return "메세지 전송이 완료되었습니다.";
     }
 
     private String makeNotificationMessage(String targetToken, String title, String body) throws JsonProcessingException {
@@ -160,14 +181,16 @@ public class FcmService {
         return googleCredentials.getAccessToken().getTokenValue();
     }
 
-    public FcmSendDto makeFcmSendDto(User user, AlarmType alarmType, Long itemId, String body, Boolean isNotification) {
+    public FcmSendDto makeFcmSendDto(User user, AlarmType alarmType, Long itemId, String body, MessageType messageType, UserLevel userLevel) {
          return FcmSendDto.builder()
                 .token(user.getFcmToken())
                 .alarmType(alarmType)
+
                 .itemId(itemId)
                 .title("비긴, 비건")
-                 .isNotification(isNotification)
                 .body(body)
+                 .messageType(messageType)
+                 .userLevel(userLevel)
                 .build();
     }
 
