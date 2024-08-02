@@ -6,6 +6,7 @@ import com.beginvegan.domain.auth.domain.repository.TokenRepository;
 import com.beginvegan.domain.auth.exception.InvalidTokenException;
 import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.fcm.application.FcmService;
+import com.beginvegan.domain.fcm.domain.MessageType;
 import com.beginvegan.domain.fcm.dto.FcmSendDto;
 import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.User;
@@ -238,7 +239,7 @@ public class UserService {
         if (originalLevel != newLevel) {
             if (newLevel.getOrder() > originalLevel.getOrder()) {
                 String msg = "나만의 식물이 성장했어요. mypage에서 확인해 보세요!";
-                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.MYPAGE, null, msg, false);
+                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.MYPAGE, null, msg, MessageType.LEVEL_UP, newLevel);
                 fcmService.sendMessageTo(fcmSendDto);
             }
             user.updateUserLevel(newLevel);
