@@ -24,8 +24,8 @@ public class FcmMessageDto {
     @AllArgsConstructor
     @Getter
     public static class Message {
-        private FcmMessageDto.Notification notification;
         private String token;
+        private FcmMessageDto.Notification notification;
         private Map<String, String> data; // 데이터 메시지를 위한 data 필드 추가
     }
 
