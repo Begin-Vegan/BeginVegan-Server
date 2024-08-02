@@ -11,6 +11,8 @@ public class RestaurantDetailRes {
 
     private Long restaurantId;
 
+    private String thumbnail;
+
     private String name;
 
     private RestaurantType restaurantType;
@@ -29,8 +31,9 @@ public class RestaurantDetailRes {
     private String contactNumber; // 전화번호
 
     @Builder
-    public RestaurantDetailRes(Long restaurantId, String name, RestaurantType restaurantType, Address address, Double distance, Double rate, int reviewCount, boolean isBookmark, String contactNumber) {
+    public RestaurantDetailRes(Long restaurantId, String thumbnail, String name, RestaurantType restaurantType, Address address, Double distance, Double rate, int reviewCount, boolean isBookmark, String contactNumber) {
         this.restaurantId = restaurantId;
+        this.thumbnail = thumbnail;
         this.name = name;
         this.restaurantType = restaurantType;
         this.address = address;
