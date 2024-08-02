@@ -69,7 +69,6 @@ public class RestaurantService {
 
         Optional<Bookmark> findBookmark = bookmarkRepository.findByContentIdAndContentTypeAndUser(restaurant.getId(), ContentType.RESTAURANT, user);
 
-
         double userLatitude = Double.parseDouble(latitude);
         double userLongitude = Double.parseDouble(longitude);
 
@@ -82,6 +81,7 @@ public class RestaurantService {
 
         RestaurantDetailRes restaurantDetailRes = RestaurantDetailRes.builder()
                 .restaurantId(restaurant.getId())
+                .thumbnail(restaurant.getThumbnail())
                 .name(restaurant.getName())
                 .restaurantType(restaurant.getRestaurantType())
                 .address(restaurant.getAddress())
