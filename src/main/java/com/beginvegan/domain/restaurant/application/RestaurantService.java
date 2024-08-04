@@ -39,6 +39,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -116,27 +117,29 @@ public class RestaurantService {
     }
 
     // 식당 리뷰 조회
-    public ResponseEntity<?> findRestaurantReviewsById(UserPrincipal userPrincipal, RestaurantDetailReq restaurantDetailReq, Boolean isPhoto, Integer page) {
+    public ResponseEntity<?> findRestaurantReviewsById(UserPrincipal userPrincipal, Long restaurantId, String filter, Boolean isPhoto, Integer page) {
 
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(InvalidUserException::new);
 
-        Restaurant restaurant = restaurantRepository.findById(restaurantDetailReq.getRestaurantId())
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(InvalidRestaurantException::new);
 
         Page<Review> reviewPage;
         // 최신순
-        if (restaurantDetailReq.getFilter().equals("date")) {
+        if (filter.equals("date")) {
             PageRequest pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "modifiedDate"));
             // photo 여부에 따라
             reviewPage = isPhoto ?
                     reviewRepository.findReviewsByRestaurantAndReviewType(restaurant, pageable, ReviewType.PHOTO) :
                     reviewRepository.findReviewsByRestaurant(restaurant, pageable);
-        } else {
+        } else if (filter.equals("recommendation")){
             Pageable pageable = PageRequest.of(page, 10);
             reviewPage = isPhoto ?
                     reviewRepository.findReviewsByRestaurantAndReviewTypeOrderByRecommendationCount(pageable, restaurant, ReviewType.PHOTO) :
                     reviewRepository.findReviewsByRestaurantOrderByRecommendationCount(pageable, restaurant);
+        } else {
+            throw new InvalidParameterException("유효한 값이 아닙니다.");
         }
 
 
