@@ -46,19 +46,20 @@ public class RestaurantController {
         return restaurantService.findRestaurantById(userPrincipal, restaurantId, latitude, longitude);
     }
 
-    @Operation(summary = "식당/카페 리뷰 조희", description = "식당/카페 리뷰를 조희합니다.")
+    @Operation(summary = "식당/카페 리뷰 조회", description = "식당/카페 리뷰를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "식당/카페 리뷰 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ReviewListRes.class))}),
             @ApiResponse(responseCode = "400", description = "식당/카페 리뷰 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @GetMapping("/review")
+    @GetMapping("/{restaurant-id}/review")
     public ResponseEntity<?> findRestaurantReviewsById(
             @Parameter(description = "AccessToken을 입력해주세요") @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "RestaurantDetailReq를 참고해주세요.", required = true) @RequestBody RestaurantDetailReq restaurantDetailReq,
+            @Parameter(description = "식당/카페를 ID로 조회합니다.", required = true) @PathVariable(value = "restaurant-id") Long restaurantId,
+            @Parameter(description = "정렬 필터입니다. date와 recommendation이 존재하며, 기본값은 date입니다.", required = true) @RequestParam(defaultValue = "false") String filter,
             @Parameter(description = "'포토 리뷰만 보기' 선택 여부입니다. 기본값은 false입니다.", required = true) @RequestParam(defaultValue = "false") Boolean isPhoto,
             @Parameter(description = "식당/카페의 리뷰 목록을 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page
     ) {
-        return restaurantService.findRestaurantReviewsById(userPrincipal, restaurantDetailReq, isPhoto, page);
+        return restaurantService.findRestaurantReviewsById(userPrincipal, restaurantId, filter, isPhoto, page);
     }
 
     @Operation(summary = "식당/카페 스크랩", description = "식당/카페를 스크랩합니다.")
