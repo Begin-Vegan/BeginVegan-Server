@@ -92,6 +92,21 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    public ResponseEntity<?> getFcmTokenStatus(UserPrincipal userPrincipal) {
+        User user = validateUserById(userPrincipal.getId());
+        boolean isStored = user.getFcmToken() != null;
+
+        StoredFcmTokenRes storedFcmTokenRes = StoredFcmTokenRes.builder()
+                .storedFcmToken(isStored)
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(storedFcmTokenRes)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
     public ResponseEntity<?> getAlarmSetting(UserPrincipal userPrincipal) {
         User user = validateUserById(userPrincipal.getId());
 
