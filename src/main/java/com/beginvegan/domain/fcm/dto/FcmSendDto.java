@@ -18,8 +18,8 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FcmSendDto {
 
-    @Schema(type = "String", example = "BJsVBMM0tWkqZY656FX3kDqhkCXfgKBhcPPSPDgaoa0tYTVKYh5Dt7...", description = "유저의 FCM 토큰입니다.")
-    private String token;
+    @Schema(type = "Long", example = "1", description = "유저의 고유 id입니다.")
+    private Long userId;
 
     @Schema(type = "String", example = "비긴, 비건", description = "알림의 제목입니다.")
     private String title;
@@ -40,8 +40,8 @@ public class FcmSendDto {
     private UserLevel userLevel;
 
     @Builder
-    public FcmSendDto(String token, String title, String body, AlarmType alarmType, Long itemId, MessageType messageType, UserLevel userLevel) {
-        this.token = token;
+    public FcmSendDto(Long userId, String title, String body, AlarmType alarmType, Long itemId, MessageType messageType, UserLevel userLevel) {
+        this.userId = userId;
         this.title = title;
         this.body = body;
         this.alarmType = alarmType;
