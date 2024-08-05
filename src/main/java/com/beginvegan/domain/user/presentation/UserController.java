@@ -46,8 +46,8 @@ public class UserController {
 
     @Operation(summary = "유저의 FCM 토큰 저장 여부 조회", description = "유저의 FCM 토큰 저장 여부를 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = MyPageUserInfoRes.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "유저 정보 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "FCM 토큰 저장 여부 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = StoredFcmTokenRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "FCM 토큰 저장 여부 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("/fcm")
     public ResponseEntity<?> getFcmTokenStatus(
