@@ -50,17 +50,15 @@ public class FcmService {
 
     @Transactional
     public ResponseEntity<?> sendMessageTo(FcmSendDto fcmSendDto) throws IOException {
+        User user = validateUserById(fcmSendDto.getUserId());
         String msg = "메세지 전송에 실패했습니다(FCM 토큰이 존재하지 않음)";
 
-        if (fcmSendDto.getToken() != null) {
-            Optional<User> findUser = userRepository.findByFcmToken(fcmSendDto.getToken());
-            DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
-            User user = findUser.get();
-
+        String fcmToken = user.getFcmToken();
+        if (fcmToken != null) {
             if (user.getAlarmSetting()) {
-                sendCombinedMessage(fcmSendDto);
+                sendCombinedMessage(fcmToken, fcmSendDto);
             } else {
-                sendDataMessage(fcmSendDto);
+                sendDataMessage(fcmToken, fcmSendDto);
             }
 
             // alarmType이 존재할 경우에만 알림 내역에 저장
@@ -78,8 +76,8 @@ public class FcmService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    private void sendCombinedMessage(FcmSendDto fcmSendDto) throws IOException {
-        String message = makeFcmMessage(fcmSendDto);
+    private void sendCombinedMessage(String token, FcmSendDto fcmSendDto) throws IOException {
+        String message = makeFcmMessage(token, fcmSendDto);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = RequestBody.create(message,
@@ -96,11 +94,11 @@ public class FcmService {
         System.out.println(response.body().string());
     }
 
-    private String makeFcmMessage(FcmSendDto fcmSendDto) throws JsonProcessingException {
+    private String makeFcmMessage(String token, FcmSendDto fcmSendDto) throws JsonProcessingException {
         FcmMessageDto fcmMessage = FcmMessageDto.builder()
                 .validateOnly(false)
                 .message(FcmMessageDto.Message.builder()
-                        .token(fcmSendDto.getToken())
+                        .token(token)
                         .notification(FcmMessageDto.Notification.builder()
                                 .title(fcmSendDto.getTitle())
                                 .body(fcmSendDto.getBody())
@@ -125,9 +123,9 @@ public class FcmService {
         return data;
     }
 
-    private void sendDataMessage(FcmSendDto fcmSendDto) throws IOException {
+    private void sendDataMessage(String token, FcmSendDto fcmSendDto) throws IOException {
         Map<String, String> data = createDataMassage(fcmSendDto);
-        String message = makeDataMessage(fcmSendDto.getToken(), data);
+        String message = makeDataMessage(token, data);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = RequestBody.create(message,
@@ -183,7 +181,7 @@ public class FcmService {
 
     public FcmSendDto makeFcmSendDto(User user, AlarmType alarmType, Long itemId, String body, MessageType messageType, UserLevel userLevel) {
          return FcmSendDto.builder()
-                .token(user.getFcmToken())
+                .userId(user.getId())
                 .alarmType(alarmType)
 
                 .itemId(itemId)
@@ -196,9 +194,7 @@ public class FcmService {
 
     @Transactional
     public void saveAlarmHistory(FcmSendDto fcmSendDto) {
-        Optional<User> findUser = userRepository.findByFcmToken(fcmSendDto.getToken());
-        DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
-        User user = findUser.get();
+        User user = validateUserById(fcmSendDto.getUserId());
 
         Alarm alarm = Alarm.builder()
                 .alarmType(fcmSendDto.getAlarmType())
@@ -208,5 +204,11 @@ public class FcmService {
                 .build();
 
         alarmRepository.save(alarm);
+    }
+
+    private User validateUserById(Long userId) {
+        Optional<User> findUser = userRepository.findById(userId);
+        DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
+        return findUser.get();
     }
 }
