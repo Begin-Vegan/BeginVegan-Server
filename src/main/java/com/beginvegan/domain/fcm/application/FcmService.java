@@ -50,10 +50,10 @@ public class FcmService {
 
     @Transactional
     public ResponseEntity<?> sendMessageTo(FcmSendDto fcmSendDto) throws IOException {
-        User user = validateUserById(fcmSendDto.getUserId());
-        String msg = "메세지 전송에 실패했습니다(FCM 토큰이 존재하지 않음)";
+        String fcmToken = fcmSendDto.getToken();
+        User user = validateUserByToken(fcmToken);
 
-        String fcmToken = user.getFcmToken();
+        String msg = "메세지 전송에 실패했습니다(FCM 토큰이 존재하지 않음)";
         if (fcmToken != null) {
             if (user.getAlarmSetting()) {
                 sendCombinedMessage(fcmToken, fcmSendDto);
@@ -179,11 +179,10 @@ public class FcmService {
         return googleCredentials.getAccessToken().getTokenValue();
     }
 
-    public FcmSendDto makeFcmSendDto(User user, AlarmType alarmType, Long itemId, String body, MessageType messageType, UserLevel userLevel) {
+    public FcmSendDto makeFcmSendDto(String token, AlarmType alarmType, Long itemId, String body, MessageType messageType, UserLevel userLevel) {
          return FcmSendDto.builder()
-                .userId(user.getId())
+                .token(token)
                 .alarmType(alarmType)
-
                 .itemId(itemId)
                 .title("비긴, 비건")
                 .body(body)
@@ -194,7 +193,7 @@ public class FcmService {
 
     @Transactional
     public void saveAlarmHistory(FcmSendDto fcmSendDto) {
-        User user = validateUserById(fcmSendDto.getUserId());
+        User user = validateUserByToken(fcmSendDto.getToken());
 
         Alarm alarm = Alarm.builder()
                 .alarmType(fcmSendDto.getAlarmType())
@@ -206,8 +205,8 @@ public class FcmService {
         alarmRepository.save(alarm);
     }
 
-    private User validateUserById(Long userId) {
-        Optional<User> findUser = userRepository.findById(userId);
+    private User validateUserByToken(String token) {
+        Optional<User> findUser = userRepository.findByFcmToken(token);
         DefaultAssert.isTrue(findUser.isPresent(), "유저 정보가 올바르지 않습니다.");
         return findUser.get();
     }

@@ -124,7 +124,7 @@ public class AuthService {
 
         // 웰컴 메세지 전송
         String msg = "비긴, 비건에 오신 것을 환영해요. 비거너의 여정으로 함께 떠나요!";
-        FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.INFORMATION, null, msg, null, null);
+        FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user.getFcmToken(), AlarmType.INFORMATION, null, msg, null, null);
         fcmService.sendMessageTo(fcmSendDto);
 
         return ResponseEntity.ok(apiResponse);
