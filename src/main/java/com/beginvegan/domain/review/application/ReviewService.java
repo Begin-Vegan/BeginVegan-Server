@@ -202,7 +202,7 @@ public class ReviewService {
                 userService.checkUserLevel(user);
                 // 푸시알림
                 String msg = "'" + user.getNickname() + "'" + "님의 리뷰가 추천을 받았어요.";
-                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(review.getUser(), AlarmType.MAP, reviewId, msg, MessageType.REVIEW_RECOMMEND, null);
+                FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(review.getUser().getFcmToken(), AlarmType.MAP, reviewId, msg, MessageType.REVIEW_RECOMMEND, null);
                 fcmService.sendMessageTo(fcmSendDto);
             }
         }
@@ -307,7 +307,7 @@ public class ReviewService {
 
         // 푸시알림 생성
         String msg = "리뷰 신고가 정상적으로 접수되었어요. 운영자의 검토 후 조치를 취할 예정이에요.";
-        FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user, AlarmType.MAP, reviewId, msg, MessageType.REVIEW_REPORT, null);
+        FcmSendDto fcmSendDto = fcmService.makeFcmSendDto(user.getFcmToken(), AlarmType.MAP, reviewId, msg, MessageType.REVIEW_REPORT, null);
         fcmService.sendMessageTo(fcmSendDto);
 
         ApiResponse apiResponse = ApiResponse.builder()
