@@ -41,7 +41,7 @@ public class FcmService {
     @Value("${firebase.project-id}")
     private String projectId;
 
-    private final String API_URL = "https://fcm.googleapis.com/v1/projects/" + projectId + "/messages:send";
+    private final String API_URL = "https://fcm.googleapis.com/v1/projects/" + projectId + "/messages:send HTTP/1.1";
     private final ObjectMapper objectMapper;
 
     private final UserRepository userRepository;
