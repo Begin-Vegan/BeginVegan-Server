@@ -49,34 +49,29 @@ public class FcmService {
 
 
     @Transactional
-    public ResponseEntity<?> sendMessageTo(FcmSendDto fcmSendDto) throws IOException {
+    public String sendMessageTo(FcmSendDto fcmSendDto) throws IOException {
         String fcmToken = fcmSendDto.getToken();
         User user = validateUserByToken(fcmToken);
 
         String msg = "메세지 전송에 실패했습니다(FCM 토큰이 존재하지 않음)";
+        String res = null;
         if (fcmToken != null) {
             if (user.getAlarmSetting()) {
-                sendCombinedMessage(fcmToken, fcmSendDto);
+                res = sendCombinedMessage(fcmToken, fcmSendDto);
             } else {
-                sendDataMessage(fcmToken, fcmSendDto);
+                res = sendDataMessage(fcmToken, fcmSendDto);
             }
-
             // alarmType이 존재할 경우에만 알림 내역에 저장
             if (fcmSendDto.getAlarmType() != null) {
                 saveAlarmHistory(fcmSendDto);
             }
             msg = "알림이 전송되었습니다.";
         }
-
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information(msg)
-                .build();
-
-        return ResponseEntity.ok(apiResponse);
+        // Response 응답
+        return res;
     }
 
-    private void sendCombinedMessage(String token, FcmSendDto fcmSendDto) throws IOException {
+    private String sendCombinedMessage(String token, FcmSendDto fcmSendDto) throws IOException {
         String message = makeFcmMessage(token, fcmSendDto);
 
         OkHttpClient client = new OkHttpClient();
@@ -91,7 +86,8 @@ public class FcmService {
 
         Response response = client.newCall(request).execute();
 
-        System.out.println(response.body().string());
+        // System.out.println(responseBody);
+        return response.body().string();
     }
 
     private String makeFcmMessage(String token, FcmSendDto fcmSendDto) throws JsonProcessingException {
@@ -102,7 +98,6 @@ public class FcmService {
                         .notification(FcmMessageDto.Notification.builder()
                                 .title(fcmSendDto.getTitle())
                                 .body(fcmSendDto.getBody())
-                                .image(null)
                                 .build())
                         .data(createDataMassage(fcmSendDto))
                         .build())
@@ -123,7 +118,7 @@ public class FcmService {
         return data;
     }
 
-    private void sendDataMessage(String token, FcmSendDto fcmSendDto) throws IOException {
+    private String sendDataMessage(String token, FcmSendDto fcmSendDto) throws IOException {
         Map<String, String> data = createDataMassage(fcmSendDto);
         String message = makeDataMessage(token, data);
 
@@ -139,7 +134,8 @@ public class FcmService {
 
         Response response = client.newCall(request).execute();
 
-        System.out.println(response.body().string());
+        // System.out.println(responseBody);
+        return response.body().string();
     }
 
     private String makeNotificationMessage(String targetToken, String title, String body) throws JsonProcessingException {
@@ -149,7 +145,6 @@ public class FcmService {
                         .notification(FcmMessageDto.Notification.builder()
                                 .title(title)
                                 .body(body)
-                                .image(null)
                                 .build()
                         ).build()).validateOnly(false).build();
 
@@ -170,7 +165,6 @@ public class FcmService {
 
     // AccessToken 발급 받기. -> Header에 포함하여 푸시 알림 요청
     private String getAccessToken() throws IOException {
-
         GoogleCredentials googleCredentials = GoogleCredentials
                 .fromStream(new ClassPathResource("firebase/" + firebaseConfigPath).getInputStream())
                 .createScoped(List.of("https://www.googleapis.com/auth/cloud-platform"));
