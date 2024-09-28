@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +38,7 @@ public class FcmController {
             @ApiResponse(responseCode = "400", description = "전송 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @PostMapping("/send")
-    public ResponseEntity<?> pushMessage(
+    public Response pushMessage(
             @Parameter(description = "Schemas의 FcmSendDto를 확인해주세요.", required = true) @RequestBody @Validated FcmSendDto fcmSendDto
     ) throws IOException {
         log.debug("[+] 푸시 메시지를 전송합니다. ");
