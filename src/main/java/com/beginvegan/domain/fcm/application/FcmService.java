@@ -7,15 +7,20 @@ import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.fcm.domain.MessageType;
 import com.beginvegan.domain.fcm.dto.FcmMessageDto;
 import com.beginvegan.domain.fcm.dto.FcmSendDto;
+import com.beginvegan.domain.fcm.exception.FcmMessageException;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.UserLevel;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.global.DefaultAssert;
+import com.beginvegan.global.error.DefaultException;
 import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.Message;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Notification;
 import lombok.RequiredArgsConstructor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -53,6 +58,9 @@ public class FcmService {
         String fcmToken = fcmSendDto.getToken();
         User user = validateUserByToken(fcmToken);
 
+        // FCM 토큰 검증
+        checkFcmToken(fcmToken);
+
         String msg = "메세지 전송에 실패했습니다(FCM 토큰이 존재하지 않음)";
         String res = null;
         if (fcmToken != null) {
@@ -69,6 +77,25 @@ public class FcmService {
         }
         // Response 응답
         return res;
+    }
+
+    private void checkFcmToken(String token) {
+        try {
+            // 테스트 메시지 전송
+            com.google.firebase.messaging.Message message = com.google.firebase.messaging.Message.builder()
+                    .setToken(token)
+                    .setNotification(Notification.builder()
+                            .setTitle("Test")
+                            .setBody("This is a test message")
+                            .build())
+                    .build();
+
+            FirebaseMessaging.getInstance().send(message);
+        } catch (FirebaseMessagingException e) {
+            // 오류에 따른 분기 처리
+            throw new FcmMessageException(e.getMessagingErrorCode(), e.getMessage());
+
+        }
     }
 
     private String sendCombinedMessage(String token, FcmSendDto fcmSendDto) throws IOException {
