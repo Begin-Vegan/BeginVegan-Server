@@ -49,12 +49,12 @@ public class FcmService {
 
 
     @Transactional
-    public Response sendMessageTo(FcmSendDto fcmSendDto) throws IOException {
+    public String sendMessageTo(FcmSendDto fcmSendDto) throws IOException {
         String fcmToken = fcmSendDto.getToken();
         User user = validateUserByToken(fcmToken);
 
         String msg = "메세지 전송에 실패했습니다(FCM 토큰이 존재하지 않음)";
-        Response res = null;
+        String res = null;
         if (fcmToken != null) {
             if (user.getAlarmSetting()) {
                 res = sendCombinedMessage(fcmToken, fcmSendDto);
@@ -71,7 +71,7 @@ public class FcmService {
         return res;
     }
 
-    private Response sendCombinedMessage(String token, FcmSendDto fcmSendDto) throws IOException {
+    private String sendCombinedMessage(String token, FcmSendDto fcmSendDto) throws IOException {
         String message = makeFcmMessage(token, fcmSendDto);
 
         OkHttpClient client = new OkHttpClient();
@@ -86,8 +86,8 @@ public class FcmService {
 
         Response response = client.newCall(request).execute();
 
-        System.out.println(response.body().string());
-        return response;
+        // System.out.println(responseBody);
+        return response.body().string();
     }
 
     private String makeFcmMessage(String token, FcmSendDto fcmSendDto) throws JsonProcessingException {
@@ -118,7 +118,7 @@ public class FcmService {
         return data;
     }
 
-    private Response sendDataMessage(String token, FcmSendDto fcmSendDto) throws IOException {
+    private String sendDataMessage(String token, FcmSendDto fcmSendDto) throws IOException {
         Map<String, String> data = createDataMassage(fcmSendDto);
         String message = makeDataMessage(token, data);
 
@@ -134,8 +134,8 @@ public class FcmService {
 
         Response response = client.newCall(request).execute();
 
-        System.out.println(response.body().string());
-        return response;
+        // System.out.println(responseBody);
+        return response.body().string();
     }
 
     private String makeNotificationMessage(String targetToken, String title, String body) throws JsonProcessingException {

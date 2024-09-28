@@ -38,7 +38,7 @@ public class FcmController {
             @ApiResponse(responseCode = "400", description = "전송 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @PostMapping("/send")
-    public Response pushMessage(
+    public String pushMessage(
             @Parameter(description = "Schemas의 FcmSendDto를 확인해주세요.", required = true) @RequestBody @Validated FcmSendDto fcmSendDto
     ) throws IOException {
         log.debug("[+] 푸시 메시지를 전송합니다. ");
