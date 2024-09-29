@@ -1,8 +1,6 @@
 package com.beginvegan.domain.auth.application;
 
-import java.io.IOException;
 import java.util.Optional;
-
 import com.beginvegan.domain.alarm.domain.AlarmType;
 import com.beginvegan.domain.auth.dto.*;
 import com.beginvegan.domain.auth.exception.InvalidTokenException;
@@ -23,7 +21,7 @@ import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.ErrorCode;
 import com.beginvegan.global.payload.Message;
 import com.beginvegan.domain.auth.domain.repository.TokenRepository;
-
+import com.google.firebase.messaging.FirebaseMessagingException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,7 +29,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -106,7 +103,7 @@ public class AuthService {
 
     // 추가 정보 입력
     @Transactional
-    public ResponseEntity<?> addSignUpUserInfo(UserPrincipal userPrincipal, AddUserInfoReq addUserInfoReq, Boolean isDefaultImage, MultipartFile file) throws IOException {
+    public ResponseEntity<?> addSignUpUserInfo(UserPrincipal userPrincipal, AddUserInfoReq addUserInfoReq, Boolean isDefaultImage, MultipartFile file) throws FirebaseMessagingException {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
 
@@ -229,7 +226,7 @@ public class AuthService {
     }
 
     // Description : [회원 가입] 프로필 최초 설정 시 포인트 지급
-    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) throws IOException {
+    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) throws FirebaseMessagingException {
         if (!isDefaultImage) {
             user.updatePoint(1);
             userService.checkUserLevel(user);

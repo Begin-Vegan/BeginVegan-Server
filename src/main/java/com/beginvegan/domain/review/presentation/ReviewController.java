@@ -6,11 +6,11 @@ import com.beginvegan.domain.review.dto.request.PostReviewReq;
 import com.beginvegan.domain.review.dto.request.UpdateReviewReq;
 import com.beginvegan.domain.review.dto.response.MyReviewRes;
 import com.beginvegan.domain.review.dto.response.RestaurantInfoRes;
-import com.beginvegan.domain.review.dto.response.ReviewListRes;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ErrorResponse;
 import com.beginvegan.global.payload.Message;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -25,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Optional;
 
 @Tag(name = "Reviews", description = "Reviews API")
@@ -60,7 +59,7 @@ public class ReviewController {
             @Parameter(description = "PostReviewReq Schema를 확인해주세요.", required = true) @Valid @RequestPart PostReviewReq postReviewReq,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
 
-    ) throws IOException {
+    ) throws FirebaseMessagingException {
         return reviewService.postReview(userPrincipal, postReviewReq, files);
     }
 
@@ -91,7 +90,7 @@ public class ReviewController {
     public ResponseEntity<?> deleteReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
-    ) throws IOException {
+    ) throws FirebaseMessagingException {
         return reviewService.deleteReview(userPrincipal, reviewId);
     }
 
@@ -102,7 +101,7 @@ public class ReviewController {
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
             @Parameter(description = "UpdateReviewReq Schema를 확인해주세요.", required = true) @Valid @RequestPart UpdateReviewReq updateReviewReq,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart Optional<MultipartFile[]> files
-    ) throws IOException {
+    ) throws FirebaseMessagingException {
         return reviewService.updateReview(userPrincipal, reviewId, updateReviewReq, files);
     }
 
@@ -111,7 +110,7 @@ public class ReviewController {
     public ResponseEntity<?> recommendReview(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId
-    ) throws IOException {
+    ) throws FirebaseMessagingException {
         return reviewService.recommendReviews(userPrincipal, reviewId);
     }
 
@@ -121,7 +120,7 @@ public class ReviewController {
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "리뷰 id를 입력해주세요..", required = true) @PathVariable Long reviewId,
             @Parameter(description = "리뷰 신고 사유입니다.", required = true) @Valid @RequestBody ReportContentReq reportContentReq
-            ) throws IOException {
+    ) throws FirebaseMessagingException {
         return reviewService.reportReview(userPrincipal, reviewId, reportContentReq);
     }
 
