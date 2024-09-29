@@ -1,18 +1,16 @@
 package com.beginvegan.domain.auth.presentation;
 
 
+import com.google.firebase.messaging.FirebaseMessagingException;
 import jakarta.validation.Valid;
-
 import com.beginvegan.domain.auth.dto.*;
 import com.beginvegan.global.payload.ErrorResponse;
 import com.beginvegan.global.config.security.token.CurrentUser;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.Message;
 import com.beginvegan.domain.auth.application.AuthService;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -58,7 +56,7 @@ public class AuthController {
             @Parameter(description = "AddUserInfoReq Schema를 확인해주세요.", required = true) @Valid @RequestPart AddUserInfoReq addUserInfoReq,
             @Parameter(description = "프로필 등록 시 기본 이미지 여부를 입력해주세요.", required = true) @RequestPart Boolean isDefaultImage,
             @Parameter(description = "form-data 형식의 Multipart-file을 입력해주세요.") @RequestPart MultipartFile file
-    ) throws IOException {
+    ) throws FirebaseMessagingException {
         return authService.addSignUpUserInfo(userPrincipal, addUserInfoReq, isDefaultImage, file);
     }
 
