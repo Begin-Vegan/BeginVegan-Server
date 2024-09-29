@@ -58,9 +58,6 @@ public class FcmService {
         String fcmToken = fcmSendDto.getToken();
         User user = validateUserByToken(fcmToken);
 
-        // FCM 토큰 검증
-        checkFcmToken(fcmToken);
-
         String msg = "메세지 전송에 실패했습니다(FCM 토큰이 존재하지 않음)";
         String res = null;
         if (fcmToken != null) {
@@ -79,25 +76,6 @@ public class FcmService {
         return res;
     }
 
-    private void checkFcmToken(String token) {
-        try {
-            // 테스트 메시지 전송
-            com.google.firebase.messaging.Message message = com.google.firebase.messaging.Message.builder()
-                    .setToken(token)
-                    .setNotification(Notification.builder()
-                            .setTitle("Test")
-                            .setBody("This is a test message")
-                            .build())
-                    .build();
-
-            FirebaseMessaging.getInstance().send(message);
-        } catch (FirebaseMessagingException e) {
-            // 오류에 따른 분기 처리
-            throw new FcmMessageException(e.getMessagingErrorCode(), e.getMessage());
-
-        }
-    }
-
     private String sendCombinedMessage(String token, FcmSendDto fcmSendDto) throws IOException {
         String message = makeFcmMessage(token, fcmSendDto);
 
@@ -112,7 +90,6 @@ public class FcmService {
                 .build();
 
         Response response = client.newCall(request).execute();
-
         // System.out.println(responseBody);
         return response.body().string();
     }
