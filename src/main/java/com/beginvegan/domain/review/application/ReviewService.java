@@ -1,6 +1,5 @@
 package com.beginvegan.domain.review.application;
 
-import com.beginvegan.domain.alarm.domain.Alarm;
 import com.beginvegan.domain.alarm.domain.AlarmType;
 import com.beginvegan.domain.common.Status;
 import com.beginvegan.domain.fcm.application.FcmService;
@@ -32,6 +31,7 @@ import com.beginvegan.global.DefaultAssert;
 import com.beginvegan.global.config.security.token.UserPrincipal;
 import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.Message;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,7 +42,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -108,7 +107,7 @@ public class ReviewService {
 
     // 리뷰 등록
     @Transactional
-    public ResponseEntity<?> postReview(UserPrincipal userPrincipal, PostReviewReq postReviewReq, Optional<MultipartFile[]> images) throws IOException {
+    public ResponseEntity<?> postReview(UserPrincipal userPrincipal, PostReviewReq postReviewReq, Optional<MultipartFile[]> images) throws FirebaseMessagingException {
         User user = userService.validateUserById(userPrincipal.getId());
         Restaurant restaurant = validateRestaurantById(postReviewReq.getRestaurantId());
 
@@ -172,7 +171,7 @@ public class ReviewService {
 
     // 리뷰 추천
     @Transactional
-    public ResponseEntity<?> recommendReviews(UserPrincipal userPrincipal, Long reviewId) throws IOException {
+    public ResponseEntity<?> recommendReviews(UserPrincipal userPrincipal, Long reviewId) throws FirebaseMessagingException {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
 
@@ -226,7 +225,7 @@ public class ReviewService {
     // Description : 수정 시 무조건 이미지 삭제
     // 추가할 이미지, 삭제할 이미지 나눠서 받기?
     @Transactional
-    public ResponseEntity<?> updateReview(UserPrincipal userPrincipal, Long reviewId, UpdateReviewReq updateReviewReq, Optional<MultipartFile[]> images) throws IOException {
+    public ResponseEntity<?> updateReview(UserPrincipal userPrincipal, Long reviewId, UpdateReviewReq updateReviewReq, Optional<MultipartFile[]> images) throws FirebaseMessagingException {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
 
@@ -259,7 +258,7 @@ public class ReviewService {
 
     // 리뷰 삭제 - 검증된 리뷰 삭제시 리워드 회수
     @Transactional
-    public ResponseEntity<?> deleteReview(UserPrincipal userPrincipal, Long reviewId) throws IOException {
+    public ResponseEntity<?> deleteReview(UserPrincipal userPrincipal, Long reviewId) throws FirebaseMessagingException {
             User user = userService.validateUserById(userPrincipal.getId());
             Review review = validateReviewById(reviewId);
 
@@ -293,7 +292,7 @@ public class ReviewService {
 
     // 리뷰 신고
     @Transactional
-    public ResponseEntity<?> reportReview(UserPrincipal userPrincipal, Long reviewId, ReportContentReq reportContentReq) throws IOException {
+    public ResponseEntity<?> reportReview(UserPrincipal userPrincipal, Long reviewId, ReportContentReq reportContentReq) throws FirebaseMessagingException {
         User user = userService.validateUserById(userPrincipal.getId());
         Review review = validateReviewById(reviewId);
 

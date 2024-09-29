@@ -11,7 +11,6 @@ import com.beginvegan.domain.fcm.dto.FcmSendDto;
 import com.beginvegan.domain.s3.application.S3Uploader;
 import com.beginvegan.domain.user.domain.User;
 import com.beginvegan.domain.user.domain.UserLevel;
-import com.beginvegan.domain.user.domain.VeganType;
 import com.beginvegan.domain.user.domain.repository.UserRepository;
 import com.beginvegan.domain.user.dto.*;
 import com.beginvegan.global.DefaultAssert;
@@ -20,6 +19,7 @@ import com.beginvegan.global.error.DefaultException;
 import com.beginvegan.global.payload.ApiResponse;
 import com.beginvegan.global.payload.ErrorCode;
 import com.beginvegan.global.payload.Message;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -76,7 +76,7 @@ public class UserService {
 
     // Description : 비건 타입 변경
     @Transactional
-    public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq, String type) throws IOException {
+    public ResponseEntity<?> updateVeganType(UserPrincipal userPrincipal, UpdateVeganTypeReq updateVeganTypeReq, String type) throws FirebaseMessagingException {
         User user = validateUserById(userPrincipal.getId());
         user.updateVeganType(updateVeganTypeReq.getVeganType());
         if (Objects.equals(type, "TEST")) {
@@ -149,7 +149,7 @@ public class UserService {
         // 이미지 수정
         file.ifPresent(multipartFile -> {
             try { updateProfileImage(user, isDefaultImage, multipartFile);
-            } catch (IOException e) { throw new RuntimeException(e); }
+            } catch (IOException | FirebaseMessagingException e) { throw new RuntimeException(e); }
         });
 
         ApiResponse apiResponse = ApiResponse.builder()
@@ -167,7 +167,7 @@ public class UserService {
         return String.format("%04d", count + 1);
     }
 
-    private void updateProfileImage(User user, Boolean isDefaultImage, MultipartFile file) throws IOException {
+    private void updateProfileImage(User user, Boolean isDefaultImage, MultipartFile file) throws IOException, FirebaseMessagingException {
         if (user.getImageUrl().contains("amazonaws.com/")) {
             // 기존 프로필 이미지 삭제
             String originalFile = user.getImageUrl().split("amazonaws.com/")[1];
@@ -190,7 +190,7 @@ public class UserService {
     }
 
     // Description : 프로필 최초 설정 시 포인트 지급
-    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) throws IOException {
+    private void rewardInitialProfileImage(User user, Boolean isDefaultImage) throws FirebaseMessagingException {
         // 프로필 이미지 설정 여부 확인
         if (!user.getCustomProfileCompleted()) {
             if (!isDefaultImage) {
@@ -203,7 +203,7 @@ public class UserService {
     }
 
     // Description : 비건테스트 최초 수행 시 포인트 지급
-    private void rewardInitialVeganTest(User user) throws IOException {
+    private void rewardInitialVeganTest(User user) throws FirebaseMessagingException {
         if (!user.getVeganTestCompleted()) {
             user.updatePoint(1);
             user.updateVeganTestCompleted(true);
@@ -248,7 +248,7 @@ public class UserService {
 
     // userLevel 변경 확인 후 푸시 알림
     @Transactional
-    public void checkUserLevel(User user) throws IOException {
+    public void checkUserLevel(User user) throws FirebaseMessagingException {
         UserLevel originalLevel = user.getUserLevel();
         UserLevel newLevel = countUserLevel(user.getPoint());
         if (originalLevel != newLevel) {
