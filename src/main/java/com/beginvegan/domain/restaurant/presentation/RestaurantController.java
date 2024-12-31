@@ -157,8 +157,8 @@ public class RestaurantController {
             @Parameter(description = "식당 검색 결과를 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(value = "page") Integer page,
             @Parameter(description = "사용자의 위도입니다.", required = true) @RequestParam(value = "latitude") String latitude,
             @Parameter(description = "사용자의 경도입니다.", required = true) @RequestParam(value = "longitude") String longitude,
-            @Parameter(description = "검색어입니다.", required = true) @RequestParam(value = "latitude") String searchWord,
-            @Parameter(description = "정렬 기준입니다. 리뷰, 스크랩, 거리", required = true) @RequestParam(value = "longitude") String filter
+            @Parameter(description = "검색어입니다.", required = true) @RequestParam(value = "searchWord") String searchWord,
+            @Parameter(description = "정렬 기준입니다. 리뷰, 스크랩, 거리", required = true) @RequestParam(value = "filter") String filter
     ) {
         return restaurantService.searchRestaurantsWithFilter(page, latitude, longitude, searchWord, filter);
     }

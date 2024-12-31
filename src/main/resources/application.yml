@@ -15,11 +15,11 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-  servlet:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
+#  servlet:
+#    encoding:
+#      charset: UTF-8
+#      enabled: true
+#      force: true
 
 # 오류 처리
 server:
